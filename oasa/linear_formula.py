@@ -129,20 +129,21 @@ class linear_formula( object):
 
   def chunk_to_atoms( self, chunk, mol):
     m = re.match( "([A-Z][a-z]?)([0-9])?([+-])?", chunk)    
-    name = m.group( 1)
-    number = m.group( 2) and int( m.group(2)) or 1
-    sign = m.group( 3) and (int( m.group(3)+'1')) or 0
-    ret = []
-    for i in range( number):
-      v = mol.create_vertex()
-      try:
-        v.symbol = name
-      except ValueError:
-        # wrong atom symbol
-        return None
-      v.charge = sign
-      ret.append( v)
-    return ret
+    if m:
+      name = m.group( 1)
+      number = m.group( 2) and int( m.group(2)) or 1
+      sign = m.group( 3) and (int( m.group(3)+'1')) or 0
+      ret = []
+      for i in range( number):
+        v = mol.create_vertex()
+        try:
+          v.symbol = name
+        except ValueError:
+          # wrong atom symbol
+          return None
+        v.charge = sign
+        ret.append( v)
+      return ret
 
 
   def get_last_free_atom( self, mol):
@@ -233,7 +234,9 @@ def gen_formula_fragments_helper( formula):
 
 ## import smiles
 ## print form
-## print smiles.mol_to_text( m)
+
+## if m:
+##   print smiles.mol_to_text( m)
 
 ## #coords_generator.show_mol( m)
 

@@ -55,7 +55,7 @@ class molecule( graph.graph):
 
   def add_missing_hydrogens( self):
     for v in copy.copy( self.vertices):
-      for i in range( v.get_free_valency()):
+      for i in range( v.free_valency):
         h = self.create_vertex()
         h.symbol = 'H'
         self.add_vertex( h)
@@ -200,7 +200,7 @@ class molecule( graph.graph):
                 b.order = 1
             i += 1
           break
-        
+
     self.localize_fake_aromatic_bonds()
 
 
