@@ -30,7 +30,6 @@ import coords_generator
 import molfile
 import inchi
 import cdml
-import config
 import graph
 import linear_formula
 import periodic_table

@@ -39,7 +39,7 @@ class coords_generator:
     self.mol = mol
     # at first we have a look if there is already something with coords
     as = Set( [a for a in mol.vertices if a.x != None and a.y != None])
-    # the we check if they are in a continuos block but not the whole molecule
+    # then we check if they are in a continuos block but not the whole molecule
     # (in this case we regenerate all the coords if force, otherwise exit)
     if len( as) == len( mol.vertices) and not force:
       return 
@@ -142,19 +142,22 @@ class coords_generator:
           new_processed += self.process_atom_neigbors( v)
         else:
           # v is in ring so we process the ring
-          self.rings.remove( ring)
-          ring = mol.sort_vertices_in_path( ring, start_from=v)
-          ring.remove( v)
-          d = [a for a in v.get_neighbors() if a.x != None and a.y != None][0] # should always work
-          ca = geometry.clockwise_angle_from_east( v.x-d.x, v.y-d.y)
-          size = len( ring)+1
-          da = deg_to_rad( 180 -180*(size-2)/size)
-          gcoords = gen_angle_stream( da, start_from=ca-pi/2+da/2)
-          # here we generate the coords
-          self.apply_gen_to_atoms( gcoords, ring, v)
-          ring.append( v)
-          new_processed += ring
-          new_processed += self.process_all_anelated_rings( ring)
+          if len( processed) > 1 and mol.defines_connected_subgraph_v( processed) and Set( processed) <= ring:
+            new_processed += self.process_all_anelated_rings( processed)
+          else:
+            self.rings.remove( ring)
+            ring = mol.sort_vertices_in_path( ring, start_from=v)
+            ring.remove( v)
+            d = [a for a in v.get_neighbors() if a.x != None and a.y != None][0] # should always work
+            ca = geometry.clockwise_angle_from_east( v.x-d.x, v.y-d.y)
+            size = len( ring)+1
+            da = deg_to_rad( 180 -180*(size-2)/size)
+            gcoords = gen_angle_stream( da, start_from=ca-pi/2+da/2)
+            # here we generate the coords
+            self.apply_gen_to_atoms( gcoords, ring, v)
+            ring.append( v)
+            new_processed += ring
+            new_processed += self.process_all_anelated_rings( ring)
       processed = new_processed
 
   def process_all_anelated_rings( self, base):

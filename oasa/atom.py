@@ -122,7 +122,25 @@ class atom( graph.vertex):
       if ord == 4:
         ord = 1
       i += ord
-    return i
+
+    if self.charge:
+      # now we deal with charge
+      if abs( self.charge) > 1:
+        # charges higher than one should always decrease valency
+        charge = abs( self.charge)
+      elif (self.symbol in PT.accept_cation) and (self.charge == 1) and (self.valency <= PT.accept_cation[self.symbol]):
+        # elements that can accept cations to increase their valency (NH4+)
+        charge = -1
+      elif (self.symbol in PT.accept_anion) and (self.charge == -1) and (self.valency <= PT.accept_anion[self.symbol]):
+        # elements that can accept anions to increase their valency (BH4-)
+        charge = -1
+      else:
+        # otherwise charge reduces valency 
+        charge = abs( self.charge)
+    else:
+      charge = 0
+
+    return i+charge+self.multiplicity-1
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
@@ -143,32 +161,9 @@ class atom( graph.vertex):
 
   def get_free_valency( self):
     """returns free valency of atom. Aromatic bonds should be localized, otherwise they are counted as simple"""
-    valency = self.occupied_valency
-    if self.symbol in PT.periodic_table:
-      vals = PT.periodic_table[ self.symbol]['valency']
-      for v in vals:
-        # should we increase or decrease valency with charge ?
-        if self.charge:
-          if abs( self.charge) > 1:
-            # charges higher than one should always decrease valency
-            charge = abs( self.charge)
-          elif (self.symbol in PT.accept_cation) and (self.charge == 1) and (valency-1 <= PT.accept_cation[self.symbol]):
-            # elements that can accept cations to increase their valency (NH4+)
-            charge = -1
-          elif (self.symbol in PT.accept_anion) and (self.charge == -1) and (valency-1 <= PT.accept_anion[self.symbol]):
-            # elements that can accept anions to increase their valency (BH4-)
-            charge = -1
-          else:
-            # otherwise charge reduces valency 
-            charge = abs( self.charge)
-        else:
-          charge = 0
-        if valency+charge <= v:
-          return v-valency-charge
-      # if valency is exceeded return lowest possible negative value
-      return max( PT.periodic_table[ self.symbol]['valency']) - valency - charge
-    # if unsuccessful return 0
-    return 0
+    print "use free_valency instead"
+    return self.free_valency
+
 
   def get_x( self):
     return self.x or 0
@@ -184,6 +179,16 @@ class atom( graph.vertex):
       if b.aromatic:
         return 1
     return 0
+
+
+  def raise_valency( self):
+    """used in case where valency < occupied_valency to try to find a higher one"""
+    for v in PT.periodic_table[ self.symbol]['valency']:
+      if v > self.valency:
+        self.valency = v
+        return True
+    return False
+
     
 
   def is_chiral( self):

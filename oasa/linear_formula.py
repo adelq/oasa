@@ -41,6 +41,7 @@ class linear_formula( object):
     mol = self.parse_form(  text, valency=valency, mol=mol)
     if mol:
       self.molecule = mol
+
       # now we check if the structure is complete
       for v in self.molecule.vertices:
         if v.free_valency:
@@ -141,8 +142,8 @@ class linear_formula( object):
     return a
 
 
-## form = 'OCH(COOCH3)2'
-## #form = "COCH3"
+## #form = 'OCH(COOCH3)2'
+## form = "COO-"
 
 ## a = linear_formula( form , valency=1)
 ## m = a.molecule

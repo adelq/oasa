@@ -81,7 +81,7 @@ class inchi( plugin):
     self.read_connectivity_layer( layers[2])
     self.read_hydrogen_layer( layers[3])
     self.structure.add_missing_bond_orders()
-    self.structure.remove_all_hydrogens()
+    #self.structure.remove_all_hydrogens()
 
 
   def read_sum_layer( self, layer, hs_in_hydrogen_layer):
@@ -118,6 +118,9 @@ class inchi( plugin):
         bracket_openings.append( last_atom)
       elif c == ')':
         last_atom = bracket_openings.pop(-1)
+      elif c == ",":
+        last_atom = bracket_openings.pop(-1)
+        bracket_openings.append( last_atom)
       else:
         try:
           i = int( c)
@@ -320,15 +323,17 @@ if __name__ == '__main__':
     t1 = time.time()
     for jj in range( cycles):
       mol = text_to_mol( text)
+      print mol
       print "  smiles: ", smiles.mol_to_text( mol)
     t1 = time.time() - t1
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
   #inch = "1.12Beta/C18H36N2O6/c1-7-21-13-14-24-10-4-20-5-11-25-17-15-22-8-2-19(1)3-9-23-16-18-26-12-6-20/h1-18H2"
-  inch = "1.12Beta/C8H8/c1-2-5-3(1)7-4(1)6(2)8(5)7/h1-8H"
+  #inch = "1.12Beta/C8H8/c1-2-5-3(1)7-4(1)6(2)8(5)7/h1-8H"
   #inch = '1.12Beta/C3H4O2/c1-2-4-6-5-3-1/h1-3H' #1.12Beta/B2H6/c1-3-2-4-1/h1-2H2'
-  #inch = "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H"
+  inch = "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H"
+  #inch = "1.12Beta/C5H5N5/c6-4-3-5(9-1-7-3)10-2-8-4/h1-2H,(H3,6,7,8,9,10)"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch
