@@ -31,6 +31,7 @@ from types import *
 import operator
 import time
 
+
 class graph:
   """provides a minimalistic graph implementation suitable for analysis of chemical problems,
   even if some care was taken to make the graph work with nonsimple graphs, there are cases where it won't!"""
@@ -317,16 +318,55 @@ class graph:
       if x and i!=i1:
         yield i
 
+
   def get_smallest_independent_cycles( self):
     """returns a set of smallest possible independent cycles,
     other cycles in graph are guaranteed to be combinations of them"""
-    #t1 = time.time()
-    ret = list( filter_off_dependent_cycles( self._get_some_cycles()))
-    #print " %.5f - smallest rings search" % (time.time() - t1)
-    return ret
+    return map( self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e())
+                
 
-  def get_smallest_cycles2( self):
-    return list( filter_off_dependent_cycles( self.get_all_cycles()))
+
+  def get_smallest_independent_cycles_e( self):
+    """returns a set of smallest possible independent cycles as list of Sets of edges,
+    other cycles in graph are guaranteed to be combinations of them"""
+    ncycles = len( self.edges) - len( self.vertices) + 1
+    if ncycles < 0:
+      warnings.warn( "The number of edges is smaller than number of vertices -1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 2)
+      ncycles = 0
+    cycles = self.get_all_cycles_e()
+    while not len( cycles) <= ncycles:
+      d = len( cycles) - ncycles
+      cycles = filter_off_dependent_cycles( cycles)
+      if len( cycles) - ncycles == d:
+        # further cycling would not help
+        break
+    if len( cycles) < ncycles:
+      warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
+    elif len( cycles) > ncycles: 
+      warnings.warn( "The number of independent cycles found (%d) is larger than the theoretical value %d (|E|-|V|+1), but I cannot improve it." % (len( cycles), ncycles), UserWarning, 2)
+
+    return cycles
+
+
+
+  def get_almost_all_cycles_e( self):
+    """returns almost all cycles found in the graph as sets of edges
+    this version is not perfect as it sometimes forgets a few rings"""
+    all_cycles = []
+    self.mark_vertices_with_distance_from( self.vertices[0])
+    to_go = Set()
+    for ps in self._get_all_ring_end_points():
+      to_go |= ps
+    for ps in self._get_all_ring_start_points():
+      to_go |= ps
+    while to_go:
+      v = to_go.pop()
+      cycles = self._get_cycles_for_vertex( v, to_reach=v)
+      all_cycles += cycles
+    all_cycles = Set( map( ImSet, all_cycles))
+    self.clean_distance_from_vertices()
+    return all_cycles
+
 
 
   def get_all_cycles_e( self):
@@ -336,23 +376,25 @@ class graph:
       if v.degree == 1:
         to_go.remove( v)
     all_cycles = []
-    removed = Set( to_go)
+#    removed = Set( to_go)
     while to_go:
-      while removed:
-        new_removed = Set()
-        for v in removed:
-          for n in v.neighbors:
-            if n in to_go and n.degree == 2:
-              new_removed.add( n)
-              to_go.remove( n)
-        removed = new_removed
+##       while removed:
+##         new_removed = Set()
+##         for v in removed:
+##           for n in v.neighbors:
+##             if n in to_go and n.degree == 2:
+##               new_removed.add( n)
+##               to_go.remove( n)
+##         removed = new_removed
       if to_go:
         v = to_go.pop()
-        removed = Set([v])
+#        removed = Set([v])
         cycles = self._get_cycles_for_vertex( v, to_reach=v)
         all_cycles += cycles
     all_cycles = Set( map( ImSet, all_cycles))
     return all_cycles
+
+
 
 
   def _get_cycles_for_vertex( self, v, to_reach=None, processed=Set()):
@@ -383,33 +425,6 @@ class graph:
 
       
 
-
-  def get_all_cycles_old( self):
-    """takes all the smallest independent cycles found and combines them to provide
-    the bigger dependent cycles. Warning - is relatively time consuming for fused cycles
-    that give rise to many possible combinations"""
-    #t1 = time.time()
-    vcycles = self.get_smallest_independent_cycles() # vertex defined cycles
-    ecycles = map( self.vertex_subgraph_to_edge_subgraph, vcycles) # edge defined cycles
-    i = 0
-    while i < len( ecycles):
-      j = i+1
-      while j < len( ecycles):
-        if j != i:
-          p = (ecycles[i] & ecycles[j])
-          if p and not (vcycles[j] <= vcycles[i]) and not (vcycles[i] <= vcycles[j]) and self.defines_connected_subgraph_e( p):
-            new = ecycles[i] ^ ecycles[j]
-            if new and new not in ecycles:
-              vnew = self.edge_subgraph_to_vertex_subgraph( new)
-              ### !!! NEEDS SOME TESTING AND POSSIBLY DIFFERENT APPROACH
-              if self.defines_connected_subgraph_v( vnew):
-                ecycles.append( new)
-                vcycles.append( vnew)
-        j += 1
-      i += 1
-    #print " %.2f ms - all rings search" % (1000*(time.time() - t1))
-    ecycles = Set( map( ImSet, ecycles))
-    return map( self.edge_subgraph_to_vertex_subgraph, ecycles)
 
   def mark_vertices_with_distance_from( self, v):
     """returns the maximum d"""
@@ -610,6 +625,7 @@ class graph:
         if ring:
           yield ring
 
+
   def _get_all_ring_end_points( self):
     already_there = []
     for v in self.vertices:
@@ -731,42 +747,61 @@ def get_path_down_to( end, start):
         return ps
   return None
 
+
+
+
+
 def filter_off_dependent_cycles( cycles):
-  """this filtres off all cycles that are combinations of two smaller cycles.
-  I don't want to go deeper (3 cycles) - it would be really slow and ugly"""
-  # at first we use filter_off_supercycles - it is faster and catches almost all
-  cs = list( filter_off_supercycles( cycles))
-  i = 0
-  while i < len( cs):
-    j = i + 1
-    while j < len( cs):
-      k = j + 1
-      while k < len( cs):
-        if len( cs[k]) > len( cs[j]):
-          if cs[k] <= (cs[i] | cs[j]):
-            del cs[k]
-            continue
-        k += 1
-      j += 1
-    i += 1
-  return cs
-  
-def filter_off_supercycles( cycles):
-  """filtres off all the bigger cycles which completely contain any of smaller cycles;
-  these should be dependent"""
+  """this filtres off all cycles that are combinations of smaller cycles."""
   cs = list( cycles)
-  cs.sort( lambda x, y: len(x)-len(y))
-  while len( cs) > 0:
-    to_del = []
-    c0 = cs.pop(0)
-    for c1 in cs:
-      if c0 <= c1:
-        to_del.append( c1)
-    for c1 in to_del:
-      cs.remove( c1)
-    yield c0
-  
-  
+  level = 2
+  cs.sort( lambda a,b: -len( a) + len(b))
+  while level < len( cs):
+    to_del = Set()
+    for c in cs:
+      combs = gen_variations( [x for x in cs if x != c and x not in to_del and x & c], level)
+      for combl in combs:
+        comb = Set( combl)
+        if not comb & to_del and (c <= reduce( operator.or_, comb)) and reduce( operator.and_, comb):
+          to_del.add( c)
+          break
+    [cs.remove( x) for x in to_del]
+    level += 1
+  return cs
+
+
+
+## def filter_off_dependent_cycles( cycles):
+##   cs = list( cycles)
+##   level = 2
+##   cs.sort( lambda a,b: -len( a) + len(b))
+##   print len( cs), map( len, cs)
+##   while level < len( cs):
+##     to_del = Set()
+##     for c in cs:
+##       combs = gen_variations( [x for x in cs if x != c and x & c], level)
+##       for combl in combs:
+##         comb = Set( combl)
+##         if not comb & to_del and (c <= reduce( operator.or_, comb)):
+##           to_del.add( c)
+##           print "remove", len( c), map( len, comb)
+##           break
+##     [cs.remove( x) for x in to_del]
+##     level += 1
+##   return cs
+
+
+
+
+def gen_variations(items, n):
+    if n==0:
+      yield []
+    else:
+      for i in xrange( len(items)-n+1):
+        for v in gen_variations(items[i+1:],n-1):
+          yield [items[i]]+v
+
+
 
 ## import profile
 

@@ -24,6 +24,9 @@
 from __future__ import generators
 #from generators import lazy_map, take
 import re
+import operator
+import types
+
 
 """periodic table as a dictionary, plus functions for molecular
 formula manipulation and computation"""
@@ -139,8 +142,14 @@ class formula_dict( dict):
     dict.__init__( self)
     ## incomplete means that there were some problems to fully convert a formula to this dict
     self.incomplete = 0
-    if form:
+    if type( form) in (types.StringType, types.UnicodeType):
       self.read_formula_string( form)
+    elif type( form) == types.DictType:
+      for key, val in form.iteritems():
+        if key in periodic_table and type( val) == types.IntType:
+          self[ key] = val
+        else:
+          raise ValueError, "some of the dictionary entries are not valid for formula_dict (%s => %s)" % (str( key), str( val))
   
   def __str__( self, reverse=0):
     sum = ''
@@ -173,6 +182,15 @@ class formula_dict( dict):
           ret[s] = form[s]
     return ret
 
+  def __mul__( self, other):
+    if not type( other) == types.IntType:
+      raise TypeError, "formula_dict can be only multiplied by an integer"
+    res = formula_dict()
+    for key in self.keys():
+      res[key] = other * self[key]
+    return res
+
+
   def get_element_fraction( self, element):
     if element in self:
       return self[element]*periodic_table[element]['weight']/self.get_molecular_weight()
@@ -190,12 +208,17 @@ class formula_dict( dict):
   def sorted_keys( self):
     k = self.keys()
     ret = []
-    for a in ('C','H'):
-      if a in k:
-        ret.append( a)
-        k.remove( a)
-    k.sort()
-    return ret+k
+    if 'C' in k:
+      for a in ('C','H'):
+        if a in k:
+          ret.append( a)
+          k.remove( a)
+      k.sort()
+      return ret+k
+    else:
+      k.sort()
+      return k
+    
 
   def read_formula_string( self, form):
     is_formula = re.compile("^([A-Z][a-z]?[0-9]*)*$")
@@ -241,6 +264,10 @@ class formula_dict( dict):
       return 1
     else:
       return 0
+
+  def to_tuple( self):
+    return tuple( reduce( operator.add, [[k,self[k]] for k in self.sorted_keys()], []))
+
 
     
 def dict_to_composition( form):

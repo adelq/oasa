@@ -33,3 +33,10 @@ cdml_to_smiles = {'Me': 'C',
                   'COCl': 'C(=O)Cl',
                   'CH2OH': 'CO'
                   }
+
+
+name_to_linear = {'Me': 'C',
+                  #'Ph': 'c1ccccc1',
+                  'Et': 'CC',
+                  'Pr': 'CCC',
+                  }

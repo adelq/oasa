@@ -33,12 +33,13 @@ import cdml
 import graph
 import linear_formula
 import periodic_table
+import config
 
 atom = atom.atom
 molecule = molecule.molecule
 bond = bond.bond
 
-__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table']
+__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table','config']
 
 
 

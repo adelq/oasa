@@ -17,15 +17,14 @@
 
 #--------------------------------------------------------------------------
 
-
-from molecule import molecule
-from atom import atom
-from bond import bond
+from config import Config
 
 import re
 from periodic_table import periodic_table
 import coords_generator
 import misc
+from known_groups import name_to_linear
+import smiles
 
 
 class linear_formula( object):
@@ -71,7 +70,7 @@ class linear_formula( object):
 
     # the code itself
     if not mol:
-      mol = molecule()
+      mol = Config.create_molecule()
 
     # create the dummy atom
     if valency:
