@@ -27,6 +27,7 @@ import bond
 import molecule
 import smiles
 import coords_generator
+import coords_optimizer
 import molfile
 import inchi
 import cdml
@@ -39,7 +40,8 @@ atom = atom.atom
 molecule = molecule.molecule
 bond = bond.bond
 
-__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table','config']
+__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table','config',
+           'coords_optimizer']
 
 
 

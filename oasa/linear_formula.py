@@ -38,7 +38,7 @@ class linear_formula( object):
 
   def parse_text( self, text, valency=0, mol=None):
     text = self.expand_abbrevs( text)
-    mol = self.parse_form(  text, valency=valency, mol=mol)
+    mol = self.parse_form( text, valency=valency, mol=mol, reverse=False)
     if mol:
       self.molecule = mol
 
@@ -63,7 +63,7 @@ class linear_formula( object):
 
 
 
-  def parse_form( self, text, valency=0, mol=None):
+  def parse_form( self, text, valency=0, mol=None, reverse=False):
     form = text
 
     # the code itself
@@ -82,6 +82,8 @@ class linear_formula( object):
     if "(" not in form:
       # there are no subbranches
       chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
+      if reverse:
+        chunks = self.reverse_chunks( chunks)
       for chunk in chunks:
         if chunk:
           as = self.chunk_to_atoms( chunk, mol)
@@ -96,7 +98,7 @@ class linear_formula( object):
               b.order = max_val
               mol.add_edge( last_atom, a, b)
     else:
-      for chunk, count in gen_formula_fragments( form):
+      for chunk, count in gen_formula_fragments( form, reverse=reverse):
         if chunk:
           last_atom = self.get_last_free_atom( mol)
 
@@ -170,20 +172,30 @@ class linear_formula( object):
     return text
 
 
-def gen_formula_fragments( formula):
+  def reverse_chunks( self, chunks):
+    chunks.reverse()
+    for i in range( 0, len( chunks), 2):
+      chunks[i], chunks[i+1] = chunks[i+1],chunks[i]
+    return chunks
+
+
+def gen_formula_fragments( formula, reverse=False):
   chunks = list( gen_formula_fragments_helper( formula))
+  if reverse:
+    chunks.reverse()
   i = 0
   while i < len( chunks):
     chunk, brack = chunks[ i]
     if brack and i < len( chunks) - 1:
       next, nbrack = chunks[i+1]
       if not nbrack:
-        try:
-          count = int( next)
-        except ValueError:
+        count, rest = split_number_and_text( next)
+        if count == None:
           yield chunk, 1
         else:
-          i += 1
+          chunks[i+1] = (rest, nbrack)
+          if not rest:
+            i += 1
           yield chunk, count
       else:
         yield chunk, 1
@@ -217,14 +229,25 @@ def gen_formula_fragments_helper( formula):
   if to_ret:
     yield ''.join( to_ret), False
 
-          
 
 
+def split_number_and_text( txt):
+  last = None
+  for i in range( len( txt)):
+    try:
+      last = int( txt[0:i+1])
+    except ValueError:
+      return last, txt[i:]
+  return last, ""
+    
+  
 
-## form = 'CH2(COOPh)2'
+
+## form = 'CPh4'
 ## #form = "CH2(Cl)2"
 
-## print [i for i in gen_formula_fragments( form)]
+## #print [i for i in gen_formula_fragments_helper( form)]
+## #print [i for i in gen_formula_fragments( form)]
 
 ## a = linear_formula( form , valency=0)
 ## m = a.molecule
@@ -241,4 +264,4 @@ def gen_formula_fragments_helper( formula):
 ## #coords_generator.show_mol( m)
 
 
-#print [i for i in gen_formula_fragments( "CO(OH)2")]
+## #print [i for i in gen_formula_fragments( "CO(OH)2")]
