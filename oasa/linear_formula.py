@@ -82,13 +82,13 @@ class linear_formula( object):
         if chunk:
           as = self.chunk_to_atoms( chunk, mol)
           for a in as:
+            last_atom = self.get_last_free_atom( mol)
             mol.add_vertex( a)
             if last_atom:
               max_val = min( last_atom.free_valency, a.free_valency, 3)
               b = mol.create_edge()
               b.order = max_val
               mol.add_edge( last_atom, a, b)
-          last_atom = self.get_last_free_atom( mol)
     else:
       if len( branching) % 2:
         branching.append( '')
@@ -96,6 +96,8 @@ class linear_formula( object):
         chunk = branching[i]
         if chunk:
           rep = branching[i+1] and int( branching[i+1]) or 1
+          last_atom = self.get_last_free_atom( mol)
+
           for j in range( rep):
             m = self.parse_form( chunk, valency=1, mol=mol.create_graph())
             if not last_atom:
@@ -106,7 +108,6 @@ class linear_formula( object):
               b = mol.create_edge()
               mol.add_edge( last_atom, m.vertices[0], b)
                           
-        last_atom = self.get_last_free_atom( mol)
 
     return mol
         
@@ -130,10 +131,10 @@ class linear_formula( object):
     # check if there is something with a free valency
     atoms = [o for o in misc.reverse( mol.vertices)]
     for a in atoms:
-      if a.get_free_valency() > 0:
+      if a.free_valency > 0:
         return a
     # if its not the case
-    for i, a in enumerate( atoms):
+    for i, a in enumerate( atoms[0:-1]):
       b = a.get_edge_leading_to( atoms[i+1])
       if b.order > 1:
         b.order -= 1
@@ -143,12 +144,13 @@ class linear_formula( object):
 
 
 ## #form = 'OCH(COOCH3)2'
-## form = "COO-"
+## form = "CH2Cl"
 
 ## a = linear_formula( form , valency=1)
 ## m = a.molecule
 ## #coords_generator.calculate_coords( m)
 
+## print m
 
 ## import smiles
 ## print form
