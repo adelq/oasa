@@ -66,7 +66,6 @@ class linear_formula( object):
   def parse_form( self, text, valency=0, mol=None):
     form = text
 
-
     # the code itself
     if not mol:
       mol = Config.create_molecule()
@@ -111,7 +110,8 @@ class linear_formula( object):
               m.remove_vertex( hs[0])
               smile = True
             else:
-              m = self.parse_form( chunk, valency=1, mol=mol.create_graph())
+              val = last_atom and 1 or 0
+              m = self.parse_form( chunk, valency=val, mol=mol.create_graph())
               smile = False
             if not last_atom:
               mol.insert_a_graph( m) 
@@ -147,6 +147,8 @@ class linear_formula( object):
 
   def get_last_free_atom( self, mol):
     # check if there is something with a free valency
+    if not mol.vertices:
+      return None
     atoms = [o for o in misc.reverse( mol.vertices)]
     for a in atoms:
       if a.free_valency > 0:
@@ -218,13 +220,12 @@ def gen_formula_fragments_helper( formula):
 
 
 
-## form = 'CH(COOPh)2'
+## form = 'CH2(COOPh)2'
+## #form = "CH2(Cl)2"
 
 ## print [i for i in gen_formula_fragments( form)]
 
-## #form = "CH2Cl"
-
-## a = linear_formula( form , valency=1)
+## a = linear_formula( form , valency=0)
 ## m = a.molecule
 ## #coords_generator.calculate_coords( m)
 
