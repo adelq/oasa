@@ -83,7 +83,7 @@ class linear_formula( object):
       # there are no subbranches
       chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
       if reverse:
-        chunks = self.reverse_chunks( chunks)
+        chunks = reverse_chunks( chunks)
       for chunk in chunks:
         if chunk:
           as = self.chunk_to_atoms( chunk, mol)
@@ -172,11 +172,11 @@ class linear_formula( object):
     return text
 
 
-  def reverse_chunks( self, chunks):
-    chunks.reverse()
-    for i in range( 0, len( chunks), 2):
-      chunks[i], chunks[i+1] = chunks[i+1],chunks[i]
-    return chunks
+def reverse_chunks( chunks):
+  chunks.reverse()
+  for i in range( 0, len( chunks), 2):
+    chunks[i], chunks[i+1] = chunks[i+1],chunks[i]
+  return chunks
 
 
 def gen_formula_fragments( formula, reverse=False):
@@ -240,10 +240,36 @@ def split_number_and_text( txt):
       return last, txt[i:]
   return last, ""
     
+
+
+def reverse_formula( text):
+  all_chunks = []
+  form = text
+  if "(" not in form:
+    chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
+    for chunk in chunks:
+      if chunk:
+        all_chunks.append( chunk)
+  else:
+    for chunk, count in gen_formula_fragments_helper( form):
+      if count:
+        all_chunks.append(")")
+      if chunk:
+        all_chunks.extend( reverse_formula( chunk))
+      if count:
+        all_chunks.append("(")
+#
+#        if count:
+#          all_chunks.append( str(count))
+
+  print all_chunks
+  #all_chunks.reverse()
+  return all_chunks
+  
   
 
 
-## form = 'CPh4'
+## form = 'CPh3Cl'
 ## #form = "CH2(Cl)2"
 
 ## #print [i for i in gen_formula_fragments_helper( form)]

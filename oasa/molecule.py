@@ -65,20 +65,20 @@ class molecule( graph.graph):
 
   def add_missing_bond_orders( self):
     #for b in self.edges:
-    #  b.properties_['free_order'] = min( [a.get_free_valency() for a in b.vertices])
+    #  b.properties_['free_order'] = min( [a.free_valency for a in b.vertices])
     processed = [1]
     while processed:
       processed = []
-      for b in [bo for bo in self.edges if min( [a.get_free_valency() for a in bo.vertices])]:
+      for b in [bo for bo in self.edges if min( [a.free_valency for a in bo.vertices])]:
         a1, a2 = b.get_vertices()
-        as1 = [a for a in a1.get_neighbors() if a.get_free_valency() > 0]
-        as2 = [a for a in a2.get_neighbors() if a.get_free_valency() > 0]
+        as1 = [a for a in a1.get_neighbors() if a.free_valency > 0]
+        as2 = [a for a in a2.get_neighbors() if a.free_valency > 0]
         if len( as1) == 1 or len( as2) == 1:
-          b.order += min( [a.get_free_valency() for a in b.vertices])
+          b.order += min( [a.free_valency for a in b.vertices])
           processed.append( b)
       if not processed:
         for b in self.edges:
-          i = min( [a.get_free_valency() for a in b.vertices])
+          i = min( [a.free_valency for a in b.vertices])
           if i:
             processed = [b]
             b.order += i
@@ -303,7 +303,7 @@ class molecule( graph.graph):
     for m in ms:
       ret.append( out.keys()[ out.values().index( m)])
       #if ret.symbol != 'H':
-      #  print "%3d: " % i, ret, ret.get_free_valency()
+      #  print "%3d: " % i, ret, ret.free_valency
       i += 1
     return ret
 
