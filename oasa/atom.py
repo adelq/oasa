@@ -51,6 +51,23 @@ class atom( graph.vertex):
 
   ## PROPERTIES
 
+  # coords
+  def _set_coords( self, coords):
+    if len( coords) == 2:
+      self.x, self.y = coords
+    elif len( coords) == 3:
+      self.x, self.y, self.z = coords      
+    else:
+      raise "wrong number of coordinates"
+
+  def _get_coords( self):
+    return self.x, self.y, self.z
+
+  coords = property( _get_coords, _set_coords, None, "atom coords")
+
+
+
+
   # charge
   def _set_charge( self, charge):
     self._charge = charge

@@ -71,6 +71,12 @@ class graph:
       c.add_edge( i, j)
     return c
     
+  def create_vertex( self):
+    return self.vertex_class()
+
+  def create_edge( self):
+    return self.edge_class()
+  
 
   ## MODIFICATION METHODS
 
@@ -78,7 +84,7 @@ class graph:
     """adds a vertex to a graph, if v argument is not given creates a new one.
     returns None if vertex is already present or the vertex instance if successful"""
     if not v:
-      v = self.vertex_class()
+      v = self.create_vertex()
     if v not in self.vertices:
       self.vertices.append( v)
     else:
@@ -100,7 +106,7 @@ class graph:
     v1 = self.vertices[ i1]
     v2 = self.vertices[ i2]
     if not e:
-      e = self.edge_class()
+      e = self.create_edge()
     e.set_vertices( (v1,v2))
     self.edges.add( e)
     v1.add_neighbor( v2, e)

@@ -19,8 +19,6 @@
 
 from plugin import plugin
 from molecule import molecule
-from atom import atom
-from bond import bond
 import periodic_table as pt
 import molfile
 
@@ -97,7 +95,9 @@ class inchi( plugin):
             continue
           else:
             processed_hs += 1
-        self.structure.add_vertex( atom( symbol=k))
+        a = self.structure.create_vertex()
+        a.symbol = k
+        self.structure.add_vertex( a)
 
 
 
@@ -126,7 +126,7 @@ class inchi( plugin):
           continue
         # atom
         if last_atom:
-          self.structure.add_edge( last_atom-1, i-1, e=bond())
+          self.structure.add_edge( last_atom-1, i-1)
         last_atom = i
 
   def read_hydrogen_layer( self, layer):
@@ -158,8 +158,10 @@ class inchi( plugin):
       ns = ns and int(ns) or 1
       for i in range( a1, a2+1):
         for j in range( ns):
-          h = self.structure.add_vertex( atom( symbol='H'))
-          self.structure.add_edge( i-1, h, e=bond())
+          h = self.structure.create_vertex()
+          h.symbol = 'H'
+          self.structure.add_vertex( h)
+          self.structure.add_edge( i-1, h)
         
 
   def get_number_of_hydrogens_in_hydrogen_layer( self, layer):
@@ -220,8 +222,10 @@ class inchi( plugin):
       hs = 1
     for i in range( hs):
       ai = int( chks[ i+1]) # atom index
-      h = self.structure.add_vertex( atom( symbol='H'))
-      self.structure.add_edge( ai, h, e=bond())
+      h = self.structure.create_vertex()
+      h.symbol = 'H'
+      self.structure.add_vertex( h)
+      self.structure.add_edge( ai, h)
       
       
 

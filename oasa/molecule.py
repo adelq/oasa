@@ -51,7 +51,9 @@ class molecule( graph.graph):
   def add_missing_hydrogens( self):
     for v in copy.copy( self.vertices):
       for i in range( v.get_free_valency()):
-        h = self.add_vertex( v=self.vertex_class( symbol='H'))
+        h = self.create_vertex()
+        h.symbol = 'H'
+        self.add_vertex( h)
         self.add_edge( h, v)
 
 
@@ -310,10 +312,14 @@ class molecule( graph.graph):
     vs = f.readline()
     for i in vs.split(' '):
       if i != '\n':
-        self.add_vertex( v=self.vertex_class( symbol=i))
+        v = self.create_vertex()
+        v.symbol = i
+        self.add_vertex( v)
     for l in f.readlines():
       o, a, b = l.split(' ')
-      self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=self.edge_class( order=int(o)))
+      e = self.create_edge()
+      e.order = int( o)
+      self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=e)
     f.close()
 
 

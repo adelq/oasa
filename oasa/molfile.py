@@ -19,8 +19,7 @@
 
 from plugin import plugin
 from molecule import molecule
-from atom import atom
-from bond import bond
+
 
 
 class molfile( plugin):
@@ -69,7 +68,10 @@ class molfile( plugin):
     mass_diff = read_molfile_value( file, 2)
     charge, multi = self._read_molfile_charge( read_molfile_value( file, 3, conversion=int))
     file.readline() # next line please
-    ret = atom( coords = (x,y,z), charge=charge, symbol=symbol)
+    ret = self.structure.create_vertex()
+    ret.coords = (x,y,z)
+    ret.charge = charge
+    ret.symbol = symbol
     ret.multiplicity = multi
     return ret
 
@@ -81,7 +83,10 @@ class molfile( plugin):
     type_remap = { 0: 'n', 1: 'w', 6: 'h', 4: 'a'}
     type = type_remap[ type]
     file.readline() # next line please
-    return bond( order=order, type=type), a1, a2
+    b = self.structure.create_edge()
+    b.order = order
+    b.type = type
+    return b, a1, a2
 
   def write_file( self, file):
     """file should be a writable file object"""

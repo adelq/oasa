@@ -19,8 +19,6 @@
 
 from plugin import plugin
 from molecule import molecule, equals
-from atom import atom
-from bond import bond
 import periodic_table as PT
 
 import re
@@ -76,32 +74,38 @@ class smiles( plugin):
           symbol = c.upper()
         else:
           symbol = c
-        a = atom( symbol=symbol)
+        a = mol.create_vertex()
+        a.symbol = symbol
         mol.add_vertex( a)
         if last_bond and not (not is_small_text.match( c) and last_bond.aromatic):
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
-          mol.add_edge( last_atom, a, e=bond())
+          mol.add_edge( last_atom, a)
         last_atom = a
         if is_small_text.match( c):
           # aromatic bond
-          last_bond = bond( order=4, type='n')
+          last_bond = mol.create_edge()
+          last_bond.order = 4
+          last_bond.type = 'n'
           last_atom.properties_['aromatic'] = 1  #we need this bellow
         else:
           last_bond = None
       # bond
       elif c in '-=#:.':
         order = self.smiles_to_oasa_bond_recode[ c]
-        type = 'n'
-        last_bond = bond( order=order, type=type)
+        last_bond = mol.create_edge()
+        last_bond.order = order
+        last_bond.type = 'n'
       # ring closure
       elif is_numer.match( c):
-        b = last_bond or bond()
+        b = last_bond or mol.create_edge()
         if c in numbers:
           mol.add_edge( last_atom, numbers[c], e=b)
           if 'aromatic' in last_atom.properties_:
-            last_bond = bond( order=4, type='n')
+            last_bond = mol.create_edge()
+            last_bond.order = 4
+            last_bond.type = 'n'
           else:
             last_bond = None
         else:
