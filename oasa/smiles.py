@@ -21,6 +21,8 @@ from plugin import plugin
 from molecule import molecule, equals
 import periodic_table as PT
 
+from config import Config
+
 import re
 from sets import Set
 import operator
@@ -56,7 +58,7 @@ class smiles( plugin):
     return self.structure
 
   def read_smiles( self, text):
-    mol = molecule()
+    mol = Config.create_molecule()
     is_text = re.compile("^[A-Z][a-z]?$")
     is_small_text = re.compile( '^[a-z]')
     is_numer = re.compile("[0-9]")

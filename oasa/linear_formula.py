@@ -23,7 +23,7 @@ import re
 from periodic_table import periodic_table
 import coords_generator
 import misc
-from known_groups import name_to_linear
+from known_groups import name_to_smiles
 import smiles
 
 
@@ -37,6 +37,7 @@ class linear_formula( object):
 
 
   def parse_text( self, text, valency=0, mol=None):
+    text = self.expand_abbrevs( text)
     mol = self.parse_form(  text, valency=valency, mol=mol)
     if mol:
       self.molecule = mol
@@ -63,10 +64,8 @@ class linear_formula( object):
 
 
   def parse_form( self, text, valency=0, mol=None):
-    is_formula = re.compile("^(([A-Z][a-z]?[0-9]*[+-]?)|\(|\)[0-9]?)*$")
     form = text
-    if not is_formula.match( form):
-      return None
+
 
     # the code itself
     if not mol:
@@ -81,8 +80,7 @@ class linear_formula( object):
       last_atom = None
 
     # check if there are branches in the formula
-    branching = re.split( "\(|\)([0-9]?)", form)
-    if len( branching) == 1:
+    if "(" not in form:
       # there are no subbranches
       chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
       for chunk in chunks:
@@ -99,21 +97,28 @@ class linear_formula( object):
               b.order = max_val
               mol.add_edge( last_atom, a, b)
     else:
-      if len( branching) % 2:
-        branching.append( '')
-      for i in range( 0, len( branching), 2):
-        chunk = branching[i]
+      for chunk, count in gen_formula_fragments( form):
         if chunk:
-          rep = branching[i+1] and int( branching[i+1]) or 1
           last_atom = self.get_last_free_atom( mol)
 
-          for j in range( rep):
-            m = self.parse_form( chunk, valency=1, mol=mol.create_graph())
+          for j in range( count):
+            if chunk[0] == "!":
+              # the form should be a smiles
+              m = smiles.text_to_mol( chunk[1:], calc_coords=0)
+              m.add_missing_hydrogens()
+              hs = [v for v in m.vertices[0].neighbors if v.symbol == 'H']
+              m.disconnect( hs[0], m.vertices[0])
+              m.remove_vertex( hs[0])
+              smile = True
+            else:
+              m = self.parse_form( chunk, valency=1, mol=mol.create_graph())
+              smile = False
             if not last_atom:
               mol.insert_a_graph( m) 
             else:
-              m.remove_vertex( m.vertices[0]) # remove the dummy
-              mol.insert_a_graph( m) 
+              if not smile:
+                m.remove_vertex( m.vertices[0]) # remove the dummy
+              mol.insert_a_graph( m)
               b = mol.create_edge()
               mol.add_edge( last_atom, m.vertices[0], b)
                           
@@ -149,15 +154,75 @@ class linear_formula( object):
     # if its not the case
     for i, a in enumerate( atoms[0:-1]):
       b = a.get_edge_leading_to( atoms[i+1])
-      if b.order > 1:
+      if b and b.order > 1:
         b.order -= 1
         return a
     # well, we cannot do anything else
     return atoms[-1]
 
 
-## #form = 'OCH(COOCH3)2'
-## form = "CH2Cl"
+  def expand_abbrevs( self, text):
+    for key, val in name_to_smiles.iteritems():
+      text = text.replace( key, "(!%s)" % val)
+    return text
+
+
+def gen_formula_fragments( formula):
+  chunks = list( gen_formula_fragments_helper( formula))
+  i = 0
+  while i < len( chunks):
+    chunk, brack = chunks[ i]
+    if brack and i < len( chunks) - 1:
+      next, nbrack = chunks[i+1]
+      if not nbrack:
+        try:
+          count = int( next)
+        except ValueError:
+          yield chunk, 1
+        else:
+          i += 1
+          yield chunk, count
+      else:
+        yield chunk, 1
+    else:
+      yield chunk, 1
+    i += 1
+
+
+def gen_formula_fragments_helper( formula):
+  opened_brackets = 0
+  to_ret = []
+  for ch in formula:
+    if ch not in "()":
+      to_ret.append( ch)
+    elif ch == "(":
+      if opened_brackets == 0:
+        if to_ret:
+          yield ''.join( to_ret), False
+          to_ret = []
+      else:
+        to_ret.append( "(")
+      opened_brackets += 1
+    elif ch == ")":
+      opened_brackets -= 1
+      if opened_brackets == 0:
+        if to_ret:
+          yield ''.join( to_ret), True
+          to_ret = []
+      else:
+        to_ret.append( ")")
+  if to_ret:
+    yield ''.join( to_ret), False
+
+          
+
+
+
+## form = 'CH(COOPh)2'
+
+## print [i for i in gen_formula_fragments( form)]
+
+## #form = "CH2Cl"
 
 ## a = linear_formula( form , valency=1)
 ## m = a.molecule
@@ -170,3 +235,6 @@ class linear_formula( object):
 ## print smiles.mol_to_text( m)
 
 ## #coords_generator.show_mol( m)
+
+
+#print [i for i in gen_formula_fragments( "CO(OH)2")]
