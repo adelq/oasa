@@ -412,9 +412,9 @@ class graph:
     return map( self.edge_subgraph_to_vertex_subgraph, ecycles)
 
   def mark_vertices_with_distance_from( self, v):
+    """returns the maximum d"""
     self.clean_distance_from_vertices()
-    v.properties_['d'] = 0
-    self._mark_vertices_with_distance_from( v)
+    return self._mark_vertices_with_distance_from( v)
 
   def clean_distance_from_vertices( self):
     for i in self.vertices:
@@ -422,6 +422,27 @@ class graph:
         del i.properties_['d']
       except KeyError:
         pass
+
+
+  def get_diameter( self):
+    diameter = 0
+    best = None
+    best_path = None
+    for v in self.vertices:
+      dist = self.mark_vertices_with_distance_from( v)
+      if dist > diameter:
+        diameter = dist
+        best = v
+        end = [x for x in self.vertices if x.properties_['d'] == dist][0]
+        best_path = get_path_down_to( end, v)
+    print best
+    print "path"
+    best_path.reverse()
+    for v in best_path:
+      print v
+    return diameter
+
+
 
   def vertex_subgraph_to_edge_subgraph( self, cycle):
     ret = Set()
@@ -508,6 +529,35 @@ class graph:
     return out
 
 
+  ## STATIC METHODS
+
+##   def get_random_longest_path_numbered( self, start):
+##     """vertices have to be freshly marked with distance"""
+##     now = start
+##     path = []
+##     d = 0
+##     while now:
+##       d += 1
+##       path.append( now)
+##       ns = [v for v in now.neighbors if 'd' in v.properties_ and v.properties_['d'] == d]
+##       if ns:
+##         now = ns[0]
+##       else:
+##         now = None
+##     return path
+
+##   get_random_longest_path_numbered = classmethod( get_random_longest_path_numbered)
+
+
+##   def get_random_longest_path( self, start):
+##     self.mark_vertices_with_distance_from( start)
+##     return self.get_random_longest_path_numbered( start)
+
+##   get_random_longest_path = classmethod( get_random_longest_path)
+
+
+
+
   # PRIVATE METHODS
 
   def _get_vertex_index( self, v):
@@ -531,15 +581,24 @@ class graph:
       self.add_edge( self.vertices[int(a)], self.vertices[int(b)])
     f.close()
 
+
   def _mark_vertices_with_distance_from( self, v):
-    d = v.properties_['d']
-    to_mark = []
-    for i in v.get_neighbors():
-      if 'd' not in i.properties_ or i.properties_['d'] > d+1:
-        i.properties_['d'] = d+1
-        to_mark.append( i)
-    for i in to_mark:
-      self._mark_vertices_with_distance_from( i)
+    """returns the maximum d"""
+    d = 0
+    to_mark = Set([v])
+    while to_mark:
+      to_mark_next = Set()
+      for i in to_mark:
+        i.properties_['d'] = d
+        for j in i.get_neighbors():
+          if 'd' not in j.properties_:
+            to_mark_next.add( j)
+
+      to_mark = to_mark_next
+      d += 1
+
+    return d-1
+
 
   def _get_some_cycles( self):
     if len( self.vertices) <= 2:

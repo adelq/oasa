@@ -28,7 +28,7 @@ class edge:
     self.properties_ = {}
 
   def __str__( self):
-    return "edge between %s %s" % map( str, self.vertices)
+    return "edge between %s %s" % tuple( map( str, self.vertices))
 
   def set_vertices( self, vs=[]):
     if vs and len( vs) == 2:
