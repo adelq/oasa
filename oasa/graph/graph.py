@@ -310,7 +310,7 @@ class graph:
       while j < len( ecycles):
         if j != i:
           p = (ecycles[i] & ecycles[j]) 
-          if p and not (vcycles[j] <= vcycles[i]) and not (vcycles[i] <= vcycles[j]) and self.is_path( p):
+          if p and not (vcycles[j] <= vcycles[i]) and not (vcycles[i] <= vcycles[j]) and self.defines_connected_subgraph_e( p):
             new = ecycles[i] ^ ecycles[j]
             if new and new not in ecycles:
               vnew = self.edge_subgraph_to_vertex_subgraph( new)
@@ -364,9 +364,14 @@ class graph:
       sub.add_edge( i1, i2)
     return sub
 
-  def is_path( self, edges):
+  def defines_connected_subgraph_e( self, edges):
     sub = self.get_new_induced_subgraph( self.edge_subgraph_to_vertex_subgraph( edges), edges)
     return sub.is_connected()
+
+  def defines_connected_subgraph_v( self, vertices):
+    sub = self.get_new_induced_subgraph( vertices, self.vertex_subgraph_to_edge_subgraph( vertices))
+    return sub.is_connected()
+  
 
   def find_path_between( self, start, end, dont_go_through=[]):
     """finds path between two vertices, if dont_go_through is given (as a list of vertices and edges),

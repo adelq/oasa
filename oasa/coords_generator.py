@@ -31,45 +31,84 @@ class coords_generator:
     self.bond_length = bond_length
 
   def calculate_coords( self, mol, bond_length=0):
-    # at first we create a backbone, it is either one of the rings or
-    # the longest chain in case of acyclic molecule
-    self.mol = mol
-    bond_length = bond_length or self.bond_length
+    """the bond_length (when given is set to self.bond_length,
+    if bond_length == -1 we suppose that there is already part of the molecule containing
+    coords and we calculate the bond_length from it"""
     processed = []
-    if mol.contains_cycle():
-      # ring
+    self.mol = mol
+    # at first we have a look if there is already something with coords
+    as = [a for a in mol.vertices if a.x != None and a.y != None]
+    # the we check if they are in a continuos block but not the whole molecule
+    # (in this case we regenerate all the coords)
+    if as and not len( as) == len( mol.vertices):
+      # this is here just to setup the molecule well
       self.rings = mol.get_smallest_independent_cycles()
-      # find the most crowded ring
-      jmax = 0
-      imax = 0
-      for i, ring in enumerate( self.rings):
-        j = 0
-        for r in self.rings:
-          if r != ring and r & ring:
-            j += 1
-        if j > jmax:
-          jmax = j
-          imax = i
-      #
-      backbone = self.rings.pop(imax)
-      gcoords = gen_ring_coords( len( backbone), side_length=self.bond_length)
-      for v in mol.sort_vertices_in_path( backbone):
-        v.x, v.y = gcoords.next()
-      processed += backbone
-      processed += self.process_all_anelated_rings( backbone)
+      # it is - we can use it as backbone
+      sub = mol.get_new_induced_subgraph( as, mol.vertex_subgraph_to_edge_subgraph( as))
+      subs = [comp for comp in sub.get_connected_components()]
+      if len( subs) == 1:
+        backbone = as
+      else:
+        # we should not be here, but when yes than we have to solve it
+        maxlength = max( map( len, subs))
+        backbone = [su for su in subs if len( su) == maxlength][0]
+        # we have to set the coords to None (for sure)
+        for sub in subs:
+          if sub != backbone:
+            for a in sub:
+              a.x = None
+              a.y = None
+      # now we check if we have to calculate bond_length from the backbone
+      if bond_length < 0:
+        bls = []
+        for b in mol.vertex_subgraph_to_edge_subgraph( backbone):
+          a1, a2 = b.vertices
+          bls.append( sqrt( (a1.x-a2.x)**2 + (a1.y-a2.y)**2))
+        self.bond_length = sum( bls) / len( bls)
+      elif bond_length == 0:
+        pass
+      else:
+        self.bond_length = bond_length
     else:
-      # chain
-      self.rings = []
-      backbone = mol.find_longest_mostly_carbon_chain()
-      angles = gen_angle_stream( -30, start_from=30, alternate=1)
-      dcoords = gen_coords_from_deg_stream( angles, length=self.bond_length)
-      x, y = 0, 0
-      for v in backbone:
-        v.x = x
-        v.y = y
-        dx, dy = dcoords.next()
-        x += dx
-        y += dy
+      if bond_length > 0:
+        # here we must have bond_length > 0
+        self.bond_length = bond_length
+      # we create a backbone, it is either one of the rings or
+      # the longest chain in case of acyclic molecule
+      if mol.contains_cycle():
+        # ring
+        self.rings = mol.get_smallest_independent_cycles()
+        # find the most crowded ring
+        jmax = 0
+        imax = 0
+        for i, ring in enumerate( self.rings):
+          j = 0
+          for r in self.rings:
+            if r != ring and r & ring:
+              j += 1
+          if j > jmax:
+            jmax = j
+            imax = i
+        #
+        backbone = self.rings.pop(imax)
+        gcoords = gen_ring_coords( len( backbone), side_length=self.bond_length)
+        for v in mol.sort_vertices_in_path( backbone):
+          v.x, v.y = gcoords.next()
+        processed += backbone
+        processed += self.process_all_anelated_rings( backbone)
+      else:
+        # chain
+        self.rings = []
+        backbone = mol.find_longest_mostly_carbon_chain()
+        angles = gen_angle_stream( -30, start_from=30, alternate=1)
+        dcoords = gen_coords_from_deg_stream( angles, length=self.bond_length)
+        x, y = 0, 0
+        for v in backbone:
+          v.x = x
+          v.y = y
+          dx, dy = dcoords.next()
+          x += dx
+          y += dy
     processed += backbone
     self._continue_with_the_coords( mol, processed=processed)
 
@@ -371,7 +410,7 @@ def show_mol( mol):
 
   dx = xmax-xmin
   dy = ymax-ymin
-  print "dx", dy, ymax, ymin
+  #print "dx", dy, ymax, ymin
   range = min( (600.0/dx, 450.0/dy))/2
   xp = 640-range*dx
   yp = 480-range*dy
@@ -403,8 +442,9 @@ if __name__ == '__main__':
   import smiles
   from molecule import molecule
 
+  sm = "CCC"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
+  #sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
   #sm = 'CCCC(C)(CCC)CCC(Cl)C(CCCCC)CCC(C)CCC'
 
   print "oasa::coords_generator DEMO"
@@ -416,7 +456,7 @@ if __name__ == '__main__':
   import time
   cg = coords_generator()
   t = time.time()
-  cg.calculate_coords( mol)
+  cg.calculate_coords( mol, bond_length=-1)
   print "generation time: %.3f ms" % ((time.time()-t)*1000)
 
   show_mol( mol)
