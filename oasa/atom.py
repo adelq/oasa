@@ -86,16 +86,17 @@ class atom( graph.vertex):
 
   # symbol
   def _set_symbol( self, symbol):
-    if symbol == "X":
-      # support for X as a dummy atom
-      self.valency = 1
-      self.symbol_number = 0
-    else:
-      try:
-        self.valency = PT.periodic_table[ symbol]['valency'][0]
-        self.symbol_number = PT.periodic_table[ symbol]['ord']
-      except KeyError:
-        warn( "wrong atom symbol %s" % symbol)
+##     if symbol == "X":
+##       # support for X as a dummy atom
+##       self.valency = 1
+##       self.symbol_number = 0
+##     else:
+    try:
+      self.valency = PT.periodic_table[ symbol]['valency'][0]
+      self.symbol_number = PT.periodic_table[ symbol]['ord']
+    except KeyError:
+      raise ValueError, "wrong atom symbol %s" % symbol
+      #warn( "wrong atom symbol %s" % symbol)
     self._symbol = symbol
 
   def _get_symbol( self):
@@ -106,7 +107,6 @@ class atom( graph.vertex):
 
   # valency
   def _set_valency( self, valency):
-    print valency
     self._valency = valency
 
   def _get_valency( self):

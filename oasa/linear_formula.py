@@ -42,6 +42,10 @@ class linear_formula( object):
     if mol:
       self.molecule = mol
 
+      # are there any atoms?
+      if not self.molecule.vertices:
+        return None
+      
       # now we check if the structure is complete
       for v in self.molecule.vertices:
         if v.free_valency:
@@ -49,6 +53,10 @@ class linear_formula( object):
 
       if valency:
         self.molecule.remove_vertex( self.molecule.vertices[0]) # remove the dummy
+
+      # are there any atoms, again?
+      if not self.molecule.vertices:
+        return None
 
       self.molecule.remove_all_hydrogens()
       return self.molecule
@@ -81,6 +89,8 @@ class linear_formula( object):
       for chunk in chunks:
         if chunk:
           as = self.chunk_to_atoms( chunk, mol)
+          if as == None:
+            return None
           for a in as:
             last_atom = self.get_last_free_atom( mol)
             mol.add_vertex( a)
@@ -121,7 +131,11 @@ class linear_formula( object):
     ret = []
     for i in range( number):
       v = mol.create_vertex()
-      v.symbol = name
+      try:
+        v.symbol = name
+      except ValueError:
+        # wrong atom symbol
+        return None
       v.charge = sign
       ret.append( v)
     return ret
@@ -140,7 +154,7 @@ class linear_formula( object):
         b.order -= 1
         return a
     # well, we cannot do anything else
-    return a
+    return atoms[-1]
 
 
 ## #form = 'OCH(COOCH3)2'

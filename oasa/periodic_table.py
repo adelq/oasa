@@ -49,22 +49,22 @@ periodic_table = {
   "Ar": {"weight": 39.95 , 'ord':  18, "valency": (0,2)},
   "K":  {"weight": 39.102, 'ord':  19, "valency": (1,)},
   "Ca": {"weight": 40.80 , 'ord':  20, "valency": (2,)},
-  "Sc": {"weight": 44.96 , 'ord':   1, "valency": (3,1)},
-  "Ti": {"weight": 47.90 , 'ord':   1, "valency": (4,3)},
-  "V":  {"weight": 50.94 , 'ord':   1, "valency": (2,4,5)},
-  "Cr": {"weight": 52.00 , 'ord':   1, "valency": (2,3,6)},
-  "Mn": {"weight": 54.94 , 'ord':   1, "valency": (2,3,4,6,7)},
-  "Fe": {"weight": 55.85 , 'ord':   1, "valency": (2,3)},
-  "Co": {"weight": 58.93 , 'ord':   1, "valency": (2,3)},
-  "Ni": {"weight": 58.70 , 'ord':   1, "valency": (2,3)},
-  "Cu": {"weight": 63.54 , 'ord':   1, "valency": (2,1)},
-  "Zn": {"weight": 65.38 , 'ord':   1, "valency": (2,)},
-  "Ga": {"weight": 69.72 , 'ord':   1, "valency": (3,)},
-  "Ge": {"weight": 72.59 , 'ord':   1, "valency": (4,)},
-  "As": {"weight": 74.92 , 'ord':   1, "valency": (3,5)},
-  "Se": {"weight": 78.96 , 'ord':   1, "valency": (2,4,6)},
-  "Br": {"weight": 79.909, 'ord':   1, "valency": (1,5)},
-  "Kr": {"weight": 83.80 , 'ord':   1, "valency": (0,2)},
+  "Sc": {"weight": 44.96 , 'ord':  21, "valency": (3,1)},
+  "Ti": {"weight": 47.90 , 'ord':  22, "valency": (4,3)},
+  "V":  {"weight": 50.94 , 'ord':  23, "valency": (2,4,5)},
+  "Cr": {"weight": 52.00 , 'ord':  24, "valency": (2,3,6)},
+  "Mn": {"weight": 54.94 , 'ord':  25, "valency": (2,3,4,6,7)},
+  "Fe": {"weight": 55.85 , 'ord':  26, "valency": (2,3)},
+  "Co": {"weight": 58.93 , 'ord':  27, "valency": (2,3)},
+  "Ni": {"weight": 58.70 , 'ord':  28, "valency": (2,3)},
+  "Cu": {"weight": 63.54 , 'ord':  29, "valency": (2,1)},
+  "Zn": {"weight": 65.38 , 'ord':  30, "valency": (2,)},
+  "Ga": {"weight": 69.72 , 'ord':  31, "valency": (3,)},
+  "Ge": {"weight": 72.59 , 'ord':  32, "valency": (4,)},
+  "As": {"weight": 74.92 , 'ord':  33, "valency": (3,5)},
+  "Se": {"weight": 78.96 , 'ord':  34, "valency": (2,4,6)},
+  "Br": {"weight": 79.909, 'ord':  35, "valency": (1,5)},
+  "Kr": {"weight": 83.80 , 'ord':  36, "valency": (0,2)},
   "Rb": {"weight": 85.47 , 'ord':   1, "valency": (1,)},
   "Sr": {"weight": 87.62 , 'ord':   1, "valency": (2,)},
   "Y":  {"weight": 88.91 , 'ord':   1, "valency": (3,)},
@@ -199,6 +199,8 @@ class formula_dict( dict):
 
   def read_formula_string( self, form):
     is_formula = re.compile("^([A-Z][a-z]?[0-9]*)*$")
+    #form = "".join( form.split("."))
+    form = form.replace( ".", "")
     if not is_formula.match( form):
       return None
     chunks = re.split( "([A-Z][a-z]*)", form)

@@ -216,7 +216,7 @@ def file_to_mol( f):
   return m.structure
 
 def text_to_mol( text):
-  file_to_mol( StringIO( text))
+  return file_to_mol( StringIO( text))
 
 #
 ##################################################
