@@ -77,6 +77,10 @@ class coords_generator:
         if backbone >= ring:
           self.rings.remove( ring)
     else:
+      if force:
+        for a in self.mol:
+          a.x = None
+          a.y = None
       if bond_length > 0:
         # here we must have bond_length > 0
         self.bond_length = bond_length

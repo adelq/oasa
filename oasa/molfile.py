@@ -222,3 +222,30 @@ def text_to_mol( text):
 ##################################################
   
 
+if __name__ == "__main__":
+
+  import sys
+
+  if len( sys.argv) < 1:
+    print "you must supply a filename"
+    sys.exit()
+
+  # parsing of the file
+
+  file_name = sys.argv[1]
+  f = file( file_name, 'r')
+  mol = file_to_mol( f)
+  f.close()
+
+  for a in  mol.atoms:
+    print a.x, a.y
+
+  import time
+
+  t = time.time()
+  lens = map( len, mol.get_all_cycles())
+  lens.sort()
+  print lens
+  print time.time() -t 
+  print "total %d rings" % len( lens)
+  print mol

@@ -56,7 +56,7 @@ class atom( graph.vertex):
     if len( coords) == 2:
       self.x, self.y = coords
     elif len( coords) == 3:
-      self.x, self.y, self.z = coords      
+      self.x, self.y, self.z = coords
     else:
       raise "wrong number of coordinates"
 

@@ -53,8 +53,8 @@ class graph:
   def copy( self):
     """provides a really shallow copy, the vertex and edge objects will remain the same,
     only the graph itself is different"""
-    clazz = self.__class__
-    c = clazz( vertices= copy.copy( self.vertices))
+    c = self.create_graph()
+    c.vertices = copy.copy( self.vertices)
     for e in self.edges:
       i, j = e.get_vertices()
       c.add_edge( i, j, e)
@@ -63,7 +63,7 @@ class graph:
   def deep_copy( self):
     """provides a deep copy of the graph. The result is an isomorphic graph,
     all the used objects are different"""
-    c = self.__class__()
+    c = self.create_graph()
     for v in self.vertices:
       c.add_vertex()
     for e in self.edges:
@@ -76,6 +76,9 @@ class graph:
 
   def create_edge( self):
     return self.edge_class()
+
+  def create_graph( self):
+    return self.__class__()
   
 
   ## MODIFICATION METHODS
@@ -144,9 +147,10 @@ class graph:
 
 
   def disconnect_edge( self, e):
+    self.edges.remove( e)
     v1, v2 = e.get_vertices()
-    self.disconnect( v1, v2)
-
+    v1.remove_edge_and_neighbor( e)
+    v2.remove_edge_and_neighbor( e)
 
 
   def remove_vertex( self, v):
@@ -281,9 +285,9 @@ class graph:
       out.append( self.get_induced_subgraph_from_vertices( vs))
     return out
 
-  def get_induced_subgraph_from_vertices( self, vs, empty_graph = None):
+  def get_induced_subgraph_from_vertices( self, vs):
     """it creates a new graph, however uses the old vertices and edges!"""
-    g = empty_graph or self.__class__()
+    g = self.create_graph()
     for v in vs:
       g.add_vertex( v)
     for e in self.edges:
@@ -321,7 +325,63 @@ class graph:
   def get_smallest_cycles2( self):
     return list( filter_off_dependent_cycles( self.get_all_cycles()))
 
+
+  def get_all_cycles_e( self):
+    """returns all cycles found in the graph as sets of edges"""
+    to_go = Set( self.vertices)
+    for v in self.vertices:
+      if v.degree == 1:
+        to_go.remove( v)
+    all_cycles = []
+    removed = Set( to_go)
+    while to_go:
+      while removed:
+        new_removed = Set()
+        for v in removed:
+          for n in v.neighbors:
+            if n in to_go and n.degree == 2:
+              new_removed.add( n)
+              to_go.remove( n)
+        removed = new_removed
+      if to_go:
+        v = to_go.pop()
+        removed = Set([v])
+        cycles = self._get_cycles_for_vertex( v, to_reach=v)
+        all_cycles += cycles
+    all_cycles = Set( map( ImSet, all_cycles))
+    return all_cycles
+
+
+  def _get_cycles_for_vertex( self, v, to_reach=None, processed=Set()):
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if neigh == to_reach and len( processed) > 1:
+        return [Set( [e])]
+    all_cycles = []
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if neigh not in processed:
+        p = Set([v]) | processed
+        cycles = self._get_cycles_for_vertex( neigh, to_reach=to_reach, processed=p)
+        if cycles:
+          for cycle in cycles:
+            cycle.add( e)
+        all_cycles += cycles
+    return all_cycles
+
+
+
+
   def get_all_cycles( self):
+    """returns all cycles found in the graph as sets of vertices,
+    use get_all_cycles_e to get the edge variant, which is better for building new
+    graphs as the mapping edges => vertices is unambiguous, while edges=>vertices=>edges might
+    include some more edges"""
+    return map( self.edge_subgraph_to_vertex_subgraph, self.get_all_cycles_e())
+
+
+      
+
+
+  def get_all_cycles_old( self):
     """takes all the smallest independent cycles found and combines them to provide
     the bigger dependent cycles. Warning - is relatively time consuming for fused cycles
     that give rise to many possible combinations"""
@@ -345,7 +405,8 @@ class graph:
         j += 1
       i += 1
     #print " %.2f ms - all rings search" % (1000*(time.time() - t1))
-    return vcycles
+    ecycles = Set( map( ImSet, ecycles))
+    return map( self.edge_subgraph_to_vertex_subgraph, ecycles)
 
   def mark_vertices_with_distance_from( self, v):
     self.clean_distance_from_vertices()
@@ -378,7 +439,7 @@ class graph:
   def get_new_induced_subgraph( self, vertices, edges):
     """returns a induced subgraph that is newly created and can be therefore freely
     changed without worry about the original."""
-    sub = self.__class__()
+    sub = self.create_graph()
     r1, r2 = [], []
     for v in vertices:
       r1.append( v)

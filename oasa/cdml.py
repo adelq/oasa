@@ -139,10 +139,18 @@ if __name__ == '__main__':
 
   file_name = sys.argv[1]
   f = file( file_name, 'r')
-
   mol = file_to_mol( f)
-  for ring in mol.get_all_cycles():
-    print len( ring)
+  f.close()
+
+  import time
+
+  t = time.time()
+  lens = map( len, mol.get_all_cycles())
+  lens.sort()
+  print lens
+  print time.time() -t 
+  print "total %d rings" % len( lens)
+
 ##     mring = mol.get_new_induced_subgraph( ring, mol.vertex_subgraph_to_edge_subgraph( ring))
 ##     if not mring.is_connected():
 ##       print map( len, [a for a in mring.get_connected_components()])
@@ -157,7 +165,5 @@ if __name__ == '__main__':
   #for a in mol.vertices:
   #  print a.x, a.y
 
-  f.close()
-
   print mol
-  print smiles.mol_to_text( mol)
+  #print smiles.mol_to_text( mol)

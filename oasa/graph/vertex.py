@@ -23,7 +23,7 @@
 from sets import Set
 
 
-class vertex:
+class vertex( object):
   """simple vertex class, normaly would not be needed but it can speed up many analytical tasks
   to store data directly in vertex and not get them from the graph connectivity matrix.
   vertex has a value attribute used to store arbitrary object"""
@@ -50,6 +50,13 @@ class vertex:
       del self._neighbors[ to_del]
     else:
       raise "cannot remove non-existing neighbor"
+
+  def remove_edge_and_neighbor( self, e):
+    if e in self._neighbors.keys():
+      del self._neighbors[ e]
+    else:
+      raise "cannot remove non-existing edge", e
+
 
   def get_neighbors( self):
     return self._neighbors.values()
