@@ -35,6 +35,7 @@ import coords_generator
 import molfile
 import inchi
 import cdml
+import config
 
 atom = atom.atom
 molecule = molecule.molecule

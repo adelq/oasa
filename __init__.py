@@ -17,10 +17,11 @@
 
 #--------------------------------------------------------------------------
 
-import sys
-import oasa
+#import sys
+from oasa import *
 
 #print dir( oasa)
 
-sys.modules['oasa'] = oasa
+#sys.modules['oasa'] = oasa
+
 

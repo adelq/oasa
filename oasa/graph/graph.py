@@ -35,6 +35,10 @@ class graph:
   """provides a minimalistic graph implementation suitable for analysis of chemical problems,
   even if some care was taken to make the graph work with nonsimple graphs, there are cases where it won't!"""
 
+  vertex_class = vertex
+  edge_class = edge
+
+
   def __init__( self, vertices = []):
     if vertices:
       self.vertices = vertices
@@ -59,7 +63,7 @@ class graph:
   def deep_copy( self):
     """provides a deep copy of the graph. The result is an isomorphic graph,
     all the used objects are different"""
-    c = graph()
+    c = self.__class__()
     for v in self.vertices:
       c.add_vertex()
     for e in self.edges:
@@ -74,7 +78,7 @@ class graph:
     """adds a vertex to a graph, if v argument is not given creates a new one.
     returns None if vertex is already present or the vertex instance if successful"""
     if not v:
-      v = vertex()
+      v = self.vertex_class()
     if v not in self.vertices:
       self.vertices.append( v)
     else:
@@ -96,7 +100,7 @@ class graph:
     v1 = self.vertices[ i1]
     v2 = self.vertices[ i2]
     if not e:
-      e = edge()
+      e = self.edge_class()
     e.set_vertices( (v1,v2))
     self.edges.add( e)
     v1.add_neighbor( v2, e)
@@ -271,9 +275,9 @@ class graph:
       out.append( self.get_induced_subgraph_from_vertices( vs))
     return out
 
-  def get_induced_subgraph_from_vertices( self, vs):
+  def get_induced_subgraph_from_vertices( self, vs, empty_graph = None):
     """it creates a new graph, however uses the old vertices and edges!"""
-    g = self.__class__()
+    g = empty_graph or self.__class__()
     for v in vs:
       g.add_vertex( v)
     for e in self.edges:
@@ -323,13 +327,15 @@ class graph:
       j = i+1
       while j < len( ecycles):
         if j != i:
-          p = (ecycles[i] & ecycles[j]) 
+          p = (ecycles[i] & ecycles[j])
           if p and not (vcycles[j] <= vcycles[i]) and not (vcycles[i] <= vcycles[j]) and self.defines_connected_subgraph_e( p):
             new = ecycles[i] ^ ecycles[j]
             if new and new not in ecycles:
               vnew = self.edge_subgraph_to_vertex_subgraph( new)
-              ecycles.append( new)
-              vcycles.append( vnew)
+              ### !!! NEEDS SOME TESTING AND POSSIBLY DIFFERENT APPROACH
+              if self.defines_connected_subgraph_v( vnew):
+                ecycles.append( new)
+                vcycles.append( vnew)
         j += 1
       i += 1
     #print " %.2f ms - all rings search" % (1000*(time.time() - t1))
@@ -350,9 +356,9 @@ class graph:
   def vertex_subgraph_to_edge_subgraph( self, cycle):
     ret = Set()
     for v1 in cycle:
-      for v2 in cycle:
-        if v2 in v1.get_neighbors() and abs( v2.properties_['d']-v1.properties_['d']) <= 1:
-          ret.add( self.get_edge_between( v1, v2))
+      for (e,n) in v1.get_neighbor_edge_pairs():
+        if n in cycle:
+          ret.add( e)
     return ret
 
   def edge_subgraph_to_vertex_subgraph( self, cycle):
@@ -366,7 +372,7 @@ class graph:
   def get_new_induced_subgraph( self, vertices, edges):
     """returns a induced subgraph that is newly created and can be therefore freely
     changed without worry about the original."""
-    sub = graph()
+    sub = self.__class__()
     r1, r2 = [], []
     for v in vertices:
       r1.append( v)

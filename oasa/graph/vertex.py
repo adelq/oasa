@@ -56,6 +56,7 @@ class vertex:
     #for i in self._neighbors.itervalues():
     #  yield i
 
+
   def get_neighbor_connected_via( self, e):
     return self._neighbors[ e]
 
@@ -67,6 +68,7 @@ class vertex:
 
   def get_degree( self):
     return len( self._neighbors)
+
 
   def get_neighbors_with_distance( self, d):
     ret = []
@@ -81,3 +83,11 @@ class vertex:
 
   def get_neighbor_edges( self):
     return self._neighbors.keys()
+
+
+
+  # PROPERTIES
+
+  neighbors = property( get_neighbors, None, None, "the neighboring vertices")
+  degree = property( get_degree, None, None, "the degree of the vertex")
+  

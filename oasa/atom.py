@@ -37,6 +37,7 @@ class atom( graph.vertex):
     if symbol not in PT.periodic_table:
       raise "atom symbol '%s' not found in periodic table" % symbol
     self.symbol_number = PT.periodic_table[ self.symbol]['ord']
+    self.valency = PT.periodic_table[ self.symbol]['valency']
     self.charge = charge
     # None means not set (used)
     if coords:
@@ -45,14 +46,52 @@ class atom( graph.vertex):
       self.x = None
       self.y = None 
       self.z = None
-      
-  def __str__( self):
-    return "atom '%s'" % str( self.symbol)
+    self.multiplicity = 1
 
-  def get_symbol( self):
-    return self.symbol
 
-  def get_valency( self):
+  ## PROPERTIES
+
+  # charge
+  def _set_charge( self, charge):
+    self._charge = charge
+
+  def _get_charge( self):
+    return self._charge
+
+  charge = property( _get_charge, _set_charge, None, "atom charge")
+
+  # multiplicity
+  def _set_multiplicity( self, multiplicity):
+    self._multiplicity = multiplicity
+
+  def _get_multiplicity( self):
+    return self._multiplicity
+
+  multiplicity = property( _get_multiplicity, _set_multiplicity, None, "atom multiplicity")
+
+
+  # symbol
+  def _set_symbol( self, symbol):
+    self._symbol = symbol
+
+  def _get_symbol( self):
+    return self._symbol
+
+  symbol = property( _get_symbol, _set_symbol, None, "atom symbol")
+
+
+  # valency
+  def _set_valency( self, valency):
+    self._valency = valency
+
+  def _get_valency( self):
+    return self._valency
+
+  valency = property( _get_valency, _set_valency, None, "atoms valency")
+
+
+  # occupied_valency
+  def _get_occupied_valency( self):
     i = 0
     for b in self._neighbors.keys():
       ord = b.order
@@ -61,9 +100,26 @@ class atom( graph.vertex):
       i += ord
     return i
 
+  occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
+
+
+  # free_valency
+  def _get_free_valency( self):
+    return self.valency - self.occupied_valency
+
+  free_valency = property( _get_free_valency, None, None, "atoms free valency")
+
+
+
+
+      
+  def __str__( self):
+    return "atom '%s'" % str( self.symbol)
+
+
   def get_free_valency( self):
     """returns free valency of atom. Aromatic bonds should be localized, otherwise they are counted as simple"""
-    valency = self.get_valency()
+    valency = self.occupied_valency
     if self.symbol in PT.periodic_table:
       vals = PT.periodic_table[ self.symbol]['valency']
       for v in vals:

@@ -34,6 +34,7 @@ import string
 import os.path
 import tempfile
 import popen2
+import coords_generator
 
 
 class inchi( plugin):
@@ -77,20 +78,25 @@ class inchi( plugin):
     layers = self.split_layers( text)
     # version support (very crude)
     self.version = self._get_version( layers[0])
-    self.read_sum_layer( layers[1])
+    hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer( layers[3])
+    self.read_sum_layer( layers[1], hs_in_hydrogen_layer)
     self.read_connectivity_layer( layers[2])
     self.read_hydrogen_layer( layers[3])
     self.structure.add_missing_bond_orders()
     self.structure.remove_all_hydrogens()
 
 
-
-  def read_sum_layer( self, layer):
+  def read_sum_layer( self, layer, hs_in_hydrogen_layer):
     form = pt.formula_dict( layer)
+    processed_hs = 0 #for diborane and similar compounds we must process some Hs here
     for k in form.sorted_keys():
-      if k == 'H':
-        continue
       for i in range( form[k]):
+        if k == 'H':
+          # we want to process only the Hs that are not in the h-layer
+          if processed_hs >= form[k] - hs_in_hydrogen_layer:
+            continue
+          else:
+            processed_hs += 1
         self.structure.add_vertex( atom( symbol=k))
 
 
@@ -139,6 +145,7 @@ class inchi( plugin):
 
     chunks = re.split( ",", layer)
     chunks = filter( None, chunks)
+    hatoms = [a for a in self.structure.vertices if a.symbol=='H']
     for c in chunks:
       as, ns = re.split( "H", c)
       if '-' in as:
@@ -148,13 +155,55 @@ class inchi( plugin):
         a2 = as
       a1 = int( a1)
       a2 = int( a2)
-      ns = ns or 1
-      ns = int( ns)
+      ns = ns and int(ns) or 1
       for i in range( a1, a2+1):
         for j in range( ns):
           h = self.structure.add_vertex( atom( symbol='H'))
           self.structure.add_edge( i-1, h, e=bond())
         
+
+  def get_number_of_hydrogens_in_hydrogen_layer( self, layer):
+    # version check
+    if self.version[0] >= 1 and self.version[1] > 11:
+      if layer[0] != 'h':
+        print "missing layers specifier at the begining of the string"
+      else:
+        layer = layer[1:]
+
+    ret = 0
+
+    re_for_brackets = "\([H\d,]+?\)"
+    brackets = re.findall( re_for_brackets, layer)
+    for bracket in brackets:
+      ret += self._get_hs_in_moving_hydrogen( bracket[1:-1])
+    layer = re.sub( re_for_brackets, "", layer)  # clean the brackets out
+
+    chunks = re.split( ",", layer)
+    chunks = filter( None, chunks)
+    for c in chunks:
+      as, ns = re.split( "H", c)
+      if '-' in as:
+        a1, a2 = re.split( '-', as)
+      else:
+        a1 = as
+        a2 = as
+      a1 = int( a1)
+      a2 = int( a2)
+      ns = ns and int(ns) or 1
+      for i in range( a1, a2+1):
+        ret += ns
+
+    return ret
+
+
+  def _get_hs_in_moving_hydrogen( self, chunk):
+    chks = chunk.split( ',')
+    if len( chks[0]) > 1:
+      hs = int( chks[0][1:])  # number of atoms
+    else:
+      hs = 1
+    return hs
+    
 
 
   def _get_version( self, ver):
@@ -220,15 +269,17 @@ def generate_inchi( m):
 reads_text = 1
 reads_files = 1
 writes_text = 1
-writes_files = 0
+writes_files = 1
 
-def text_to_mol( text, include_hydrogens=False, mark_aromatic_bonds=False):
+def text_to_mol( text, include_hydrogens=False, mark_aromatic_bonds=False, calc_coords=1):
   inc = inchi()
   inc.read_inchi( text)
   mol = inc.structure
   #mol.add_missing_bond_orders()
   #if not include_hydrogens:
   #  mol.remove_all_hydrogens()
+  if calc_coords:
+    coords_generator.calculate_coords( mol)
   if mark_aromatic_bonds:
     mol.mark_aromatic_bonds()
 
@@ -270,7 +321,10 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H"
+  #inch = "1.12Beta/C18H36N2O6/c1-7-21-13-14-24-10-4-20-5-11-25-17-15-22-8-2-19(1)3-9-23-16-18-26-12-6-20/h1-18H2"
+  inch = "1.12Beta/C8H8/c1-2-5-3(1)7-4(1)6(2)8(5)7/h1-8H"
+  #inch = '1.12Beta/C3H4O2/c1-2-4-6-5-3-1/h1-3H' #1.12Beta/B2H6/c1-3-2-4-1/h1-2H2'
+  #inch = "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch

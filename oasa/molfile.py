@@ -67,9 +67,11 @@ class molfile( plugin):
     read_molfile_value( file, 1) # empty space
     symbol = read_molfile_value( file, 3)
     mass_diff = read_molfile_value( file, 2)
-    charge = read_molfile_value( file, 3, conversion=int)
+    charge, multi = self._read_molfile_charge( read_molfile_value( file, 3, conversion=int))
     file.readline() # next line please
-    return atom( coords = (x,y,z), charge=charge, symbol=symbol)
+    ret = atom( coords = (x,y,z), charge=charge, symbol=symbol)
+    ret.multiplicity = multi
+    return ret
 
   def _read_bond( self, file):
     a1 = read_molfile_value( file, 3, conversion=int) -1 # molfiles index from 1
@@ -133,7 +135,7 @@ class molfile( plugin):
     z = a.get_z()
     symbol = a.symbol
     mass_diff = 0
-    charge = a.charge
+    charge = self._get_molfile_charge( a.charge, a.multiplicity)
     rest = "  0  0  0  0  0  0  0  0  0  0"
     #            1    2     3     4  5  6 7
     return "%10.4f%10.4f%10.4f %-3s%2d%3d%s" % (x,y,z,symbol,mass_diff,charge,rest)
@@ -148,6 +150,23 @@ class molfile( plugin):
     rest = "  0  0  0"
     #         1  2  3  4 5
     return "%3d%3d%3d%3d%s" % (a1,a2,order,type,rest)
+
+
+  def _read_molfile_charge( self, value):
+    if value == 0:
+      return (0,1)
+    ch = -(value-4)
+    multi = ch == 0 and 2 or 1
+    return (ch, multi)
+
+  def _get_molfile_charge( self, charge, multiplicity):
+    if charge == 0:
+      if multiplicity == 1:
+        return 0
+      else:
+        return 4
+    else:
+      return 4-charge
 
 
 def read_molfile_value( file, length, strip=1, conversion=None):

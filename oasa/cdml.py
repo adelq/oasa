@@ -72,13 +72,21 @@ def read_cdml( text):
       break
 
     for bond_el in xpath.Evaluate( "bond", mol_el):
+      type = bond_el.getAttribute( 'type')
+      if type[1] == u'0':
+        # we ignore bonds with order 0
+        continue
       v1 = atom_id_remap[ bond_el.getAttribute( 'start')]
       v2 = atom_id_remap[ bond_el.getAttribute( 'end')]
-      type = bond_el.getAttribute( 'type')
       e = bond( order=int( type[1]), type=type[0])
       mol.add_edge( v1, v2, e=e)
 
-    yield mol
+    if mol.is_connected():
+      # this is here to handle diborane and similar weird things
+      yield mol
+    else:
+      for comp in mol.get_disconnected_subgraphs():
+        yield comp
       
 
 def cm_to_float_coord( x):
@@ -133,10 +141,21 @@ if __name__ == '__main__':
   f = file( file_name, 'r')
 
   mol = file_to_mol( f)
-  calculate_coords( mol, bond_length=-1)
+  for ring in mol.get_all_cycles():
+    print len( ring)
+##     mring = mol.get_new_induced_subgraph( ring, mol.vertex_subgraph_to_edge_subgraph( ring))
+##     if not mring.is_connected():
+##       print map( len, [a for a in mring.get_connected_components()])
+##       for vs in mring.get_connected_components():
+##         print [a.symbol for a in vs]
+      #import molfile
+      #print molfile.mol_to_text( mring)
 
-  for a in mol.vertices:
-    print a.x, a.y
+
+  #calculate_coords( mol, bond_length=-1)
+
+  #for a in mol.vertices:
+  #  print a.x, a.y
 
   f.close()
 

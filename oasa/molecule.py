@@ -26,7 +26,14 @@ import copy
 import common
 import operator
 
+
+
+
 class molecule( graph.graph):
+
+  vertex_class = atom
+  edge_class = bond
+
 
   def __init__( self, vertices =[]):
     graph.graph.__init__( self, vertices=vertices)
@@ -41,26 +48,10 @@ class molecule( graph.graph):
 
 
 
-  def add_vertex( self, v=None):
-    """we need to override it in order to use atoms as default vertices"""
-    if v == None:
-      v = atom()
-    return graph.graph.add_vertex( self, v=v)
-
-
-
-  def add_edge( self, v1, v2, e=None):
-    """we need to override it in order to use bonds as default edges"""
-    if e == None:
-      e = bond( vs=(v1,v2))
-    graph.graph.add_edge( self, v1, v2, e=e)
-
-
-
   def add_missing_hydrogens( self):
     for v in copy.copy( self.vertices):
       for i in range( v.get_free_valency()):
-        h = self.add_vertex( v=atom( symbol='H'))
+        h = self.add_vertex( v=self.vertex_class( symbol='H'))
         self.add_edge( h, v)
 
 
@@ -244,7 +235,7 @@ class molecule( graph.graph):
   def remove_all_hydrogens( self):
     """removes all H atoms"""
     for v in copy.copy( self.vertices):
-      if v.symbol == 'H':
+      if v.symbol == 'H' and v.degree <= 1:
         self.remove_vertex( v)
 
 
@@ -319,10 +310,10 @@ class molecule( graph.graph):
     vs = f.readline()
     for i in vs.split(' '):
       if i != '\n':
-        self.add_vertex( v=atom( symbol=i))
+        self.add_vertex( v=self.vertex_class( symbol=i))
     for l in f.readlines():
       o, a, b = l.split(' ')
-      self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=bond( order=int(o)))
+      self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=self.edge_class( order=int(o)))
     f.close()
 
 
@@ -441,3 +432,5 @@ if __name__ == '__main__':
 # test the equals function
 
 ##################################################
+
+

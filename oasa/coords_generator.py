@@ -291,12 +291,13 @@ class coords_generator:
     else:
       # there are more than 2 atoms common
       if len( ring) == len( base):
-        raise( "i don't how to handle this yet")
+        out += self._process_multi_anelated_ring( ring, angle_shift=15)
+        #raise( "i don't how to handle this yet")
       else:
         out += self._process_multi_anelated_ring( ring)
     return out
 
-  def _process_multi_anelated_ring( self, ring):
+  def _process_multi_anelated_ring( self, ring, angle_shift=0):
     out = []
     to_go = [v for v in ring if v.x == None or v.y == None]
     if not to_go:
@@ -306,7 +307,7 @@ class coords_generator:
     sorted_back = self.mol.sort_vertices_in_path( back)
     if not sorted_back:
       # the already set atoms are not in one path - we have to process it "per partes"
-      # it should not happen with the constriction method we use
+      # it should not happen with the construction method we use
       raise( "i am not able to handle this, it should normaly not happen. please send me the input.")
     else:
       v1 = sorted_back[0]
@@ -318,7 +319,10 @@ class coords_generator:
       blocked_angle = sum_of_ring_internal_angles( len( back))
       overall_angle = sum_of_ring_internal_angles( len( ring))
       da = optimal_ring_iternal_angle( len( ring))  # internal angle
-      ca = deg_to_rad( 180-(overall_angle - blocked_angle - len( to_go) * da)/2)  # connection angle
+      # if there are 2 rings of same size inside each other, we need to use the angle_shift
+      if angle_shift:
+        da += 2*angle_shift/(len( to_go))
+      ca = deg_to_rad( 180-(overall_angle - blocked_angle - len( to_go) * da + angle_shift)/2)  # connection angle
       side = sum( [geometry.on_which_side_is_point( (v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in back if v != v1 and v != v2])
       # we need to make sure that the ring is drawn on the right side
       if side > 0:
@@ -348,7 +352,7 @@ class coords_generator:
 def sum_of_ring_internal_angles( size):
   return (size-2)*180
 
-def optimal_ring_iternal_angle( size):
+def optimal_ring_iternal_angle( size, angle_shift=0):
   return sum_of_ring_internal_angles( size)/size
 
 def gen_ring_coords( size, side_length=1):
@@ -451,7 +455,9 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
+  sm = "C25C1C3C5C4C2C1C34"
+  #sm = 'C1CC2CCC1CC2'
+  #sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
   #sm = 'CCCC(C)(CCC)CCC(Cl)C(CCCCC)CCC(C)CCC'
 
   print "oasa::coords_generator DEMO"
