@@ -67,7 +67,7 @@ class vertex( object):
   def get_neighbor_connected_via( self, e):
     return self._neighbors[ e]
 
-  def get_bond_leading_to( self, a):
+  def get_edge_leading_to( self, a):
     for b, at in self._neighbors.iteritems():
       if a == at:
         return b

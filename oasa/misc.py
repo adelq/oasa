@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 #     This file is part of BKchem - a chemical drawing program
-#     Copyright (C) 2002, 2003 Beda Kosata <beda@zirael.org>
+#     Copyright (C) 2002-2004 Beda Kosata <beda@zirael.org>
 
 #     This program is free software; you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@ import string
 from warnings import warn
 import re
 import types
+import base64
+
 
 def intersection( a, b):
   "returns intersection of 2 lists"
@@ -110,3 +112,83 @@ def split_number_and_unit( txt):
 def lazy_apply( function, arguments):
   """similar to apply but returns a callable (lambda) that performs the apply when called."""
   return lambda: apply( function, arguments)
+
+
+
+
+def extend_bbox( bbox, pixels=1):
+  minx = min( (bbox[0], bbox[2]))
+  maxx = max( (bbox[0], bbox[2]))
+  miny = min( (bbox[1], bbox[3]))
+  maxy = max( (bbox[1], bbox[3]))
+  return minx-pixels, miny-pixels, maxx+pixels, maxy+pixels
+
+
+def smallest_common_bbox( bboxes):
+  _x0, _y0, _x1, _y1 = None, None, None, None
+  for (x0, y0, x1, y1) in bboxes:
+    minx = min( x0, x1)
+    maxx = max( x0, x1)
+    miny = min( y0, y1)
+    maxy = max( y0, y1)
+    if not _x0 or minx < _x0:
+      _x0 = minx
+    if not _x1 or maxx > _x1:
+      _x1 = maxx
+    if not _y0 or miny < _y0:
+      _y0 = miny
+    if not _y1 or maxy > _y1:
+      _y1 = maxy
+  return _x1, _y1, _x0, _y0
+
+      
+    
+
+
+
+def has_one_value_only( iterable):
+  if not iterable:
+    return 0
+  a = iterable[0]
+  for i in iterable:
+    if a != i:
+      return 0
+  return 1
+
+
+
+def plural_or_singular( iterable):
+  """useful for string construction such as 'you have %d apple%s' % (len(apples), plural_or_singular( apples)"""
+  if len( iterable) == 1:
+    return ''
+  else:
+    return 's'
+
+
+def len_and_ending( iterable):
+  return (len( iterable), plural_or_singular( iterable))
+
+
+def reverse( iterable):
+  for i in range( len( iterable)-1, -1, -1):
+    yield iterable[i]
+
+
+
+# some helper, higher order functions
+
+map_functions = lambda funcs, value: zip( apply, funcs, len(funcs)*[value])
+
+something_true = lambda vals: len( filter( None, vals))
+
+some_apply = lambda func, vals: something_true( map( func, vals))
+
+
+
+# some results
+
+isinstance_of_one = lambda obj, parents: some_apply( lambda x: isinstance( obj, x), parents)
+
+
+  
+

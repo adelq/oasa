@@ -25,6 +25,7 @@ from bond import bond
 import re
 from periodic_table import periodic_table
 import coords_generator
+import misc
 
 
 class linear_formula( object):
@@ -38,10 +39,11 @@ class linear_formula( object):
 
 
   def parse_text( self, text, valency=0, mol=None):
-    is_formula = re.compile("^([A-Z][a-z]?[0-9]*[+-]?)*$")
+    is_formula = re.compile("^(([A-Z][a-z]?[0-9]*[+-]?)|\(|\)[0-9]?)*$")
     form = text
     if not is_formula.match( form):
       return None
+    print "wow"
     chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
     if not mol:
       mol = molecule()
@@ -64,7 +66,7 @@ class linear_formula( object):
             b = self.molecule.create_edge()
             b.order = max_val
             self.molecule.add_edge( last_atom, a, b)
-        last_atom = self.get_last_free_atom( a)
+        last_atom = self.get_last_free_atom()
 
     # now we check if the structure is complete
     for v in self.molecule.vertices:
@@ -75,7 +77,6 @@ class linear_formula( object):
       self.molecule.remove_vertex( self.molecule.vertices[0]) # remove the dummy
 
     self.molecule.remove_all_hydrogens()
-    print self.molecule
     return self.molecule
 
 
@@ -93,30 +94,33 @@ class linear_formula( object):
     return ret
 
 
-  def get_last_free_atom( self, a):
-    # we check if a has some free valency
-    if a.get_free_valency() > 0:
-      return a
+  def get_last_free_atom( self):
+    # check if there is something with a free valency
+    atoms = [o for o in misc.reverse( self.molecule.vertices)]
+    for a in atoms:
+      if a.get_free_valency() > 0:
+        return a
     # if its not the case
-    for b, at in a.get_neighbor_edge_pairs():
+    for i, a in enumerate( atoms):
+      b = a.get_edge_leading_to( atoms[i+1])
       if b.order > 1:
         b.order -= 1
-        return self.get_last_free_atom( a)
-      elif at.get_free_valency() > 0:
-        return self.get_last_free_atom( at)
+        return a
     # well, we cannot do anything else
     return a
 
 
-## form = 'CHCl2'
+form = 'C(CH2CH3)2C(CH3)3'
 
-## a = linear_formula( form , valency=1)
-## m = a.molecule
-## #coords_generator.calculate_coords( m)
+print re.split( "\(|\)([0-9]?)", form)
+
+a = linear_formula( form , valency=1)
+m = a.molecule
+#coords_generator.calculate_coords( m)
 
 
-## import smiles
-## print form
-## print smiles.mol_to_text( m)
+import smiles
+print form
+print smiles.mol_to_text( m)
 
 #coords_generator.show_mol( m)

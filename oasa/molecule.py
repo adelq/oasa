@@ -171,7 +171,7 @@ class molecule( graph.graph):
           for i in range( len( aring) -1):
             if comb[i] + comb[i+1] != 2:
               # these bonds must be single
-              b = aring[i].get_bond_leading_to( aring[i+1])
+              b = aring[i].get_edge_leading_to( aring[i+1])
               b.order = 1
               already_set = i
           if already_set != None:
@@ -184,7 +184,7 @@ class molecule( graph.graph):
           i = 0
           while i+1 < len( aring):
             if comb[i] + comb[i+1] == 2:
-              b = aring[i].get_bond_leading_to( aring[i+1])
+              b = aring[i].get_edge_leading_to( aring[i+1])
               assert b != None # should be
               # to assure alternating bonds
               bs1 = [bo for bo in aring[i].get_neighbor_edges() if bo.order == 2 and bo.aromatic and bo!=b]
