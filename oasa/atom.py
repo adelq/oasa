@@ -26,6 +26,7 @@ from common import is_uniquely_sorted
 
 import copy
 import itertools
+from warnings import warn
 
 
 
@@ -34,10 +35,6 @@ class atom( graph.vertex):
   def __init__( self, symbol='C', charge=0, coords=None):
     graph.vertex.__init__( self)
     self.symbol = symbol
-    if symbol not in PT.periodic_table:
-      raise "atom symbol '%s' not found in periodic table" % symbol
-    self.symbol_number = PT.periodic_table[ self.symbol]['ord']
-    self.valency = PT.periodic_table[ self.symbol]['valency']
     self.charge = charge
     # None means not set (used)
     if coords:
@@ -89,6 +86,11 @@ class atom( graph.vertex):
 
   # symbol
   def _set_symbol( self, symbol):
+    try:
+      self.valency = PT.periodic_table[ symbol]['valency'][0]
+      self.symbol_number = PT.periodic_table[ symbol]['ord']
+    except KeyError:
+      warn( "wrong atom symbol %s" % symbol)
     self._symbol = symbol
 
   def _get_symbol( self):

@@ -80,6 +80,9 @@ class graph:
   def create_graph( self):
     return self.__class__()
   
+  def delete_vertex( self, v):
+    self.vertices.remove( v)
+
 
   ## MODIFICATION METHODS
 
@@ -156,7 +159,7 @@ class graph:
   def remove_vertex( self, v):
     for neigh in v.get_neighbors():
       self.disconnect( v, neigh)
-    self.vertices.remove( v)
+    self.delete_vertex( v)
       
 
 

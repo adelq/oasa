@@ -21,11 +21,6 @@ import sys
 if not (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 3)):
   raise ImportError, "system version %d.%d is lower than 2.3 which is needed by OASA" % sys.version_info[0:2]
 
-## try:
-##   import psyco
-##   psyco.profile()
-## except ImportError:
-##   pass # no psyco available
 
 import atom
 import bond
@@ -36,11 +31,14 @@ import molfile
 import inchi
 import cdml
 import config
+import graph
+import linear_formula
 
 atom = atom.atom
 molecule = molecule.molecule
 bond = bond.bond
 
+__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula"]
 
 
   
