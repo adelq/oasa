@@ -41,9 +41,6 @@ class graph:
     else:
       self.vertices = []
     self.edges = Set()
-    self.connect = []
-    for i in range( len( self.vertices)):
-      self.connect.append( len( self.vertices) *[0])
 
   def __str__( self):
     str = "graph G(V,E), |V|=%d, |E|=%d" % ( len( self.vertices), len( self.edges))
@@ -54,10 +51,9 @@ class graph:
     only the graph itself is different"""
     clazz = self.__class__
     c = clazz( vertices= copy.copy( self.vertices))
-    for i, line in enumerate( self.connect):
-      for j, e in enumerate( line):
-        if e:
-          c.add_edge( i, j, e)
+    for e in self.edges:
+      i, j = e.get_vertices()
+      c.add_edge( i, j, e)
     return c
 
   def deep_copy( self):
@@ -66,10 +62,9 @@ class graph:
     c = graph()
     for v in self.vertices:
       c.add_vertex()
-    for i, line in enumerate( self.connect):
-      for j, e in enumerate( line):
-        if j > i and e:
-          c.add_edge( i, j)
+    for e in self.edges:
+      i, j = e.get_vertices()
+      c.add_edge( i, j)
     return c
     
 
@@ -85,9 +80,6 @@ class graph:
     else:
       warnings.warn( "Added vertex is already present in graph %s" % str( v), UserWarning, 2)
       return None
-    for line in self.connect:
-      line.append( 0)
-    self.connect.append( len( self.vertices) *[0])
     return v
 
 
@@ -107,8 +99,6 @@ class graph:
       e = edge()
     e.set_vertices( (v1,v2))
     self.edges.add( e)
-    self.connect[i1][i2] = e
-    self.connect[i2][i1] = e
     v1.add_neighbor( v2, e)
     v2.add_neighbor( v1, e)
     return e
@@ -116,18 +106,13 @@ class graph:
 
 
   def disconnect( self, v1, v2):
-    """disconnects vertices v1 and v2 (can be also indexes), on success returns the edge"""
-    i1 = self._get_vertex_index( v1)
-    i2 = self._get_vertex_index( v2)
-    v1 = self.vertices[ i1]
-    v2 = self.vertices[ i2]
-    if i1 != None and i2 != None:
-      e = self.connect[i1][i2]
-      self.edges.remove( e)
-      self.connect[i1][i2] = 0
-      self.connect[i2][i1] = 0
-      v1.remove_neighbor( v2)
-      v2.remove_neighbor( v1)
+    """disconnects vertices v1 and v2, on success returns the edge"""
+    if v1 != None and v2 != None:
+      e = self.get_edge_between( v1, v2)
+      if e:
+        self.edges.remove( e)
+        v1.remove_neighbor( v2)
+        v2.remove_neighbor( v1)
       return e
     else:
       return None
@@ -135,7 +120,7 @@ class graph:
 
 
   def disconnect_edge( self, e):
-    v1, v2 = e.vertices
+    v1, v2 = e.get_vertices()
     self.disconnect( v1, v2)
 
 
@@ -143,28 +128,17 @@ class graph:
   def remove_vertex( self, v):
     for neigh in v.get_neighbors():
       self.disconnect( v, neigh)
-    i = self.vertices.index( v)
-    del self.vertices[i]
-    del self.connect[i]
-    for line in self.connect:
-      del line[i]
+    self.vertices.remove( v)
       
 
 
   def get_edge_between( self, v1, v2):
-    """takes two vertices either as vertex instances or indexes in self.vertices"""
-    i1 = self._get_vertex_index( v1)
-    i2 = self._get_vertex_index( v2)
-    return self.connect[i1][i2]
+    """takes two vertices"""
+    for e in v1.get_neighbor_edges():
+      if e in v2.get_neighbor_edges():
+        return e
+    return None
 
-
-
-  def get_vertices_of_edge( self, e):
-    """Info - available also trough the edge.get_vertices()"""
-    for i, line in enumerate( self.connect):
-      for j, ed in enumerate( line):
-        if e == ed:
-          return self.vertices[i], self.vertices[j]
 
 
   ## PROPERTIES METHODS
@@ -261,17 +235,19 @@ class graph:
     comps = []
     not_processed = Set( self.vertices)
     if not_processed:
-      recent = Set( [not_processed.pop()])
-      comp |= recent
+      recent = Set() # [not_processed.pop()])
     while not_processed:
       recent = Set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
       if not recent:
-        yield comp
+        if comp:
+          yield comp
         recent = Set( [not_processed.pop()])
         comp = recent
       else:
         comp |= recent
         not_processed -= recent
+    # when there is only one atom in the last piece it is not yielded in the loop
+    yield comp
 
 
   def get_disconnected_subgraphs( self):
@@ -293,17 +269,11 @@ class graph:
     return g
     
       
-  def get_vertex_degree( self, v):
-    """accepts the vertex or its index.
-    Info - available also trough the vertex.get_degree()"""
-    i1 = self._get_vertex_index( v)
-    return self._get_degree_of_index( i1)
-
   def get_degrees( self):
     """returns a generator of degrees, this is useful because for many properties
     the whole list is not important"""
-    for i in range( len( self.vertices)):
-      yield self._get_degree_of_index( i)
+    for v in self.vertices:
+      yield v.get_degree()
   
   def get_neighbors( self, v):
     """Info - available also trough the vertex.get_neighbors()"""
@@ -454,21 +424,10 @@ class graph:
     except ValueError:
       return None
 
-  def _get_degree_of_index( self, i1):
-    """helps when index is already known"""
-    deg = 0
-    for i, b in enumerate( self.connect[i1]):
-      if b:
-        if i == i1:
-          deg += 2
-        else:
-          deg += 1
-    return deg
 
   def _read_file( self, name="/home/beda/oasa/oasa/mol.graph"):
     self.vertices = []
     self.edges = Set()
-    self.connect = []
     f = file( name, 'r')
     vs = f.readline()
     [self.add_vertex() for i in vs.split(" ")]
@@ -520,38 +479,6 @@ class graph:
         yield vs_ver
 
 
-
-## common functions
-
-def simplify_connectivity_matrix( mat):
-  """makes a underlying simple graph connectivity matrix from mat, works on the mat itself"""
-  for i, line in enumerate( mat):
-    for j, x in enumerate( line):
-      if mat[i][j] and i!=j:
-        mat[i][j] = 1
-      else:
-        mat[i][j] = 0
-
-def get_index_of_vertex_connected_to_first_vertex( mat):
-  """returns an index of vertex that is connected to the vertex in first line
-  of the matrix"""
-  for i, x in enumerate( mat[0]):
-    if x:
-      return i
-
-def fuse_vertices( i1, i2, mat):
-  """fuses vertices with indexes i1, i2 to i1, works on the mat"""
-  # sum the lines
-  for i in range( len( mat)):
-    if i != i1:
-      mat[i1][i] = mat[i1][i] or mat[i2][i]
-  # remove i2
-  del mat[i2]
-  for line in mat:
-    del line[i2]
-  # copy row i1 to column i1
-  for i, x in enumerate( mat[i1]):
-    mat[i][i1] = x
 
 def is_ring_end_vertex( v):
 # NEEDS NEW COMMENT
@@ -689,7 +616,7 @@ def filter_off_supercycles( cycles):
 
 ## g = graph()
 ## g._read_file()
-
+## print g
 ## print [c for c in g.get_connected_components()]
 
 ## for e in g.edges:

@@ -169,7 +169,7 @@ class smiles( plugin):
         if start_from:
           self.ring_joins.append( mol.disconnect( start_from, start_from.get_neighbors()[0]))
         else:
-          self.ring_joins.append( mol.disconnect( 0,1)) # edge is returned from disconnect
+          self.ring_joins.append( mol.disconnect( mol.vertices[0], mol.vertices[1])) # edge is returned from disconnect
       else:
         e, mol, branch_vertex, branch = self.disconnect_something( mol, start_from=start_from)
         if branch_vertex:
