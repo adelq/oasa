@@ -466,6 +466,8 @@ class graph:
       self._mark_vertices_with_distance_from( i)
 
   def _get_some_cycles( self):
+    if len( self.vertices) <= 2:
+      raise StopIteration
     self.mark_vertices_with_distance_from( self.vertices[0])
     for end in self._get_all_ring_end_points():
       for start in self._get_all_ring_start_points():

@@ -46,17 +46,17 @@ def read_cdml( text):
     for atom_el in xpath.Evaluate( "atom", mol_el):
       name = atom_el.getAttribute( 'name')
       if not name:
-        print "this molecule has an invalid symbol"
+        #print "this molecule has an invalid symbol"
         do_not_continue_this_mol = 1
         break
       pos = xpath.Evaluate( 'point', atom_el)[0]
-      z = pos.getAttribute( 'z') and float( pos.getAttribute('z')) or 0
       x = cm_to_float_coord( pos.getAttribute('x'))
       y = cm_to_float_coord( pos.getAttribute('y'))
+      z = cm_to_float_coord( pos.getAttribute('z'))
       if name in PT:
         # its really an atom 
         a = atom( symbol=name,
-                  charge=atom_el.getAttribute( 'charge') or 0,
+                  charge=atom_el.getAttribute( 'charge') and int( atom_el.getAttribute( 'charge')) or 0,
                   coords=( x, y, z))
         mol.add_vertex( v=a)
       elif name in cdml_to_smiles:
@@ -78,10 +78,12 @@ def read_cdml( text):
       e = bond( order=int( type[1]), type=type[0])
       mol.add_edge( v1, v2, e=e)
 
-  return mol
+    yield mol
       
 
 def cm_to_float_coord( x):
+  if not x:
+    return 0
   if x[-2:] == 'cm':
     return float( x[:-2])*72/2.54
   else:
@@ -102,7 +104,11 @@ def file_to_mol( f):
   return text_to_mol( f.read())
 
 def text_to_mol( text):
-  mol = read_cdml( text)
+  gen = read_cdml( text)
+  try:
+    mol = gen.next()
+  except StopIteration:
+    return None
   calculate_coords( mol, bond_length=-1)
   return mol
 

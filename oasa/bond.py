@@ -31,7 +31,7 @@ import graph
 class bond( graph.edge, object):
   """is based on edge, however the vertices are not a Set anymore,
   we need to preserve the order (for instance for wedge bonds).
-  type is 'n'-normal, 'w'-wedge, 'h'-hatch, 'a'-adder, 'b'-bold"""
+  type is 'n'-normal, 'w'-wedge, 'h'-hatch, 'a'-adder, 'b'-bold, 'd'-dash"""
 
   def __init__( self, vs=[], order=1, type='n'):
     graph.edge.__init__( self, vs=vs)

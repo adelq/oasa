@@ -143,7 +143,7 @@ class molfile( plugin):
     a1 = self.structure.vertices.index( v1) +1
     a2 = self.structure.vertices.index( v2) +1
     order = b.order
-    type_remap = { 'n': 0, 'w': 1, 'h': 6, 'a': 4, 'b': 0}
+    type_remap = { 'n': 0, 'w': 1, 'h': 6, 'a': 4, 'b': 0, 'd': 0}
     type = type_remap[ b.type]
     rest = "  0  0  0"
     #         1  2  3  4 5
