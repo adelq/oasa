@@ -1,0 +1,43 @@
+OASA is a free python library for manipulating and analyzing chemical structures.
+
+
+INSTALL
+--------------------------------------------------
+OASA needs python 2.3 or higher to run properly.
+You just have to extract the sources somewhere and its ready.
+To use the command line conversion program, cd to the toplevel oasa directory and run 
+"python convert.py" to get the information about how to use the program.
+To use OASA from a python program use "import oasa"
+
+
+STATUS
+--------------------------------------------------
+bellow are summarized the limitations of the library. it does by no means mean that there
+are no other limitations, however, for these it has no sense to write bugreports :) 
+
+
+OVERALL:
+- as for now, no effort was made to implement any stereochemistry related concepts
+- no isotope support yet
+- therefor none of the export/import plugins does handle these
+- not much effort was invested into optimalization of the code, it may be pretty slow sometimes
+
+
+SMILES:
+- as stereo information are not supported (yet), they are also not read properly so don't use them -
+  the result is unpredictable
+
+
+I(N)CHI:
+- reading only
+- both plain-text (in form: "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H")
+  and xml format is supported
+
+
+MOLFILE
+- data after the bond block are not read
+  (this means that molfiles containing a properties block are not read properly)
+ 
+
+COORDS GENERATOR:
+- coords for molecules like calix[4]arene and similar do not give a very nice picture
