@@ -106,6 +106,7 @@ class atom( graph.vertex):
 
   # valency
   def _set_valency( self, valency):
+    print valency
     self._valency = valency
 
   def _get_valency( self):
@@ -161,7 +162,7 @@ class atom( graph.vertex):
 
   def get_free_valency( self):
     """returns free valency of atom. Aromatic bonds should be localized, otherwise they are counted as simple"""
-    print "use free_valency instead"
+    warn( "use free_valency instead", DeprecationWarning, 2)
     return self.free_valency
 
 
@@ -179,6 +180,17 @@ class atom( graph.vertex):
       if b.aromatic:
         return 1
     return 0
+
+
+
+  def raise_valency_to_senseful_value( self):
+    """set atoms valency to the lowest possible, so that free_valency
+    if non-negative (when possible) or highest possible,
+    does not lower valency when set to higher then necessary value"""
+    while self.free_valency < 0:
+      if not self.raise_valency():
+        return
+
 
 
   def raise_valency( self):
