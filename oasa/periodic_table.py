@@ -29,7 +29,6 @@ import re
 formula manipulation and computation"""
 
 periodic_table = {
-  "X":  {"weight": 0     , 'ord':   0, "valency": (1,2,3,4,5,6,7,8)},
   "H":  {"weight": 1.008 , 'ord':   1, "valency": (1,)},
   "He": {"weight": 4.00  , 'ord':   2, "valency": (0,2)},
   "Li": {"weight": 6.94  , 'ord':   3, "valency": (1,)},

@@ -37,17 +37,33 @@ class linear_formula( object):
       self.molecule = self.parse_text( text, valency=valency, mol=mol)
 
 
-
   def parse_text( self, text, valency=0, mol=None):
+    mol = self.parse_form(  text, valency=valency, mol=mol)
+    if mol:
+      self.molecule = mol
+      # now we check if the structure is complete
+      for v in self.molecule.vertices:
+        if v.free_valency:
+          return None
+
+      if valency:
+        self.molecule.remove_vertex( self.molecule.vertices[0]) # remove the dummy
+
+      self.molecule.remove_all_hydrogens()
+      return self.molecule
+
+
+
+  def parse_form( self, text, valency=0, mol=None):
     is_formula = re.compile("^(([A-Z][a-z]?[0-9]*[+-]?)|\(|\)[0-9]?)*$")
     form = text
     if not is_formula.match( form):
       return None
-    print "wow"
-    chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
+
+    # the code itself
     if not mol:
       mol = molecule()
-    self.molecule = mol
+
     # create the dummy atom
     if valency:
       last_atom = mol.create_vertex()
@@ -56,47 +72,62 @@ class linear_formula( object):
     else:
       last_atom = None
 
-    for chunk in chunks:
-      if chunk:
-        as = self.chunk_to_atoms( chunk)
-        for a in as:
-          self.molecule.add_vertex( a)
-          if last_atom:
-            max_val = min( last_atom.free_valency, a.free_valency, 3)
-            b = self.molecule.create_edge()
-            b.order = max_val
-            self.molecule.add_edge( last_atom, a, b)
-        last_atom = self.get_last_free_atom()
+    # check if there are branches in the formula
+    branching = re.split( "\(|\)([0-9]?)", form)
+    if len( branching) == 1:
+      # there are no subbranches
+      chunks = re.split( "([A-Z][a-z]?[0-9]?[+-]?)", form)
+      for chunk in chunks:
+        if chunk:
+          as = self.chunk_to_atoms( chunk, mol)
+          for a in as:
+            mol.add_vertex( a)
+            if last_atom:
+              max_val = min( last_atom.free_valency, a.free_valency, 3)
+              b = mol.create_edge()
+              b.order = max_val
+              mol.add_edge( last_atom, a, b)
+          last_atom = self.get_last_free_atom( mol)
+    else:
+      if len( branching) % 2:
+        branching.append( '')
+      for i in range( 0, len( branching), 2):
+        chunk = branching[i]
+        if chunk:
+          rep = branching[i+1] and int( branching[i+1]) or 1
+          for j in range( rep):
+            m = self.parse_form( chunk, valency=1, mol=mol.create_graph())
+            if not last_atom:
+              mol.insert_a_graph( m) 
+            else:
+              m.remove_vertex( m.vertices[0]) # remove the dummy
+              mol.insert_a_graph( m) 
+              b = mol.create_edge()
+              mol.add_edge( last_atom, m.vertices[0], b)
+                          
+        last_atom = self.get_last_free_atom( mol)
 
-    # now we check if the structure is complete
-    for v in self.molecule.vertices:
-      if v.free_valency:
-        return None
-
-    if valency:
-      self.molecule.remove_vertex( self.molecule.vertices[0]) # remove the dummy
-
-    self.molecule.remove_all_hydrogens()
-    return self.molecule
+    return mol
+        
 
 
-  def chunk_to_atoms( self, chunk):
+  def chunk_to_atoms( self, chunk, mol):
     m = re.match( "([A-Z][a-z]?)([0-9])?([+-])?", chunk)    
     name = m.group( 1)
     number = m.group( 2) and int( m.group(2)) or 1
     sign = m.group( 3) and (int( m.group(3)+'1')) or 0
     ret = []
     for i in range( number):
-      v = self.molecule.create_vertex()
+      v = mol.create_vertex()
       v.symbol = name
       v.charge = sign
       ret.append( v)
     return ret
 
 
-  def get_last_free_atom( self):
+  def get_last_free_atom( self, mol):
     # check if there is something with a free valency
-    atoms = [o for o in misc.reverse( self.molecule.vertices)]
+    atoms = [o for o in misc.reverse( mol.vertices)]
     for a in atoms:
       if a.get_free_valency() > 0:
         return a
@@ -110,17 +141,16 @@ class linear_formula( object):
     return a
 
 
-form = 'C(CH2CH3)2C(CH3)3'
+## form = 'OCH(COOCH3)2'
+## #form = "COCH3"
 
-print re.split( "\(|\)([0-9]?)", form)
-
-a = linear_formula( form , valency=1)
-m = a.molecule
-#coords_generator.calculate_coords( m)
+## a = linear_formula( form , valency=1)
+## m = a.molecule
+## #coords_generator.calculate_coords( m)
 
 
-import smiles
-print form
-print smiles.mol_to_text( m)
+## import smiles
+## print form
+## print smiles.mol_to_text( m)
 
-#coords_generator.show_mol( m)
+## #coords_generator.show_mol( m)
