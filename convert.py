@@ -33,8 +33,8 @@ def bug_message():
 usage_text ="""usage: python convert.py xy [infile] [outfile or stdout]
 
   where x and y is input and output format, respectively
-  - possible values for x are 's' (smiles), 'i' (IChI), 'm' (molfile)
-  - possible values for y are 's' (smiles), 'm' (molfile)
+  - possible values for x are 's' (smiles), 'i' (INChI), 'm' (molfile)
+  - possible values for y are 's' (smiles), 'i' (INChI), 'm' (molfile)
 
   if not infile is given the program is started in interactive mode
 
@@ -75,7 +75,7 @@ if inmode not in "sim":
   print
   sys.exit()
 
-if outmode not in "sm":
+if outmode not in "sim":
   print usage_text
   print "error: the output format should be one of s,m"
   print

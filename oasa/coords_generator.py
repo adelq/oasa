@@ -1,3 +1,22 @@
+#--------------------------------------------------------------------------
+#     This file is part of OASA - a free chemical python library
+#     Copyright (C) 2004 Beda Kosata <beda@zirael.org>
+
+#     This program is free software; you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation; either version 2 of the License, or
+#     (at your option) any later version.
+
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+
+#     Complete text of GNU GPL can be found in the file gpl.txt in the
+#     main directory of the program
+
+#--------------------------------------------------------------------------
+
 
 from math import pi, sqrt, sin, cos
 from __future__ import division
@@ -341,17 +360,18 @@ def show_mol( mol):
 
   xmin, xmax, ymin, ymax = None,None,None,None
   for a in mol.vertices:
-    if not xmin or a.x < xmin:
+    if xmin == None or a.x < xmin:
       xmin = a.x
-    if not xmax or a.x > xmax:
+    if xmax == None or a.x > xmax:
       xmax = a.x
-    if not ymin or a.y < ymin:
+    if ymin == None or a.y < ymin:
       ymin = a.y
-    if not ymax or a.y > ymax:
+    if ymax == None or a.y > ymax:
       ymax = a.y
 
   dx = xmax-xmin
   dy = ymax-ymin
+  print "dx", dy, ymax, ymin
   range = min( (600.0/dx, 450.0/dy))/2
   xp = 640-range*dx
   yp = 480-range*dy

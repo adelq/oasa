@@ -22,6 +22,7 @@ from molecule import molecule
 from atom import atom
 from bond import bond
 import periodic_table as pt
+import molfile
 
 import re
 from sets import Set
@@ -30,6 +31,9 @@ import time
 import xml.dom.minidom as dom
 import dom_extensions
 import string
+import os.path
+import tempfile
+import popen2
 
 
 class inchi( plugin):
@@ -171,6 +175,40 @@ class inchi( plugin):
       self.structure.add_edge( ai, h, e=bond())
       
       
+
+def generate_inchi( m):
+  program = "/home/beda/inchi/cINChI11b"
+
+  #try:
+  name = os.path.join( tempfile.gettempdir(), "gen_inchi.mol")
+  file = open( name, 'w')
+  molfile.mol_to_file( m, file)
+  file.close()
+#  except:
+#    print "It was imposible to write a temporary Molfile %s" % name
+#    return
+
+  in_name = os.path.join( tempfile.gettempdir(), "gen_inchi.temp")
+
+  if os.name == 'nt':
+    options = "/AUXNONE"
+  else:
+    options = "-AUXNONE"
+  command = ' '.join( (program, name, in_name, options))
+  popen = popen2.Popen4( command)
+  exit_code = popen.wait()
+  #exit_code = os.spawnv( os.P_WAIT, program, (program, name, in_name, options))
+
+  if exit_code == 0 or exit_code != 0:
+    in_file = open( in_name, 'r')
+    [line for line in in_file.readlines()]
+    out = ( line[6:].strip())
+    in_file.close()
+  else:
+    out = ''
+
+  return out
+
     
 
 
@@ -181,7 +219,7 @@ class inchi( plugin):
 
 reads_text = 1
 reads_files = 1
-writes_text = 0
+writes_text = 1
 writes_files = 0
 
 def text_to_mol( text, include_hydrogens=False, mark_aromatic_bonds=False):
@@ -199,6 +237,15 @@ def text_to_mol( text, include_hydrogens=False, mark_aromatic_bonds=False):
 
 def file_to_mol( f):
   return text_to_mol( f.read())
+
+
+def mol_to_text( mol):
+  return generate_inchi( mol)
+
+
+def mol_to_file( mol, f):
+  f.write( mol_to_text( mol))
+
 
 
 #
