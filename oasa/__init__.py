@@ -34,6 +34,7 @@ import smiles
 import coords_generator
 import molfile
 import inchi
+import cdml
 
 atom = atom.atom
 molecule = molecule.molecule
