@@ -257,25 +257,22 @@ class graph:
 
   def get_connected_components( self):
     """returns the connected components of graph in a form o list of lists of vertices"""
-    comp = [] # just processed component 
-    con = []  # connectivity matrix copy for fusion
-    for line in self.connect:
-      con.append( [(e and 1) or 0 for e in line])
-    vs = copy.copy( self.vertices)
-    while vs:
-      if sum( con[0]) == 0:
-        comp.append( vs.pop(0))
+    comp = Set() # just processed component 
+    comps = []
+    not_processed = Set( self.vertices)
+    if not_processed:
+      recent = Set( [not_processed.pop()])
+      comp |= recent
+    while not_processed:
+      recent = Set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
+      if not recent:
         yield comp
-        #comps.append( comp)
-        comp = []
-        del con[0]
-        for line in con:
-          del line[0]
-        continue
-      i = get_index_of_vertex_connected_to_first_vertex( con)
-      fuse_vertices( 0, i, con)
-      comp.append( vs.pop( i))
-      # return comps
+        recent = Set( [not_processed.pop()])
+        comp = recent
+      else:
+        comp |= recent
+        not_processed -= recent
+
 
   def get_disconnected_subgraphs( self):
     vss = self.get_connected_components()
@@ -474,9 +471,9 @@ class graph:
     self.connect = []
     f = file( name, 'r')
     vs = f.readline()
-    [self.add_vertex() for i in vs if i=='v']
+    [self.add_vertex() for i in vs.split(" ")]
     for l in f.readlines():
-      a, b = l.split(' ')
+      c, a, b = l.split(' ')
       self.add_edge( self.vertices[int(a)], self.vertices[int(b)])
     f.close()
 
@@ -692,6 +689,8 @@ def filter_off_supercycles( cycles):
 
 ## g = graph()
 ## g._read_file()
+
+## print [c for c in g.get_connected_components()]
 
 ## for e in g.edges:
 ##   print g.is_edge_a_bridge( e),
