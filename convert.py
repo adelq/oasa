@@ -33,7 +33,7 @@ def bug_message():
 usage_text ="""usage: python convert.py xy [infile] [outfile or stdout]
 
   where x and y is input and output format, respectively
-  - possible values for x are 's' (smiles), 'i' (INChI), 'm' (molfile)
+  - possible values for x are 's' (smiles), 'i' (INChI), 'm' (molfile), 'c' (CDML)
   - possible values for y are 's' (smiles), 'i' (INChI), 'm' (molfile)
 
   if not infile is given the program is started in interactive mode
@@ -69,7 +69,7 @@ except:
   print
   sys.exit()
 
-if inmode not in "sim":
+if inmode not in "csim":
   print usage_text
   print "error: the input format should be one of s,i,m"
   print
@@ -103,7 +103,7 @@ else:
 
 # the code itself
 
-recoding = {'s':'smiles', 'i':'inchi', 'm':'molfile'}
+recoding = {'s':'smiles', 'i':'inchi', 'm':'molfile', 'c':'cdml'}
 
 in_recoder = oasa.__dict__[ recoding[ inmode]]
 out_recoder = oasa.__dict__[ recoding[ outmode]]

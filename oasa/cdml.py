@@ -45,10 +45,12 @@ def read_cdml( text):
         do_not_continue_this_mol = 1
         break
       pos = xpath.Evaluate( 'point', atom_el)[0]
-      z = pos.getAttribute( 'z') or 0
+      z = pos.getAttribute( 'z') and float( pos.getAttribute('z')) or 0
+      x = cm_to_float_coord( pos.getAttribute('x'))
+      y = cm_to_float_coord( pos.getAttribute('y'))
       a = atom( symbol=name,
                 charge=atom_el.getAttribute( 'charge') or 0,
-                coords=(pos.getAttribute('x'),pos.getAttribute('y'),z))
+                coords=( x, y, z))
       mol.add_vertex( v=a)
       atom_id_remap[ atom_el.getAttribute( 'id')] = a
 
@@ -64,6 +66,13 @@ def read_cdml( text):
 
   return mol
       
+
+def cm_to_float_coord( x):
+  if x[-2:] == 'cm':
+    return float( x[:-2])*72/2.54
+  else:
+    return float( x)
+    
 
 ##################################################
 # MODULE INTERFACE
