@@ -21,7 +21,7 @@ from plugin import plugin
 from molecule import molecule
 from atom import atom
 from bond import bond
-from xml import xpath
+import dom_extensions as dom_ext
 import xml.dom.minidom as dom
 from known_groups import cdml_to_smiles
 from periodic_table import periodic_table as PT
@@ -39,17 +39,17 @@ def read_cdml( text):
   #  path = "/cdml/molecule"
   path = "//molecule"
   do_not_continue_this_mol = 0
-  for mol_el in xpath.Evaluate( path, doc):
+  for mol_el in dom_ext.simpleXPathSearch( doc, path):
     atom_id_remap = {}
     mol = molecule()
     groups = []
-    for atom_el in xpath.Evaluate( "atom", mol_el):
+    for atom_el in dom_ext.simpleXPathSearch( mol_el, "atom"):
       name = atom_el.getAttribute( 'name')
       if not name:
         #print "this molecule has an invalid symbol"
         do_not_continue_this_mol = 1
         break
-      pos = xpath.Evaluate( 'point', atom_el)[0]
+      pos = dom_ext.simpleXPathSearch( atom_el, 'point')[0]
       x = cm_to_float_coord( pos.getAttribute('x'))
       y = cm_to_float_coord( pos.getAttribute('y'))
       z = cm_to_float_coord( pos.getAttribute('z'))
@@ -71,7 +71,7 @@ def read_cdml( text):
     if do_not_continue_this_mol:
       break
 
-    for bond_el in xpath.Evaluate( "bond", mol_el):
+    for bond_el in dom_ext.simpleXPathSearch( mol_el, "bond"):
       type = bond_el.getAttribute( 'type')
       if type[1] == u'0':
         # we ignore bonds with order 0
