@@ -89,8 +89,8 @@ class linear_formula( object):
           as = self.chunk_to_atoms( chunk, mol)
           if as == None:
             return None
+          last_atom = self.get_last_free_atom( mol)
           for a in as:
-            last_atom = self.get_last_free_atom( mol)
             mol.add_vertex( a)
             if last_atom:
               max_val = min( last_atom.free_valency, a.free_valency, 3)
@@ -115,6 +115,8 @@ class linear_formula( object):
               val = last_atom and 1 or 0
               m = self.parse_form( chunk, valency=val, mol=mol.create_graph())
               smile = False
+            if not m:
+              return None
             if not last_atom:
               mol.insert_a_graph( m) 
             else:
@@ -269,25 +271,25 @@ def reverse_formula( text):
   
 
 
-## form = 'CPh3Cl'
-## #form = "CH2(Cl)2"
+form = 'C6H6'
+#form = "CH2(Cl)2"
 
-## #print [i for i in gen_formula_fragments_helper( form)]
-## #print [i for i in gen_formula_fragments( form)]
+#print [i for i in gen_formula_fragments_helper( form)]
+#print [i for i in gen_formula_fragments( form)]
 
-## a = linear_formula( form , valency=0)
-## m = a.molecule
-## #coords_generator.calculate_coords( m)
+a = linear_formula( form , valency=0)
+m = a.molecule
+#coords_generator.calculate_coords( m)
 
-## print m
+print m
 
-## import smiles
-## print form
+import smiles
+print form
 
-## if m:
-##   print smiles.mol_to_text( m)
+if m:
+  print smiles.mol_to_text( m)
 
-## #coords_generator.show_mol( m)
+#coords_generator.show_mol( m)
 
 
-## #print [i for i in gen_formula_fragments( "CO(OH)2")]
+#print [i for i in gen_formula_fragments( "CO(OH)2")]

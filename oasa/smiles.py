@@ -119,6 +119,7 @@ class smiles( plugin):
 
     ## FINISH
     for a in mol.vertices:
+      a.raise_valency_to_senseful_value()
       try:
         del a.properties_['aromatic']
       except:
@@ -423,6 +424,8 @@ def file_to_mol( f):
 
 if __name__ == '__main__':
 
+  import sys
+
   def main( text, cycles):
     t = time.time()
     #mol = molecule()
@@ -436,7 +439,11 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
 
   repeat = 3
-  text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
+
+  if not len( sys.argv) > 1:
+    text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
+  else:
+    text = sys.argv[1]
   #text = "c1ccc2c1ccccc2"
   #text = "C=1ccC=2C=1C=CC=CC=2"
 
