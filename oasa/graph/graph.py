@@ -105,6 +105,20 @@ class graph:
 
 
 
+  def insert_a_graph( self, gr):
+    """inserts all edges and vertices to the graph"""
+    self.vertices.extend( gr.vertices)
+    self.edges |= gr.edges
+
+
+  # do we need it?
+  def connect_a_graph( self, gr, v1, v2, e=None):
+    """gr is a graph, v1 is vertex in self, v2 is vertex in gr, bond is what to use for connection"""
+    self.insert_a_graph( gr)
+    self.add_edge( v1, v2, e=e)
+    
+
+
   def disconnect( self, v1, v2):
     """disconnects vertices v1 and v2, on success returns the edge"""
     if v1 != None and v2 != None:

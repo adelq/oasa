@@ -23,6 +23,10 @@ from atom import atom
 from bond import bond
 from xml import xpath
 import xml.dom.minidom as dom
+from known_groups import cdml_to_smiles
+from periodic_table import periodic_table as PT
+from coords_generator import calculate_coords
+import smiles
 
 
 
@@ -38,6 +42,7 @@ def read_cdml( text):
   for mol_el in xpath.Evaluate( path, doc):
     atom_id_remap = {}
     mol = molecule()
+    groups = []
     for atom_el in xpath.Evaluate( "atom", mol_el):
       name = atom_el.getAttribute( 'name')
       if not name:
@@ -48,12 +53,21 @@ def read_cdml( text):
       z = pos.getAttribute( 'z') and float( pos.getAttribute('z')) or 0
       x = cm_to_float_coord( pos.getAttribute('x'))
       y = cm_to_float_coord( pos.getAttribute('y'))
-      a = atom( symbol=name,
-                charge=atom_el.getAttribute( 'charge') or 0,
-                coords=( x, y, z))
-      mol.add_vertex( v=a)
+      if name in PT:
+        # its really an atom 
+        a = atom( symbol=name,
+                  charge=atom_el.getAttribute( 'charge') or 0,
+                  coords=( x, y, z))
+        mol.add_vertex( v=a)
+      elif name in cdml_to_smiles:
+        # its a known group
+        group = smiles.text_to_mol( cdml_to_smiles[ name], calc_coords=0)
+        a = group.vertices[0]
+        a.x = x
+        a.y = y
+        a.z = z
+        mol.insert_a_graph( group) 
       atom_id_remap[ atom_el.getAttribute( 'id')] = a
-
     if do_not_continue_this_mol:
       break
 
@@ -88,7 +102,9 @@ def file_to_mol( f):
   return text_to_mol( f.read())
 
 def text_to_mol( text):
-  return read_cdml( text)
+  mol = read_cdml( text)
+  calculate_coords( mol, bond_length=-1)
+  return mol
 
 #
 ##################################################
@@ -100,7 +116,6 @@ def text_to_mol( text):
 if __name__ == '__main__':
 
   import sys
-  import smiles
 
   if len( sys.argv) < 1:
     print "you must supply a filename"
@@ -112,6 +127,10 @@ if __name__ == '__main__':
   f = file( file_name, 'r')
 
   mol = file_to_mol( f)
+  calculate_coords( mol, bond_length=-1)
+
+  for a in mol.vertices:
+    print a.x, a.y
 
   f.close()
 

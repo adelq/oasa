@@ -30,17 +30,20 @@ class coords_generator:
   def __init__( self, bond_length=1):
     self.bond_length = bond_length
 
-  def calculate_coords( self, mol, bond_length=0):
-    """the bond_length (when given is set to self.bond_length,
+  def calculate_coords( self, mol, bond_length=0, force=0):
+    """the bond_length (when given) sets the self.bond_length,
     if bond_length == -1 we suppose that there is already part of the molecule containing
-    coords and we calculate the bond_length from it"""
+    coords and we calculate the bond_length from it;
+    force says if we should recalc all coords"""
     processed = []
     self.mol = mol
     # at first we have a look if there is already something with coords
-    as = [a for a in mol.vertices if a.x != None and a.y != None]
+    as = Set( [a for a in mol.vertices if a.x != None and a.y != None])
     # the we check if they are in a continuos block but not the whole molecule
-    # (in this case we regenerate all the coords)
-    if as and not len( as) == len( mol.vertices):
+    # (in this case we regenerate all the coords if force, otherwise exit)
+    if len( as) == len( mol.vertices) and not force:
+      return 
+    elif not force and as and not len( as) == len( mol.vertices):
       # this is here just to setup the molecule well
       self.rings = mol.get_smallest_independent_cycles()
       # it is - we can use it as backbone
@@ -69,6 +72,10 @@ class coords_generator:
         pass
       else:
         self.bond_length = bond_length
+      # at last we have to remove rings that have coords from the self.rings
+      for ring in self.rings[:]:
+        if backbone >= ring:
+          self.rings.remove( ring)
     else:
       if bond_length > 0:
         # here we must have bond_length > 0
@@ -428,9 +435,9 @@ def show_mol( mol):
   app.mainloop()
 
 
-def calculate_coords( mol):
+def calculate_coords( mol, bond_length=0, force=0):
   g = coords_generator()
-  g.calculate_coords( mol)
+  g.calculate_coords( mol, bond_length=bond_length, force=force)
 
 
 
@@ -442,9 +449,9 @@ if __name__ == '__main__':
   import smiles
   from molecule import molecule
 
-  sm = "CCC"
+  #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  #sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
+  sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
   #sm = 'CCCC(C)(CCC)CCC(Cl)C(CCCCC)CCC(C)CCC'
 
   print "oasa::coords_generator DEMO"
@@ -456,7 +463,7 @@ if __name__ == '__main__':
   import time
   cg = coords_generator()
   t = time.time()
-  cg.calculate_coords( mol, bond_length=-1)
+  cg.calculate_coords( mol, force=1)
   print "generation time: %.3f ms" % ((time.time()-t)*1000)
 
   show_mol( mol)

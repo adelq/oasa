@@ -389,14 +389,15 @@ def mol_to_text( structure):
   structure.mark_aromatic_bonds()
   return sm.get_smiles( structure)
 
-def text_to_mol( text):
+def text_to_mol( text, calc_coords=1):
   sm = smiles()
   sm.read_smiles( text)
   mol = sm.structure
   mol.localize_aromatic_bonds()
   for b in mol.bonds:
     b.aromatic = 0
-  coords_generator.calculate_coords( mol)
+  if calc_coords:
+    coords_generator.calculate_coords( mol)
   return mol
 
 def mol_to_file( mol, f):
