@@ -58,6 +58,10 @@ class linear_formula( object):
       if not self.molecule.vertices:
         return None
 
+      # is the molecule connected?
+      if not self.molecule.is_connected():
+        return None
+
       self.molecule.remove_all_hydrogens()
       return self.molecule
 
@@ -271,25 +275,25 @@ def reverse_formula( text):
   
 
 
-form = 'C6H6'
-#form = "CH2(Cl)2"
+## form = '(CH3)2CHOAc'
+## #form = "CH2(Cl)2"
 
-#print [i for i in gen_formula_fragments_helper( form)]
-#print [i for i in gen_formula_fragments( form)]
+## #print [i for i in gen_formula_fragments_helper( form)]
+## #print [i for i in gen_formula_fragments( form)]
 
-a = linear_formula( form , valency=0)
-m = a.molecule
-#coords_generator.calculate_coords( m)
+## a = linear_formula( form , valency=0)
+## m = a.molecule
+## #coords_generator.calculate_coords( m)
 
-print m
+## print m
 
-import smiles
-print form
+## import smiles
+## print form
 
-if m:
-  print smiles.mol_to_text( m)
+## if m:
+##   print smiles.mol_to_text( m)
 
-#coords_generator.show_mol( m)
+## #coords_generator.show_mol( m)
 
 
-#print [i for i in gen_formula_fragments( "CO(OH)2")]
+## #print [i for i in gen_formula_fragments( "CO(OH)2")]
