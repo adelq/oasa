@@ -331,7 +331,7 @@ class graph:
     other cycles in graph are guaranteed to be combinations of them"""
     ncycles = len( self.edges) - len( self.vertices) + 1
     if ncycles < 0:
-      warnings.warn( "The number of edges is smaller than number of vertices -1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 2)
+      warnings.warn( "The number of edges is smaller than number of vertices -1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
     cycles = self.get_all_cycles_e()
     while not len( cycles) <= ncycles:

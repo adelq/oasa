@@ -135,7 +135,10 @@ class molecule( graph.graph):
     for those that are not aromatic but marked so
     (it is for instance possible to misuse 'cccc' in smiles to create butadiene)
     they will be properly localized but marked as non-aromatic"""
-    rings = self.get_smallest_independent_cycles()
+    erings = self.get_smallest_independent_cycles_e()
+    # filter off rings without aromatic bonds
+    erings = filter( lambda x: len( [b for b in x if b.aromatic]), erings)
+    rings = map( self.edge_subgraph_to_vertex_subgraph, erings)
     # sort rings
     rings.sort( lambda x,y: len(y)%2 - len(x)%2) # odd size rings first
     last_rings = []
