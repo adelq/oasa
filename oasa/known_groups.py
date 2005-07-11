@@ -43,5 +43,6 @@ name_to_smiles = {'Me': 'C',
                   'Bz': 'C(=O)c1ccccc1',
                   'Ac': 'C(=O)C',
                   'Ms': 'S(=O)(=O)C',
-                  'Ts': 'S(=O)(=O)c1ccc(C)cc1'
+                  'Ts': 'S(=O)(=O)c1ccc(C)cc1',
+                  'Bu': 'CCCC'
                   }
