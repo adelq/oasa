@@ -38,6 +38,7 @@ class graph:
 
   vertex_class = vertex
   edge_class = edge
+  uses_cache = True
 
 
   def __init__( self, vertices = []):
@@ -46,10 +47,15 @@ class graph:
     else:
       self.vertices = []
     self.edges = Set()
+    self._cache = {}
+
+
 
   def __str__( self):
     str = "graph G(V,E), |V|=%d, |E|=%d" % ( len( self.vertices), len( self.edges))
     return str
+
+
 
   def copy( self):
     """provides a really shallow copy, the vertex and edge objects will remain the same,
@@ -81,11 +87,15 @@ class graph:
   def create_graph( self):
     return self.__class__()
   
-  def delete_vertex( self, v):
-    self.vertices.remove( v)
 
 
   ## MODIFICATION METHODS
+
+
+  def delete_vertex( self, v):
+    self.vertices.remove( v)
+    self._flush_cache()
+
 
   def add_vertex( self, v=None):
     """adds a vertex to a graph, if v argument is not given creates a new one.
@@ -97,6 +107,7 @@ class graph:
     else:
       warnings.warn( "Added vertex is already present in graph %s" % str( v), UserWarning, 2)
       return None
+    self._flush_cache()
     return v
 
 
@@ -118,6 +129,7 @@ class graph:
     self.edges.add( e)
     v1.add_neighbor( v2, e)
     v2.add_neighbor( v1, e)
+    self._flush_cache()
     return e
 
 
@@ -126,7 +138,8 @@ class graph:
     """inserts all edges and vertices to the graph"""
     self.vertices.extend( gr.vertices)
     self.edges |= gr.edges
-
+    self._flush_cache()
+    
 
   # do we need it?
   def connect_a_graph( self, gr, v1, v2, e=None):
@@ -144,6 +157,7 @@ class graph:
         self.edges.remove( e)
         v1.remove_neighbor( v2)
         v2.remove_neighbor( v1)
+      self._flush_cache()
       return e
     else:
       return None
@@ -155,7 +169,8 @@ class graph:
     v1, v2 = e.get_vertices()
     v1.remove_edge_and_neighbor( e)
     v2.remove_edge_and_neighbor( e)
-
+    self._flush_cache()
+    
 
   def remove_vertex( self, v):
     for neigh in v.get_neighbors():
@@ -329,11 +344,21 @@ class graph:
   def get_smallest_independent_cycles_e( self):
     """returns a set of smallest possible independent cycles as list of Sets of edges,
     other cycles in graph are guaranteed to be combinations of them"""
+    # try cache first
+    cycles = self._get_cache( "smallest_cycles_e")
+    if cycles:
+      return cycles
+    # cache not hit
     ncycles = len( self.edges) - len( self.vertices) + 1
     if ncycles < 0:
-      warnings.warn( "The number of edges is smaller than number of vertices -1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
+      warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
-    cycles = self.get_all_cycles_e()
+    # we try to use the fast method
+    cycles = self.get_almost_all_cycles_e()
+    # if it fails, we switch to the slow one
+    if len( cycles) < ncycles:
+      cycles = self.get_all_cycles_e()
+      
     while not len( cycles) <= ncycles:
       d = len( cycles) - ncycles
       cycles = filter_off_dependent_cycles( cycles)
@@ -344,7 +369,8 @@ class graph:
       warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
     elif len( cycles) > ncycles: 
       warnings.warn( "The number of independent cycles found (%d) is larger than the theoretical value %d (|E|-|V|+1), but I cannot improve it." % (len( cycles), ncycles), UserWarning, 2)
-
+      
+    self._set_cache( 'smallest_cycles_e', cycles)
     return cycles
 
 
@@ -649,6 +675,23 @@ class graph:
       if vs_ver:
         already_there.extend( vs_ver)
         yield vs_ver
+
+
+
+  def _flush_cache( self):
+    self._cache = {}
+
+
+  def _set_cache( self, name, value):
+    if self.uses_cache:
+      self._cache[ name] = value
+
+
+  def _get_cache( self, name):
+    return self._cache.get( name, None)
+    
+
+
 
 
 
