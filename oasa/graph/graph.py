@@ -354,10 +354,10 @@ class graph:
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
     # we try to use the fast method
-    cycles = self.get_almost_all_cycles_e()
+    #cycles = self.get_almost_all_cycles_e()
     # if it fails, we switch to the slow one
-    if len( cycles) < ncycles:
-      cycles = self.get_all_cycles_e()
+    #if len( cycles) < ncycles:
+    cycles = self.get_all_cycles_e()
       
     while not len( cycles) <= ncycles:
       d = len( cycles) - ncycles
@@ -395,6 +395,23 @@ class graph:
 
 
 
+  def get_all_cycles_e_old( self):
+    """returns all cycles found in the graph as sets of edges;
+    it was obseleted and replaced by about 3x faster version found bellow"""
+    to_go = Set( self.vertices)
+    for v in self.vertices:
+      if v.degree == 1:
+        to_go.remove( v)
+    all_cycles = []
+    while to_go:
+      v = to_go.pop()
+      cycles = self._get_cycles_for_vertex( v, to_reach=v)
+      all_cycles += cycles
+    all_cycles = Set( map( ImSet, all_cycles))
+    return all_cycles
+
+
+
   def get_all_cycles_e( self):
     """returns all cycles found in the graph as sets of edges"""
     to_go = Set( self.vertices)
@@ -402,21 +419,11 @@ class graph:
       if v.degree == 1:
         to_go.remove( v)
     all_cycles = []
-#    removed = Set( to_go)
     while to_go:
-##       while removed:
-##         new_removed = Set()
-##         for v in removed:
-##           for n in v.neighbors:
-##             if n in to_go and n.degree == 2:
-##               new_removed.add( n)
-##               to_go.remove( n)
-##         removed = new_removed
-      if to_go:
-        v = to_go.pop()
-#        removed = Set([v])
-        cycles = self._get_cycles_for_vertex( v, to_reach=v)
-        all_cycles += cycles
+      v = to_go.pop()
+      cycles = self._get_cycles_for_vertex( v, to_reach=v)
+      all_cycles += cycles
+      to_go -= Set( [ver for ver in reduce( operator.or_, map( self.edge_subgraph_to_vertex_subgraph, cycles), Set()) if ver.degree == 2])
     all_cycles = Set( map( ImSet, all_cycles))
     return all_cycles
 
