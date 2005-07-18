@@ -358,8 +358,8 @@ class molecule( graph.graph):
 
 
   def select_matching_substructures( self, other):
-    """select fragments that match the complete molecule 'other';
-    thread and max_thread is used during iteration only"""
+    """select fragments that match the complete molecule 'other' and yield them
+    as lists of atoms in the order of other.vertices"""
     i = 0 
     for a in other.vertices:
       a.properties_[ 'subsearch'] = {}
@@ -372,10 +372,8 @@ class molecule( graph.graph):
         a.properties_[ 'subsearch'][i] = v
         v.properties_[ 'subsearch'][i] = a
 
-    self._mark_matching_threads( v, other, i)
-    threads = Set( reduce( operator.add, [v.properties_['subsearch'].keys() for v in self.vertices], []))
     yielded = Set()
-    for thread in threads:
+    for thread in self._mark_matching_threads( v, other):
       vs = [v.properties_['subsearch'][thread] for v in other.vertices]
       # for symetrical fragments we have to get rid of copies (O1=N=O2 and O2=N=O1)
       vsset = ImmutableSet( vs)
@@ -383,10 +381,14 @@ class molecule( graph.graph):
         yield vs
       yielded.add( vsset)
 
+    for v in self.vertices + other.vertices:
+      del v.properties_['subsearch']
+
+
     
       
-  def _mark_matching_threads( self, v, other, max_thread):
-    """v is other vertex, other is the other molecule, max_thread is the current maximal thread value"""
+  def _mark_matching_threads( self, v, other):
+    """v is other vertex, other is the other molecule"""
     thread = 0
     threads = v.properties_['subsearch'].keys()
     while threads:
@@ -401,9 +403,10 @@ class molecule( graph.graph):
           for me, mn in mirror.get_neighbor_edge_pairs():
             if thread not in mn.properties_['subsearch'].keys() and n.same_as( mn) and e.same_as( me):
               candidates.add( mn)
+
           if candidates:
             if len( candidates) > 1:
-              new_threads, max_thread = self._spawn_thread( other, thread, len( candidates)-1, max_thread)
+              new_threads = self._spawn_thread( other, thread, len( candidates)-1)
               ths = [thread] + new_threads
             else:
               ths = [thread]
@@ -411,7 +414,7 @@ class molecule( graph.graph):
               th = ths.pop()
               n.properties_['subsearch'][th] = c
               c.properties_['subsearch'][th] = n
-            self._mark_matching_threads( n, other, max_thread)
+            [x for x in self._mark_matching_threads( n, other)] # just make the generator run
             if thread not in v.properties_['subsearch'].keys():
               # the thread already died
               #print "died", thread, v
@@ -427,7 +430,7 @@ class molecule( graph.graph):
         else: 
           found = False
           for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread in mn.properties_['subsearch'].keys() and n.same_as( mn) and e.same_as( me):
+            if thread in mn.properties_['subsearch'].keys() and n.properties_['subsearch'][thread] == mn and e.same_as( me):
               found = True
               break
           if not found:
@@ -435,17 +438,21 @@ class molecule( graph.graph):
             self._delete_thread( other, thread)
             break
          
-      threads = [i for i in v.properties_['subsearch'].keys() if i > thread]
+      threads = [i for i in v.properties_['subsearch'].keys() if i >= thread]
+      if thread in threads:
+        threads.remove( thread)
+        yield thread
           
 
 
-  def _spawn_thread( self, other, thread, number, max_thread):
+  def _spawn_thread( self, other, thread, number):
     my_vs = [v for v in self.vertices if thread in v.properties_['subsearch'].keys()]
     other_vs = [v for v in other.vertices if thread in v.properties_['subsearch'].keys()]
+    max_thread = max( [max( v.properties_['subsearch'].keys()) for v in other.vertices if v.properties_['subsearch'].keys()])
     for i in range( max_thread +1, max_thread +number +1, 1):
       for v in my_vs + other_vs:
         v.properties_['subsearch'][ i] = v.properties_['subsearch'][thread]
-    return range( max_thread +1, max_thread +number +1, 1), max_thread + number
+    return range( max_thread +1, max_thread +number +1, 1)
 
 
 

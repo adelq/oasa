@@ -47,7 +47,34 @@ class atom( graph.vertex):
 
 
   def same_as( self, other):
-    if self.symbol == other.symbol and self.valency == other.valency:
+    # query atoms
+    if self.query:
+      # halogens
+      if self.symbol == "X":
+        if other.symbol in ("F","Cl","Br","I"):
+          return True
+        else:
+          return False
+      # Q (any except H,C)
+      elif self.symbol == "Q":
+        if other.symbol not in "HC":
+          return True
+        else:
+          return False
+      # A (any except H)
+      elif self.symbol == "A":
+        if other.symbol != "H":
+          return True
+        else:
+          return False
+      # R - anything
+      elif self.symbol == "R":
+        return True
+      else:
+        raise ValueError, "The atom does not specify a query but is marked as query %s" % self 
+
+    # normal atoms
+    elif self.symbol == other.symbol and self.valency == other.valency:
       return True
     return False
 
@@ -92,23 +119,29 @@ class atom( graph.vertex):
 
   # symbol
   def _set_symbol( self, symbol):
-##     if symbol == "X":
-##       # support for X as a dummy atom
-##       self.valency = 1
-##       self.symbol_number = 0
-##     else:
     try:
       self.valency = PT.periodic_table[ symbol]['valency'][0]
       self.symbol_number = PT.periodic_table[ symbol]['ord']
+      if "query" in PT.periodic_table[ symbol]:
+        self._query = PT.periodic_table[ symbol]["query"]
+      else:
+        self._query = False
     except KeyError:
       raise ValueError, "wrong atom symbol %s" % symbol
-      #warn( "wrong atom symbol %s" % symbol)
     self._symbol = symbol
 
   def _get_symbol( self):
     return self._symbol
 
   symbol = property( _get_symbol, _set_symbol, None, "atom symbol")
+
+
+  # query (does the atom specify a query?)
+  def _get_query( self):
+    return self._query
+
+  query = property( _get_query, None, None, "does the atom specify a query?")
+
 
 
   # valency

@@ -104,7 +104,14 @@ periodic_table = {
   "Po": {"weight": 209   , 'ord':   1, "valency": (2,4,6)},
   "At": {"weight": 210   , 'ord':   1, "valency": (1,7)},
   "Rn": {"weight": 222   , 'ord':   1, "valency": (0,2)},
-  "U":  {"weight": 238.03, 'ord':   1, "valency": (3,4,5,6)}
+  "U":  {"weight": 238.03, 'ord':   1, "valency": (3,4,5,6)},
+
+  # query atoms
+  "X":  {"weight": 0, 'ord': 300, "valency": (1,),       "query": True},  # halogen
+  "Q":  {"weight": 0, 'ord': 301, "valency": (1,2,3,4),  "query": True},  # anything not H or C
+  "A":  {"weight": 0, 'ord': 302, "valency": (1,2,3,4),  "query": True},  # anything not H
+  "R":  {"weight": 0, 'ord': 303, "valency": (1,2,3,4),  "query": True},  # anything
+  
   }
 
 # elements that accept cations and raise their valency; for each element a valency is specified
