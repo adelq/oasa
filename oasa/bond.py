@@ -41,11 +41,20 @@ class bond( graph.edge, object):
     self.type = type
     self.properties_ = {}
 
+
   def __str__( self):
     if self._vertices:
       return "bond between %s %s" % tuple( map( str, self.vertices))
     else:
       return "bond, no vertices set"
+
+
+  def same_as( self, other):
+    if self.order == other.order:
+      return True
+    return False
+
+
 
   def set_vertices( self, vs=[]):
     """sets the vertices this edge connects"""

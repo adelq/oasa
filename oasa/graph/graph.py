@@ -353,6 +353,7 @@ class graph:
     if ncycles < 0:
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
+    # well now the slow method is often faster than the fast one, so the bellow is not interesting
     # we try to use the fast method
     #cycles = self.get_almost_all_cycles_e()
     # if it fails, we switch to the slow one

@@ -426,41 +426,38 @@ if __name__ == '__main__':
 
   import sys
 
-  def main( text, cycles):
-    t = time.time()
-    #mol = molecule()
-    #mol._read_file()
-    for j in range( cycles):
-      mol = text_to_mol( text)
-      mol.remove_all_hydrogens()
-      text = mol_to_text( mol)
-      print "  generated: %s" % text
-    t = time.time()-t
-    print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
+##   def main( text, cycles):
+##     t = time.time()
+##     #mol = molecule()
+##     #mol._read_file()
+##     for j in range( cycles):
+##       mol = text_to_mol( text)
+##       mol.remove_all_hydrogens()
+##       text = mol_to_text( mol)
+##       print "  generated: %s" % text
+##     t = time.time()-t
+##     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
 
-  repeat = 3
+##   repeat = 3
 
-  if not len( sys.argv) > 1:
-    text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
-  else:
-    text = sys.argv[1]
-  #text = "c1ccc2c1ccccc2"
-  #text = "C=1ccC=2C=1C=CC=CC=2"
+##   if not len( sys.argv) > 1:
+##     text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
+##   else:
+##     text = sys.argv[1]
+##   #text = "c1ccc2c1ccccc2"
+##   #text = "C=1ccC=2C=1C=CC=CC=2"
 
-  print "oasa::SMILES DEMO"
-  print "converting following smiles to smiles (%d times)" % repeat
-  print "  starting with: %s" % text
-  main( text, repeat)
-  #import profile
-  #profile.run( 'main( text, repeat)')
+##   print "oasa::SMILES DEMO"
+##   print "converting following smiles to smiles (%d times)" % repeat
+##   print "  starting with: %s" % text
+##   main( text, repeat)
+##   #import profile
+##   #profile.run( 'main( text, repeat)')
 
   # test of equal function for comparison of molecules
-##   a = text_to_mol('CC1=CCCCC1')
-##   a.add_missing_hydrogens()
-##   b = text_to_mol('CC1CC=CCC1')
-##   b.add_missing_hydrogens()
-##   for l in range( 1, 4):
-##     print equals( a, b, level=l)
+  a = text_to_mol('C1CCCC1-N(=O)=O')
+  b = text_to_mol('CN(=O)=O')
+  print [map( str, frag) for frag in a.select_matching_substructures( b)]
 
 # DEMO END
 ##################################################

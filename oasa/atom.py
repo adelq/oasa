@@ -46,6 +46,12 @@ class atom( graph.vertex):
     self.multiplicity = 1
 
 
+  def same_as( self, other):
+    if self.symbol == other.symbol and self.valency == other.valency:
+      return True
+    return False
+
+
   ## PROPERTIES
 
   # coords

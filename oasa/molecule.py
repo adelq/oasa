@@ -353,6 +353,112 @@ class molecule( graph.graph):
     return p
 
 
+
+
+
+
+  def select_matching_substructures( self, other):
+    """select fragments that match the complete molecule 'other';
+    thread and max_thread is used during iteration only"""
+    i = 0 
+    for a in other.vertices:
+      a.properties_[ 'subsearch'] = {}
+    v = other.vertices[0]
+
+    for a in self.vertices:
+      a.properties_[ 'subsearch'] = {}
+      if v.same_as( a):
+        i += 1
+        a.properties_[ 'subsearch'][i] = v
+        v.properties_[ 'subsearch'][i] = a
+
+    self._mark_matching_threads( v, other, i)
+    threads = Set( reduce( operator.add, [v.properties_['subsearch'].keys() for v in self.vertices], []))
+    yielded = Set()
+    for thread in threads:
+      vs = [v.properties_['subsearch'][thread] for v in other.vertices]
+      # for symetrical fragments we have to get rid of copies (O1=N=O2 and O2=N=O1)
+      vsset = ImmutableSet( vs)
+      if vsset not in yielded:
+        yield vs
+      yielded.add( vsset)
+
+    
+      
+  def _mark_matching_threads( self, v, other, max_thread):
+    """v is other vertex, other is the other molecule, max_thread is the current maximal thread value"""
+    thread = 0
+    threads = v.properties_['subsearch'].keys()
+    while threads:
+      thread = min( threads)
+      threads.remove( thread)
+      #print v, thread
+
+      mirror = v.properties_['subsearch'][thread]
+      for e, n in v.get_neighbor_edge_pairs():
+        if thread not in n.properties_['subsearch'].keys():
+          candidates = Set()
+          for me, mn in mirror.get_neighbor_edge_pairs():
+            if thread not in mn.properties_['subsearch'].keys() and n.same_as( mn) and e.same_as( me):
+              candidates.add( mn)
+          if candidates:
+            if len( candidates) > 1:
+              new_threads, max_thread = self._spawn_thread( other, thread, len( candidates)-1, max_thread)
+              ths = [thread] + new_threads
+            else:
+              ths = [thread]
+            for c in candidates:
+              th = ths.pop()
+              n.properties_['subsearch'][th] = c
+              c.properties_['subsearch'][th] = n
+            self._mark_matching_threads( n, other, max_thread)
+            if thread not in v.properties_['subsearch'].keys():
+              # the thread already died
+              #print "died", thread, v
+              break
+            else:
+              pass
+              #print "continuing", thread, v
+          else:
+            #print "deleting", thread
+            self._delete_thread( other, thread)
+            break
+        # for proper handling of rings we have to check also the ones that are in this thread already
+        else: 
+          found = False
+          for me, mn in mirror.get_neighbor_edge_pairs():
+            if thread in mn.properties_['subsearch'].keys() and n.same_as( mn) and e.same_as( me):
+              found = True
+              break
+          if not found:
+            #print "deleting", thread, "due to ring"
+            self._delete_thread( other, thread)
+            break
+         
+      threads = [i for i in v.properties_['subsearch'].keys() if i > thread]
+          
+
+
+  def _spawn_thread( self, other, thread, number, max_thread):
+    my_vs = [v for v in self.vertices if thread in v.properties_['subsearch'].keys()]
+    other_vs = [v for v in other.vertices if thread in v.properties_['subsearch'].keys()]
+    for i in range( max_thread +1, max_thread +number +1, 1):
+      for v in my_vs + other_vs:
+        v.properties_['subsearch'][ i] = v.properties_['subsearch'][thread]
+    return range( max_thread +1, max_thread +number +1, 1), max_thread + number
+
+
+
+  def _delete_thread( self, other, thread):
+    for v in self.vertices + other.vertices:
+      try:
+        del v.properties_['subsearch'][thread]
+      except KeyError:
+        pass
+
+
+
+
 def the_right_sorting_function( t1, t2):
   for i,l in enumerate( t1):
     k = t2[i]
