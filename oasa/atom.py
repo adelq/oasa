@@ -36,6 +36,7 @@ class atom( graph.vertex):
     graph.vertex.__init__( self)
     self.symbol = symbol
     self.charge = charge
+    self.free_sites = 0
     # None means not set (used)
     if coords:
       self.x, self.y, self.z = coords
@@ -190,6 +191,16 @@ class atom( graph.vertex):
     return self.valency - self.occupied_valency
 
   free_valency = property( _get_free_valency, None, None, "atoms free valency")
+
+
+  # free_sites
+  def _set_free_sites( self, free_sites):
+    self._free_sites = free_sites
+
+  def _get_free_sites( self):
+    return self._free_sites
+
+  free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
 
 
 

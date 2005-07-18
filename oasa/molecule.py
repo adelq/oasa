@@ -356,8 +356,9 @@ class molecule( graph.graph):
 
 
 
+  # --- the fragment matching routines ---
 
-  def select_matching_substructures( self, other):
+  def select_matching_substructures( self, other, implicit_freesites=False):
     """select fragments that match the complete molecule 'other' and yield them
     as lists of atoms in the order of other.vertices"""
     i = 0 
@@ -378,7 +379,12 @@ class molecule( graph.graph):
       # for symetrical fragments we have to get rid of copies (O1=N=O2 and O2=N=O1)
       vsset = ImmutableSet( vs)
       if vsset not in yielded:
-        yield vs
+        # if we do not use implicit_freesites we have to check the non-implicit one here
+        if not implicit_freesites:
+          if self._freesites_match( other, thread):
+            yield vs
+        else:
+          yield vs
       yielded.add( vsset)
 
     for v in self.vertices + other.vertices:
@@ -394,7 +400,6 @@ class molecule( graph.graph):
     while threads:
       thread = min( threads)
       threads.remove( thread)
-      #print v, thread
 
       mirror = v.properties_['subsearch'][thread]
       for e, n in v.get_neighbor_edge_pairs():
@@ -417,13 +422,10 @@ class molecule( graph.graph):
             [x for x in self._mark_matching_threads( n, other)] # just make the generator run
             if thread not in v.properties_['subsearch'].keys():
               # the thread already died
-              #print "died", thread, v
               break
             else:
               pass
-              #print "continuing", thread, v
           else:
-            #print "deleting", thread
             self._delete_thread( other, thread)
             break
         # for proper handling of rings we have to check also the ones that are in this thread already
@@ -434,7 +436,6 @@ class molecule( graph.graph):
               found = True
               break
           if not found:
-            #print "deleting", thread, "due to ring"
             self._delete_thread( other, thread)
             break
          
@@ -463,6 +464,19 @@ class molecule( graph.graph):
       except KeyError:
         pass
 
+
+  def _freesites_match( self, other, thread):
+    for v in other.vertices:
+      mirror = v.properties_['subsearch'][thread]
+      if not len( [n for n in mirror.neighbors if thread not in n.properties_['subsearch']]) <= v.free_sites:
+        # if there is more unmatched neighbors then free-site it does not match
+        return False
+    return True
+        
+
+
+
+  # // --- end of the fragment matching routines ---
 
 
 
