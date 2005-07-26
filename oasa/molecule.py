@@ -468,8 +468,9 @@ class molecule( graph.graph):
   def _freesites_match( self, other, thread):
     for v in other.vertices:
       mirror = v.properties_['subsearch'][thread]
-      if not len( [n for n in mirror.neighbors if thread not in n.properties_['subsearch']]) <= v.free_sites:
-        # if there is more unmatched neighbors then free-site it does not match
+      unmatched_ns = [n for n in mirror.neighbors if thread not in n.properties_['subsearch'] and not n.symbol == 'H']
+      # if there is more unmatched neighbors then free-site it does not match (Hs don't count)
+      if not len( unmatched_ns) <= v.free_sites:
         return False
     return True
         
