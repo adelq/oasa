@@ -210,11 +210,6 @@ class atom( graph.vertex):
     return "atom '%s'" % str( self.symbol)
 
 
-  def get_free_valency( self):
-    """returns free valency of atom. Aromatic bonds should be localized, otherwise they are counted as simple"""
-    warn( "use free_valency instead", DeprecationWarning, 2)
-    return self.free_valency
-
 
   def get_x( self):
     return self.x or 0
