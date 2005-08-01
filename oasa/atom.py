@@ -21,6 +21,7 @@ import sys
 sys.path.append( '../')
 
 import graph
+from chem_vertex import chem_vertex
 import periodic_table as PT
 from common import is_uniquely_sorted
 
@@ -30,7 +31,7 @@ from warnings import warn
 
 
 
-class atom( graph.vertex):
+class atom( chem_vertex):
 
   def __init__( self, symbol='C', charge=0, coords=None):
     graph.vertex.__init__( self)
@@ -82,42 +83,6 @@ class atom( graph.vertex):
 
   ## PROPERTIES
 
-  # coords
-  def _set_coords( self, coords):
-    if len( coords) == 2:
-      self.x, self.y = coords
-    elif len( coords) == 3:
-      self.x, self.y, self.z = coords
-    else:
-      raise "wrong number of coordinates"
-
-  def _get_coords( self):
-    return self.x, self.y, self.z
-
-  coords = property( _get_coords, _set_coords, None, "atom coords")
-
-
-
-
-  # charge
-  def _set_charge( self, charge):
-    self._charge = charge
-
-  def _get_charge( self):
-    return self._charge
-
-  charge = property( _get_charge, _set_charge, None, "atom charge")
-
-  # multiplicity
-  def _set_multiplicity( self, multiplicity):
-    self._multiplicity = multiplicity
-
-  def _get_multiplicity( self):
-    return self._multiplicity
-
-  multiplicity = property( _get_multiplicity, _set_multiplicity, None, "atom multiplicity")
-
-
   # symbol
   def _set_symbol( self, symbol):
     try:
@@ -145,17 +110,7 @@ class atom( graph.vertex):
 
 
 
-  # valency
-  def _set_valency( self, valency):
-    self._valency = valency
-
-  def _get_valency( self):
-    return self._valency
-
-  valency = property( _get_valency, _set_valency, None, "atoms valency")
-
-
-  # occupied_valency
+  # occupied_valency (overrides chem_vertex occupied_valency)
   def _get_occupied_valency( self):
     i = 0
     for b in self._neighbors.keys():
@@ -185,12 +140,6 @@ class atom( graph.vertex):
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
-
-  # free_valency
-  def _get_free_valency( self):
-    return self.valency - self.occupied_valency
-
-  free_valency = property( _get_free_valency, None, None, "atoms free valency")
 
 
   # free_sites
@@ -236,14 +185,7 @@ class atom( graph.vertex):
 
 
 
-  def get_x( self):
-    return self.x or 0
 
-  def get_y( self):
-    return self.y or 0
-
-  def get_z( self):
-    return self.z or 0
 
   def has_aromatic_bonds( self):
     for b in self._neighbors.keys():
@@ -369,65 +311,6 @@ class atom( graph.vertex):
         cip[3] = len( cip[1])
       yield None
 
-
-
-
-  def gen_CIP_sequence_does_something_else( self, iter_over=None, came_from=None):
-    yield self
-    neighs = self.get_neighbors()
-    if came_from:
-      assert came_from in neighs
-      neighs.remove( came_from)
-    # strip the neighbors that were already processed
-    #neighs = [i for i in neighs if i in iter_over]
-    # end if there are no neighs
-    if not neighs:
-      raise StopIteration
-    # remove neighs from iter_over
-##     for i in neighs:
-##       try:
-##         iter_over.remove( i)
-##       except ValueError:
-##         pass
-    # generators of the neighs
-    cips = []
-    for a in neighs:
-      cips.append( [0, [], a.gen_CIP_sequence( came_from = self)])
-    while cips:
-      reserve = [] # here we store whats ruled out to use it later
-      # this returns the already generated cip of the new first atom in later cycles
-      for a in cips[0][1]:
-        if a != None:
-          yield a
-      while cips:
-        for cip in cips:
-          try:
-            next_a = cip[2].next()
-          except StopIteration:
-            cip[1].append( None)
-            continue
-          cip[0] += next_a.symbol_number
-          cip[1].append( next_a)
-        if cips[0][1] == None:
-          # here we remove the cip[0] that wa marked as finished
-          del cips[0]
-        if cips:
-          cips.sort( cip_sorting_function)
-          if cips[0][1][-1] != None:
-            yield cips[0][1][-1]  # the first atom in the sequence
-          else:
-            del cips[0]
-          # we filter of the already ruled out things
-          ruled_out = [c for c in cips if c[0] < cips[0][0]]
-          ruled_out.reverse() # to ensure sorting in the reserve
-          reserve += ruled_out
-          [cips.remove( c) for c in ruled_out]
-          to_yield_now = [c for c in cips if c[1][-1] == None]  # e.g. 2 of the 3 H's in Me end here
-          for c in to_yield_now:
-            yield c[1][-2]
-          [cips.remove( c) for c in to_yield_now]
-      cips = reserve
-      cips.reverse() # so we ensure that the 
 
 
 def cip_sorting_function( a, b):
