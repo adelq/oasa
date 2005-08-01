@@ -368,7 +368,7 @@ class molecule( graph.graph):
 
     for a in self.vertices:
       a.properties_[ 'subsearch'] = {}
-      if v.same_as( a):
+      if v.matches( a):
         i += 1
         a.properties_[ 'subsearch'][i] = v
         v.properties_[ 'subsearch'][i] = a
@@ -406,7 +406,7 @@ class molecule( graph.graph):
         if thread not in n.properties_['subsearch'].keys():
           candidates = Set()
           for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread not in mn.properties_['subsearch'].keys() and n.same_as( mn) and e.same_as( me):
+            if thread not in mn.properties_['subsearch'].keys() and n.matches( mn) and e.matches( me):
               candidates.add( mn)
 
           if candidates:
@@ -432,7 +432,7 @@ class molecule( graph.graph):
         else: 
           found = False
           for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread in mn.properties_['subsearch'].keys() and n.properties_['subsearch'][thread] == mn and e.same_as( me):
+            if thread in mn.properties_['subsearch'].keys() and n.properties_['subsearch'][thread] == mn and e.matches( me):
               found = True
               break
           if not found:

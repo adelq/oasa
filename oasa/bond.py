@@ -49,7 +49,7 @@ class bond( graph.edge, object):
       return "bond, no vertices set"
 
 
-  def same_as( self, other):
+  def matches( self, other):
     if self.order == other.order:
       return True
     return False

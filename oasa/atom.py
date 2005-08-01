@@ -47,7 +47,7 @@ class atom( graph.vertex):
     self.multiplicity = 1
 
 
-  def same_as( self, other):
+  def matches( self, other):
     # query atoms
     if self.query:
       # halogens
@@ -201,6 +201,31 @@ class atom( graph.vertex):
     return self._free_sites
 
   free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
+
+
+
+  # electronegativity
+  def _get_electronegativity( self):
+    try:
+      return PT.periodic_table[self.symbol]['en']
+    except KeyError:
+      return None
+
+  electronegativity = property( _get_electronegativity, None, None, "atoms electronegativity")
+
+
+
+  # oxidation number
+  def _get_oxidation_number( self):
+    en = self.charge
+    for e, n in self.get_neighbor_edge_pairs():
+      if n.symbol != self.symbol:
+        en += e.order * (n.electronegativity > self.electronegativity and 1 or -1)
+    hen = PT.periodic_table['H']['en']
+    en += self.free_valency * (hen > self.electronegativity and 1 or -1) 
+    return en
+
+  oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number as text")
 
 
 
