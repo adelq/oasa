@@ -25,7 +25,6 @@ import periodic_table as PT
 from common import is_uniquely_sorted
 
 import copy
-import itertools
 from warnings import warn
 
 
@@ -110,7 +109,15 @@ class chem_vertex( graph.vertex):
 
   # occupied_valency
   def _get_occupied_valency( self):
-    return self.degree
+    i = 0
+    for b in self._neighbors.keys():
+      ord = b.order
+      if ord == 4:
+        ord = 1
+      i += ord
+
+    return i
+
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
@@ -136,3 +143,8 @@ class chem_vertex( graph.vertex):
 
 
 
+  def has_aromatic_bonds( self):
+    for b in self._neighbors.keys():
+      if b.aromatic:
+        return 1
+    return 0

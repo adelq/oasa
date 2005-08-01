@@ -34,49 +34,14 @@ from warnings import warn
 class atom( chem_vertex):
 
   def __init__( self, symbol='C', charge=0, coords=None):
-    graph.vertex.__init__( self)
+    chem_vertex.__init__( self, coords=coords)
     self.symbol = symbol
     self.charge = charge
-    self.free_sites = 0
-    # None means not set (used)
-    if coords:
-      self.x, self.y, self.z = coords
-    else:
-      self.x = None
-      self.y = None 
-      self.z = None
-    self.multiplicity = 1
+
 
 
   def matches( self, other):
-    # query atoms
-    if self.query:
-      # halogens
-      if self.symbol == "X":
-        if other.symbol in ("F","Cl","Br","I"):
-          return True
-        else:
-          return False
-      # Q (any except H,C)
-      elif self.symbol == "Q":
-        if other.symbol not in "HC":
-          return True
-        else:
-          return False
-      # A (any except H)
-      elif self.symbol == "A":
-        if other.symbol != "H":
-          return True
-        else:
-          return False
-      # R - anything
-      elif self.symbol == "R":
-        return True
-      else:
-        raise ValueError, "The atom does not specify a query but is marked as query %s" % self 
-
-    # normal atoms
-    elif self.symbol == other.symbol and self.valency == other.valency:
+    if self.symbol == other.symbol and self.valency == other.valency:
       return True
     return False
 
@@ -88,12 +53,8 @@ class atom( chem_vertex):
     try:
       self.valency = PT.periodic_table[ symbol]['valency'][0]
       self.symbol_number = PT.periodic_table[ symbol]['ord']
-      if "query" in PT.periodic_table[ symbol]:
-        self._query = PT.periodic_table[ symbol]["query"]
-      else:
-        self._query = False
     except KeyError:
-      raise ValueError, "wrong atom symbol %s" % symbol
+      raise oasa_invalid_atom_symbol( "wrong atom symbol %s", symbol)
     self._symbol = symbol
 
   def _get_symbol( self):
@@ -102,11 +63,6 @@ class atom( chem_vertex):
   symbol = property( _get_symbol, _set_symbol, None, "atom symbol")
 
 
-  # query (does the atom specify a query?)
-  def _get_query( self):
-    return self._query
-
-  query = property( _get_query, None, None, "does the atom specify a query?")
 
 
 
@@ -184,14 +140,6 @@ class atom( chem_vertex):
     return "atom '%s'" % str( self.symbol)
 
 
-
-
-
-  def has_aromatic_bonds( self):
-    for b in self._neighbors.keys():
-      if b.aromatic:
-        return 1
-    return 0
 
 
 

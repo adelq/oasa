@@ -30,9 +30,6 @@ import operator
 
 class molecule( graph.graph):
 
-  vertex_class = atom
-  edge_class = bond
-
 
   def __init__( self, vertices =[]):
     graph.graph.__init__( self, vertices=vertices)
@@ -44,6 +41,20 @@ class molecule( graph.graph):
 
   def __str__( self):
     return "molecule, %d atoms, %d bonds" % (len( self.vertices), len( self.edges))
+
+
+
+
+  def create_vertex( self, vertex_class=None):
+    if not vertex_class:
+      return atom()
+    else:
+      return vertex_class()
+
+
+
+  def create_edge( self):
+    return bond()
 
 
 

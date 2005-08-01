@@ -36,8 +36,6 @@ class graph:
   """provides a minimalistic graph implementation suitable for analysis of chemical problems,
   even if some care was taken to make the graph work with nonsimple graphs, there are cases where it won't!"""
 
-  vertex_class = vertex
-  edge_class = edge
   uses_cache = True
 
 
@@ -79,10 +77,10 @@ class graph:
     return c
     
   def create_vertex( self):
-    return self.vertex_class()
+    return vertex()
 
   def create_edge( self):
-    return self.edge_class()
+    return edge()
 
   def create_graph( self):
     return self.__class__()

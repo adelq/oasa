@@ -96,5 +96,6 @@ class vertex( object):
   # PROPERTIES
 
   neighbors = property( get_neighbors, None, None, "the neighboring vertices")
+  neighbor_edges = property( get_neighbor_edges, None, None, "the neighboring edges")
   degree = property( get_degree, None, None, "the degree of the vertex")
   

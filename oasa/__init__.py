@@ -35,13 +35,19 @@ import graph
 import linear_formula
 import periodic_table
 import config
+import query_atom
+import chem_vertex
+import oasa_exceptions
 
 atom = atom.atom
 molecule = molecule.molecule
 bond = bond.bond
+query_atom = query_atom.query_atom
+chem_vertex = chem_vertex.chem_vertex
+
 
 __all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table','config',
-           'coords_optimizer']
+           'coords_optimizer','chem_vertex','query_atom','oasa_exceptions']
 
 
 
