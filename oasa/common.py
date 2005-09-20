@@ -17,6 +17,9 @@
 
 #--------------------------------------------------------------------------
 
+from sets import Set
+
+
 def gen_combinations_of_series( series):
   """series is a list of lists (tuples), the generator yields
   lists by combining each element of each list with each other"""
@@ -43,3 +46,12 @@ def is_uniquely_sorted( series, sorting_function=None):
   return True
 
 
+
+def least_common_item( series):
+  d = {}
+  for i in series:
+    d[i] = d.get( i, 0) + 1
+  return d.keys()[ d.values().index( min( d.values()))]
+
+
+    

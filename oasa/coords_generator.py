@@ -78,7 +78,7 @@ class coords_generator:
           self.rings.remove( ring)
     else:
       if force:
-        for a in self.mol:
+        for a in self.mol.vertices:
           a.x = None
           a.y = None
       if bond_length > 0:

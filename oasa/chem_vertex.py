@@ -77,6 +77,7 @@ class chem_vertex( graph.vertex):
 
   # charge
   def _set_charge( self, charge):
+    self._clean_cache()
     self._charge = charge
 
   def _get_charge( self):
@@ -88,6 +89,7 @@ class chem_vertex( graph.vertex):
 
   # multiplicity
   def _set_multiplicity( self, multiplicity):
+    self._clean_cache()
     self._multiplicity = multiplicity
 
   def _get_multiplicity( self):
@@ -99,6 +101,7 @@ class chem_vertex( graph.vertex):
 
   # valency
   def _set_valency( self, valency):
+    self._clean_cache()
     self._valency = valency
 
   def _get_valency( self):
@@ -124,7 +127,12 @@ class chem_vertex( graph.vertex):
 
   # free_valency
   def _get_free_valency( self):
-    return self.valency - self.occupied_valency
+    try:
+      return self._cache[ 'free_valency']
+    except KeyError:
+      x = self.valency - self.occupied_valency
+      self._cache[ 'free_valency'] = x
+      return x
 
   free_valency = property( _get_free_valency, None, None, "atoms free valency")
 
@@ -148,3 +156,9 @@ class chem_vertex( graph.vertex):
       if b.aromatic:
         return 1
     return 0
+
+
+
+  def bond_order_changed( self):
+    """called by a bond when its order was changed"""
+    self._clean_cache()

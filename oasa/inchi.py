@@ -21,6 +21,7 @@ from plugin import plugin
 from molecule import molecule
 import periodic_table as pt
 import molfile
+import misc
 
 import re
 from sets import Set
@@ -33,6 +34,8 @@ import os.path
 import tempfile
 import popen2
 import coords_generator
+from oasa_exceptions import oasa_not_implemented_error
+
 
 
 class inchi( plugin):
@@ -41,14 +44,22 @@ class inchi( plugin):
   read = 1
   write = 0
 
+  proton_donors = ['O','F','Cl','Br','I','N','S']
+  proton_acceptors = ['P','N','S']
+  
+
   def __init__( self, structure=None):
     self.structure = structure
+    self._no_possibility_to_improve = False
+    self._movable_additional_protones = []
 
   def set_structure( self, structure):
     self.structure = structure
 
   def get_structure( self):
     return self.structure
+
+
 
   def split_layers( self, text):
     # try if we have a xml document in hand
@@ -71,27 +82,74 @@ class inchi( plugin):
     return layers
 
 
+
+
+  def get_layer( self, prefix):
+    for l in self.layers:
+      if l.startswith( prefix):
+        return l[1:]
+
+
+
+
   def read_inchi( self, text):
     self.structure = molecule()
-    layers = self.split_layers( text)
+    self.layers = self.split_layers( text)
     # version support (very crude)
-    self.version = self._get_version( layers[0])
-    hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer( layers[3])
-    self.read_sum_layer( layers[1], hs_in_hydrogen_layer)
-    self.read_connectivity_layer( layers[2])
-    self.read_hydrogen_layer( layers[3])
-    self.structure.add_missing_bond_orders()
-    #self.structure.remove_all_hydrogens()
+    self.version = self._check_version( self.layers[0])
+    if not self.version:
+      raise ValueError, "this version of INChI is not supported - %s" % self.layers[0]
+    
+    self.hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer()
+    self.read_sum_layer()
+    self.read_connectivity_layer()
+    repeat = True
+    run = 0
+    hs = []
+    # we have to repeat this step in order to find the right positioning of movable hydrogens
+    while repeat and not self._no_possibility_to_improve and run<1000:
+      # cleanup
+      for h in hs:
+        self.structure.remove_vertex( h)
+      for b in self.structure.edges:
+        b.order = 1
+      for v in self.structure.vertices:
+        v.symbol = v.symbol
+        v.charge = 0
+
+      # the code itself
+      run += 1
+      hs = self.read_hydrogen_layer( run=run)
+      self.read_charge_layer()
+      self.read_p_layer()
+      [a.raise_valency_to_senseful_value() for a in self.structure.vertices]
+      # if there is no possibility to improve via the hydrogen positioning we must try the retry here
+      self.structure.add_missing_bond_orders()
+
+      # here we check out if the molecule seems ok
+      if not filter( None, [v.free_valency for v in self.structure.vertices]) and \
+             not filter( None, [not v.order for v in self.structure.edges]):
+        repeat = False
+      else:
+        pass
+    if repeat and self._no_possibility_to_improve:
+      pass
+      #print "**error warning"
 
 
-  def read_sum_layer( self, layer, hs_in_hydrogen_layer):
-    form = pt.formula_dict( layer)
+
+
+  def read_sum_layer( self):
+    if "." in self.layers[1]:
+      raise oasa_not_implemented_error( "INChI", "multiple compound systems are not supported by the library")
+
+    form = pt.formula_dict( self.layers[1])
     processed_hs = 0 #for diborane and similar compounds we must process some Hs here
     for k in form.sorted_keys():
       for i in range( form[k]):
         if k == 'H':
           # we want to process only the Hs that are not in the h-layer
-          if processed_hs >= form[k] - hs_in_hydrogen_layer:
+          if processed_hs >= form[k] - self.hs_in_hydrogen_layer:
             continue
           else:
             processed_hs += 1
@@ -101,13 +159,8 @@ class inchi( plugin):
 
 
 
-  def read_connectivity_layer( self, layer):
-    # version check
-    if self.version[0] >= 1 and self.version[1] > 11:
-      if layer[0] != 'c':
-        print "missing layers specifier at the begining of the string"
-      else:
-        layer = layer[1:]
+  def read_connectivity_layer( self):
+    layer = self.get_layer( "c")
     chunks = re.split( "([0-9]*)", layer)
     chunks = filter( None, chunks)
     chunks = filter( lambda x: x!='-', chunks)
@@ -125,78 +178,206 @@ class inchi( plugin):
         try:
           i = int( c)
         except:
-          print "should not happen"
+          print "should not happen", c
           continue
         # atom
         if last_atom:
           self.structure.add_edge( last_atom-1, i-1)
         last_atom = i
 
-  def read_hydrogen_layer( self, layer):
-    # version check
-    if self.version[0] >= 1 and self.version[1] > 11:
-      if layer[0] != 'h':
-        print "missing layers specifier at the begining of the string"
-      else:
-        layer = layer[1:]
 
-    re_for_brackets = "\([H\d,]+?\)"
+  def read_hydrogen_layer( self, run=0):
+    added_hs = []
+    layer = self.get_layer( "h")
+    # check presence of the layer
+    if not layer:
+      return
+
+    re_for_brackets = "\([H\d,\-]+?\)"
     brackets = re.findall( re_for_brackets, layer)
     for bracket in brackets:
-      self._process_moving_hydrogen( bracket[1:-1])
+      added_hs += self._process_moving_hydrogen( bracket[1:-1], run=run)
+
+    # we improve only in the _process_moving_hydrogen so if it was not called there is no possibility for improvement
+    if not added_hs:
+      self._no_possibility_to_improve = True
+      
     layer = re.sub( re_for_brackets, "", layer)  # clean the brackets out
 
-    chunks = re.split( ",", layer)
-    chunks = filter( None, chunks)
-    hatoms = [a for a in self.structure.vertices if a.symbol=='H']
-    for c in chunks:
-      as, ns = re.split( "H", c)
-      if '-' in as:
-        a1, a2 = re.split( '-', as)
-      else:
-        a1 = as
-        a2 = as
-      a1 = int( a1)
-      a2 = int( a2)
-      ns = ns and int(ns) or 1
-      for i in range( a1, a2+1):
-        for j in range( ns):
+    for vs, num in self._parse_h_layer( layer):
+      for v in vs:
+        for j in range( num):
           h = self.structure.create_vertex()
           h.symbol = 'H'
           self.structure.add_vertex( h)
-          self.structure.add_edge( i-1, h)
+          self.structure.add_edge( v-1, h)
+          added_hs.append( h)
+
+    return added_hs
+
+
+  def read_charge_layer( self):
+    layer = self.get_layer( "q")
+    if not layer:
+      return
+
+    charge = int( layer[1:])
+
+    change = True
+    # at first we try to put the charge on atoms with negative free_valency
+    while charge and change:
+      change = False
+      for v in self.structure.vertices:
+        if v.free_valency == -1:
+          if charge > 0:
+            v.charge = -v.free_valency
+          else:
+            v.charge = v.free_valency
+          charge -= v.charge
+          change = True
+          break
+
+#    print 1
+
+    change = True
+    # then we try to put the charge on orphan atoms
+    while charge and change:
+      change = False
+      for v in self.structure.vertices:
+        if v.free_valency and sum( [n.free_valency for n in v.neighbors]) < v.free_valency:
+          charge = self._valency_to_charge( v, charge)
+          change = True
+          break
+
+
+#    print 2
+
+    # this could be rewritten to put charges to places where a segment with odd number of free_valencies is
+    # this would be more general than counting the free_valencies for the whole molecule
+
+    free_valencies = sum( [a.free_valency for a in self.structure.vertices])
+    if free_valencies % 2:
+      # odd number of free_valencies means we have to put the charge somewhere to make a free_valency there
+      change = True
+      while charge and change:
+        change = False
+        for v in self.structure.vertices:
+          if v.symbol != 'C' and not v.free_valency and filter( None, [n.free_valency for n in v.neighbors]):
+            v.charge = charge
+            charge = 0
+            change = True
+            break
+
+#    print 3
+
+    # then we do the others, at first trying heteroatoms
+    change = True
+    while charge and change:
+      change = False
+      for v in self.structure.vertices:
+        if v.free_valency and v.symbol != 'C':
+          charge = self._valency_to_charge( v, charge)
+          change = True
+          break
+
+
+#    print 4
+
+    # then we try the carbon atoms as well
+    change = True
+    while charge and change:
+      change = False
+      for v in self.structure.vertices:
+        if v.free_valency:
+          charge = self._valency_to_charge( v, charge)
+          change = True
+          break
+
+    if charge:
+      raise oasa_exceptions.oasa_inchi_error( "The molecular charge could not be allocated to any atom (%d)." % charge)
+
+
+
+  def read_p_layer( self):
+    layer = self.get_layer( "p")
+    if not layer:
+      return
+
+    p = int( layer[1:])
+
+    # if there are movable additional protones process them first
+    if self._movable_additional_protones:
+      num_h, vs = self._movable_additional_protones[0], self._movable_additional_protones[1:]
+      for i in range( num_h):
+        v = vs[i]
+        h = self.structure.create_vertex()
+        h.symbol = 'H'
+        self.structure.add_vertex( h)
+        self.structure.add_edge( v, h)
+        p -= 1
+        v.charge += 1
+        self._movable_additional_protones = []
+        print v, v.free_valency, v.charge
+
+    # then come the other additional protones
+    while p:
+      for v in self.structure.vertices:
+        if p > 0:
+          if v.symbol in self.proton_acceptors:
+            h = self.structure.create_vertex()
+            h.symbol = 'H'
+            self.structure.add_vertex( h)
+            self.structure.add_edge( v, h)
+            p -= 1
+            v.charge += 1
+            break
+        elif p < 0:
+          if v.symbol in self.proton_donors:
+            hs = [n for n in v.neighbors if n.symbol=='H']
+            if hs:
+              h = hs[0]
+              self.structure.remove_vertex( h)
+              p += 1
+              v.charge -= 1
+              break
+          
+    
+
+
+
+  def _valency_to_charge( self, v, charge):
+    """sets charge of the atom so that it has minimal free_valency,
+    returns the 'unused' charge in case it is not comsumed whole"""
+    ch = misc.signum( charge) * min( abs( charge), v.free_valency)
+    if charge < 0:
+      charge += ch
+      v.charge = -ch
+    else:
+      charge -= ch
+      v.charge = ch
+    return charge
         
 
-  def get_number_of_hydrogens_in_hydrogen_layer( self, layer):
+  def get_number_of_hydrogens_in_hydrogen_layer( self):
     # version check
-    if self.version[0] >= 1 and self.version[1] > 11:
-      if layer[0] != 'h':
-        print "missing layers specifier at the begining of the string"
-      else:
-        layer = layer[1:]
+    layer = self.get_layer( "h")
+    if not layer:
+      return 0
+
+    # check if we can handle it
+    if "*" in layer or ";" in layer:
+      raise oasa_not_implemented_error( "INChI", "multiple compound systems are not supported by the library")
 
     ret = 0
 
-    re_for_brackets = "\([H\d,]+?\)"
+    re_for_brackets = "\([H\d,\-]+?\)"
     brackets = re.findall( re_for_brackets, layer)
     for bracket in brackets:
       ret += self._get_hs_in_moving_hydrogen( bracket[1:-1])
     layer = re.sub( re_for_brackets, "", layer)  # clean the brackets out
 
-    chunks = re.split( ",", layer)
-    chunks = filter( None, chunks)
-    for c in chunks:
-      as, ns = re.split( "H", c)
-      if '-' in as:
-        a1, a2 = re.split( '-', as)
-      else:
-        a1 = as
-        a2 = as
-      a1 = int( a1)
-      a2 = int( a2)
-      ns = ns and int(ns) or 1
-      for i in range( a1, a2+1):
-        ret += ns
+    for vs, num in self._parse_h_layer( layer):
+      ret += len( vs) * num
 
     return ret
 
@@ -204,36 +385,111 @@ class inchi( plugin):
   def _get_hs_in_moving_hydrogen( self, chunk):
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
-      hs = int( chks[0][1:])  # number of atoms
+      if chks[0][1:] == "-":
+        hs = 0
+      else:
+        hs = int( chks[0][1:])  # number of atoms
     else:
       hs = 1
     return hs
     
 
 
-  def _get_version( self, ver):
+  def _check_version( self, ver):
     """returns a tuple of two version numbers"""
+    if "Beta" in ver:
+      return None
     v = ver.strip(string.ascii_lowercase+string.ascii_uppercase)
-    return v.split('.')
+    if "." in v:
+      return v.split('.')
+    else:
+      return v, 0
 
 
-  def _process_moving_hydrogen( self, chunk):
+  def _process_moving_hydrogen( self, chunk, run=0):
+    added_hs = []
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
-      hs = int( chks[0][1:])  # number of atoms
+      if chks[0][1:] == "-":
+        hs = 1
+      else:
+        hs = int( chks[0][1:])  # number of atoms
     else:
       hs = 1
-    for i in range( hs):
-      ai = int( chks[ i+1]) # atom index
-      h = self.structure.create_vertex()
-      h.symbol = 'H'
-      self.structure.add_vertex( h)
-      self.structure.add_edge( ai, h)
-      
+
+    # the movable protons do not come from the summary layer but from the p-layer
+    if hs < 0:
+      self._movable_additional_protones = [-hs] + [self.structure.vertices[ int( i)-1] for i in chks[1:]]
+      print map( str, self._movable_additional_protones)
+      return []
+
+    vertices = [self.structure.vertices[ int( i)-1] for i in chks[1:]]
+    vs = vertices
+    take = hs
+
+    # here we generate still shorter combinations of vertices that receive hydrogens
+    # because of applying them in circles in the next step, we simulate the case
+    # where more than one hydrogen is put to one atom
+    while (run > misc.x_over_y( len( vs), take)) and take:
+      run -= misc.x_over_y( len( vs), take)
+      take -= 1
+    if not take:
+      self._no_possibility_to_improve = True
+      return []
+    variations = misc.gen_variations( vs, take)
+    for i in range( run):
+      vs = variations.next()
+
+    while hs:
+      for v in vs:
+        h = self.structure.create_vertex()
+        h.symbol = 'H'
+        self.structure.add_vertex( h)
+        self.structure.add_edge( v, h)
+        hs -= 1
+        added_hs.append( h)
+        if not hs:
+          break
+
+    return added_hs
+
+
+  def _split_h_layer( self, layer):
+    was_h = False
+    chunks = []
+    chunk = ""
+    for c in layer:
+      if c == 'H':
+        was_h = True
+        chunk += c
+      elif c == "," and was_h:
+        was_h = False
+        chunks.append( chunk)
+        chunk = ""
+      else:
+        chunk += c
+    if chunk:
+      chunks.append( chunk)
+    return chunks
+
+
+  def _parse_h_layer( self, layer):
+    chunks = self._split_h_layer( layer)
+    for chunk in chunks:
+      head, tail = chunk.split( 'H')
+      num_h = tail and int( tail) or 1
+      vertices = []
+      for p in head.split( ","):
+        if "-" in p:
+          a, b = map( int, p.split("-"))
+          vertices.extend( range( a, b+1))
+        else:
+          vertices.append( int( p))
+      yield vertices, num_h
       
 
 def generate_inchi( m):
-  program = "/home/beda/inchi/cINChI11b"
+  program = "/home/beda/inchi/cInChI-1"
 
   #try:
   name = os.path.join( tempfile.gettempdir(), "gen_inchi.mol")
@@ -257,8 +513,15 @@ def generate_inchi( m):
 
   if exit_code == 0 or exit_code != 0:
     in_file = open( in_name, 'r')
-    [line for line in in_file.readlines()]
-    out = ( line[6:].strip())
+    # go to the last line
+    i = 0
+    for line in in_file.readlines():
+      i += 1
+    if i > 1:
+      out = ( line[6:].strip())
+    else:
+      # single line file is the only way how to determine it has crashed
+      out = ""
     in_file.close()
   else:
     out = ''
@@ -278,18 +541,17 @@ reads_files = 1
 writes_text = 1
 writes_files = 1
 
-def text_to_mol( text, include_hydrogens=False, mark_aromatic_bonds=False, calc_coords=1):
+def text_to_mol( text, include_hydrogens=True, mark_aromatic_bonds=False, calc_coords=1):
   inc = inchi()
   inc.read_inchi( text)
   mol = inc.structure
   #mol.add_missing_bond_orders()
-  #if not include_hydrogens:
-  #  mol.remove_all_hydrogens()
+  if not include_hydrogens:
+    mol.remove_all_hydrogens()
   if calc_coords:
     coords_generator.calculate_coords( mol)
   if mark_aromatic_bonds:
     mol.mark_aromatic_bonds()
-
   return mol
 
 
@@ -324,16 +586,14 @@ if __name__ == '__main__':
     for jj in range( cycles):
       mol = text_to_mol( text)
       print mol
+      print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
+      print "  inchi:  ", mol_to_text( mol)
     t1 = time.time() - t1
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  #inch = "1.12Beta/C18H36N2O6/c1-7-21-13-14-24-10-4-20-5-11-25-17-15-22-8-2-19(1)3-9-23-16-18-26-12-6-20/h1-18H2"
-  #inch = "1.12Beta/C8H8/c1-2-5-3(1)7-4(1)6(2)8(5)7/h1-8H"
-  #inch = '1.12Beta/C3H4O2/c1-2-4-6-5-3-1/h1-3H' #1.12Beta/B2H6/c1-3-2-4-1/h1-2H2'
-  inch = "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H"
-  #inch = "1.12Beta/C5H5N5/c6-4-3-5(9-1-7-3)10-2-8-4/h1-2H,(H3,6,7,8,9,10)"
+  inch = "1/C10H15N3O/c1-13(2,3)12-10(14)11-9-7-5-4-6-8-9/h4-8H,1-3H3,(H-,11,12,14)/p+1" #"1/C7H12N/c1-8-7-5-3-2-4-6-7/h1,7H,2-6H2/q+1" #"1/C19H35N2O2S/c1-2-3-4-5-6-7-8-9-10-11-12-13-16-21-17-14-15-19(18-21)24(20,22)23/h14-15,17-18H,2-13,16H2,1H3,(H2,20,22,23)/q+1" #"1/C14H13NO2/c1-11-5-6-12(13(16)9-11)14(17)10-15-7-3-2-4-8-15/h2-9H,10H2,1H3/p+1"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch

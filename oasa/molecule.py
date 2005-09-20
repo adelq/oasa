@@ -20,11 +20,13 @@
 
 import graph
 from atom import atom
+from query_atom import query_atom
 from bond import bond
 from sets import Set, ImmutableSet
 import copy
 import common
 import operator
+import misc
 
 
 
@@ -65,18 +67,44 @@ class molecule( graph.graph):
 
 
   def add_missing_hydrogens( self):
+    hs = Set()
     for v in copy.copy( self.vertices):
       for i in range( v.free_valency):
         h = self.create_vertex()
         h.symbol = 'H'
         self.add_vertex( h)
         self.add_edge( h, v)
+        hs.add( h)
+    return hs
 
 
+  def add_missing_bond_orders( self, retry=False):
+    """retry means to try a different approach because the last one was not successful"""
+    # we must at first find orphans that will force raising of valence of their neigbors
+    # NO2 is a typical example
+    [v.raise_valency_to_senseful_value() for v in self.vertices if v.free_valency < 0]
 
-  def add_missing_bond_orders( self):
-    #for b in self.edges:
-    #  b.properties_['free_order'] = min( [a.free_valency for a in b.vertices])
+    fix = True
+    while fix:
+      fix = False
+      for v in self.vertices:
+        if sum( [n.free_valency for n in v.neighbors]) < v.free_valency:
+          for n in v.neighbors:
+            if n.raise_valency():
+              fix = True
+              break
+        if fix:
+          break
+
+    if retry:
+      for ring in self.get_smallest_independent_cycles_e():
+        if not filter( lambda x: x<=0, [v.free_valency for v in self.edge_subgraph_to_vertex_subgraph( ring)]):
+          for e in ring:
+            e.order = 4
+      self.localize_aromatic_bonds()
+
+
+    # now we process it
     processed = [1]
     while processed:
       processed = []
@@ -87,6 +115,17 @@ class molecule( graph.graph):
         if len( as1) == 1 or len( as2) == 1:
           b.order += min( [a.free_valency for a in b.vertices])
           processed.append( b)
+
+      # we process non-bridge bonds first, so that their fixation does not
+      # force unsolvable possitioning of bonds in rings
+      if not processed:
+        for b in self.edges:
+          i = min( [a.free_valency for a in b.vertices])
+          if i and not self.is_edge_a_bridge( b):
+            processed = [b]
+            b.order += i
+            break
+
       if not processed:
         for b in self.edges:
           i = min( [a.free_valency for a in b.vertices])
@@ -94,6 +133,7 @@ class molecule( graph.graph):
             processed = [b]
             b.order += i
             break
+
 
 
 
@@ -222,6 +262,14 @@ class molecule( graph.graph):
 
   def localize_fake_aromatic_bonds( self):
     to_go = [b for b in self.bonds if b.order == 4]
+
+    processed = []
+    for b in to_go:
+      if not min( [a.free_valency for a in b.vertices]):
+        b.order = 1
+        processed.append( b)
+    to_go = misc.difference( to_go, processed)
+
     while to_go:
       # find the right bond
       b = None
@@ -369,13 +417,36 @@ class molecule( graph.graph):
 
   # --- the fragment matching routines ---
 
-  def select_matching_substructures( self, other, implicit_freesites=False):
+  def select_matching_substructures( self, other, implicit_freesites=False, auto_cleanup=True):
     """select fragments that match the complete molecule 'other' and yield them
-    as lists of atoms in the order of other.vertices"""
+    as lists of atoms in the order of other.vertices; however when other has
+    explicit hydrogens that match implicit hydrogens on self the length of the
+    returned fragment might be shorter of the matched implicit hydrogens;
+    
+    IF YOU DON'T LET THE GENERATOR RUN TO THE END OR SET THE auto_cleanup TO FALSE, YOU HAVE TO
+    RUN clean_after_search MANUALLY NOT TO CLUTTER THE STRUCTURE"""
+
+    # at first decide if we need to add implicit hydrogens to self
+    add_implicit = False
+    for v in other.vertices:
+      if (isinstance( v, atom) and v.symbol == 'H') or \
+         (isinstance( v, query_atom) and ('H' in v.symbols or 'R' in v.symbols)):
+        add_implicit = True
+        break
+    if add_implicit:
+      added_hs = self.add_missing_hydrogens()
+      for h in added_hs:
+        h.properties_['implicit_hydrogen'] = True
+
+
+    # then we create the dicts for storing threads in each of the atoms
     i = 0 
     for a in other.vertices:
       a.properties_[ 'subsearch'] = {}
-    v = other.vertices[0]
+    # here we select the vertex to start from
+    vs = [v for v in other.vertices if isinstance( v, atom)]
+    sym = common.least_common_item( [v.symbol for v in vs])
+    v = [v for v in vs if v.symbol == sym][0]
 
     for a in self.vertices:
       a.properties_[ 'subsearch'] = {}
@@ -384,6 +455,7 @@ class molecule( graph.graph):
         a.properties_[ 'subsearch'][i] = v
         v.properties_[ 'subsearch'][i] = a
 
+    # now we can proceed with the search
     yielded = Set()
     for thread in self._mark_matching_threads( v, other):
       vs = [v.properties_['subsearch'][thread] for v in other.vertices]
@@ -393,10 +465,22 @@ class molecule( graph.graph):
         # if we do not use implicit_freesites we have to check the non-implicit one here
         if not implicit_freesites:
           if self._freesites_match( other, thread):
-            yield vs
+            yield [v for v in vs if not 'implicit_hydrogen' in v.properties_.keys()]
         else:
-          yield vs
+          yield [v for v in vs if not 'implicit_hydrogen' in v.properties_.keys()]
       yielded.add( vsset)
+
+    if auto_cleanup:
+      self.clean_after_search( other)
+
+
+
+  def clean_after_search( self, other):
+    # finally we remove the added implicit hydrogens
+    hs = [v for v in self.vertices if 'implicit_hydrogen' in v.properties_.keys()]
+    for v in hs:
+      del v.properties_['implicit_hydrogen']
+      self.remove_vertex( v)
 
     for v in self.vertices + other.vertices:
       del v.properties_['subsearch']

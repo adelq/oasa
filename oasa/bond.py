@@ -65,6 +65,7 @@ class bond( graph.edge, object):
     return self._vertices
 
   def set_order( self, order):
+    [a.bond_order_changed() for a in self.vertices]
     if order == 4:
       self._order = None
       self.aromatic = 1

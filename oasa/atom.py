@@ -41,6 +41,8 @@ class atom( chem_vertex):
 
 
   def matches( self, other):
+    if not isinstance( other, atom):
+      return False
     if self.symbol == other.symbol and self.valency == other.valency:
       return True
     return False
@@ -50,6 +52,7 @@ class atom( chem_vertex):
 
   # symbol
   def _set_symbol( self, symbol):
+    self._clean_cache()
     try:
       self.valency = PT.periodic_table[ symbol]['valency'][0]
       self.symbol_number = PT.periodic_table[ symbol]['ord']
@@ -68,6 +71,11 @@ class atom( chem_vertex):
 
   # occupied_valency (overrides chem_vertex occupied_valency)
   def _get_occupied_valency( self):
+    try:
+      return self._cache['occupied_valency']
+    except KeyError:
+      pass
+
     i = 0
     for b in self._neighbors.keys():
       ord = b.order
@@ -92,7 +100,15 @@ class atom( chem_vertex):
     else:
       charge = 0
 
-    return i+charge+self.multiplicity-1
+    x = i+charge+self.multiplicity-1
+
+    ## if 'occupied_valency' in self._cache:
+##       if not self._cache['occupied_valency'] == x:
+##         print i, charge, self.multiplicity
+
+    self._cache['occupied_valency'] = x
+
+    return x
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
@@ -124,14 +140,13 @@ class atom( chem_vertex):
   def _get_oxidation_number( self):
     en = self.charge
     for e, n in self.get_neighbor_edge_pairs():
-      if n.symbol != self.symbol:
+      if isinstance( n, atom) and n.symbol != self.symbol:
         en += e.order * (n.electronegativity > self.electronegativity and 1 or -1)
     hen = PT.periodic_table['H']['en']
     en += self.free_valency * (hen > self.electronegativity and 1 or -1) 
     return en
 
-  oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number as text")
-
+  oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number")
 
 
 
@@ -158,6 +173,7 @@ class atom( chem_vertex):
     for v in PT.periodic_table[ self.symbol]['valency']:
       if v > self.valency:
         self.valency = v
+        self._clean_cache()
         return True
     return False
 

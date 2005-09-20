@@ -32,15 +32,23 @@ class vertex( object):
     self.properties_ = {} # used to store intermediate properties such as distances etc.
     self.value = None  # used to store any object associated with the vertex
     self._neighbors = {} # set of all neighbors
+    self._clean_cache()
+    
     
   def __str__( self):
     return ("vertex, value=%s, degree=%d, " % (str( self.value), self.get_degree()) )+str(self.properties_)
 
+  def _clean_cache( self):
+    self._cache = {}
+
+
   def add_neighbor( self, v, e):
     """adds a neighbor connected via e"""
+    self._clean_cache()
     self._neighbors[ e] = v
 
   def remove_neighbor( self, v):
+    self._clean_cache()
     to_del = None
     for k, vv in self._neighbors.iteritems():
       if v == vv:
@@ -52,6 +60,7 @@ class vertex( object):
       raise "cannot remove non-existing neighbor"
 
   def remove_edge_and_neighbor( self, e):
+    self._clean_cache()
     if e in self._neighbors.keys():
       del self._neighbors[ e]
     else:

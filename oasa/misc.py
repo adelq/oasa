@@ -192,3 +192,38 @@ isinstance_of_one = lambda obj, parents: some_apply( lambda x: isinstance( obj, 
 
   
 
+def gen_variations(items, n):
+  if n==0:
+    yield []
+  else:
+    for i in xrange( len(items)-n+1):
+      for v in gen_variations(items[i+1:],n-1):
+        yield [items[i]]+v
+
+
+def gen_combinations( items, n):
+  if n==0:
+    yield []
+  else:
+    for i in xrange( len( items)):
+      for v in gen_combinations( items, n-1):
+        index = i+(len(items)-n)
+        if index >= len( items):
+          index -= len( items)
+        yield [items[index]]+v
+
+
+def x_over_y( x, y):
+  return factorial( x) / factorial( y) / factorial( x-y)
+
+
+def factorial( x):
+  ret = 1
+  for i in range( 2, x+1):
+    ret *= i
+  return ret
+
+
+
+
+#print len( list( gen_variations( [1,2,3,4,5], 3)))
