@@ -35,7 +35,7 @@ import tempfile
 import popen2
 import coords_generator
 from oasa_exceptions import oasa_not_implemented_error
-
+from tempfile import mkstemp
 
 
 class inchi( plugin):
@@ -51,7 +51,12 @@ class inchi( plugin):
   def __init__( self, structure=None):
     self.structure = structure
     self._no_possibility_to_improve = False
+    self.cleanup()
+
+  def cleanup( self):
     self.forced_charge = 0
+    self._protonation_dealt_with_already = 0
+    self._added_hs = Set()
 
   def set_structure( self, structure):
     self.structure = structure
@@ -105,26 +110,27 @@ class inchi( plugin):
     self.read_connectivity_layer()
     repeat = True
     run = 0
-    hs = []
     # we have to repeat this step in order to find the right positioning of movable hydrogens
     while repeat and not self._no_possibility_to_improve:
       # cleanup
-      for h in hs:
+      for h in self._added_hs:
         self.structure.remove_vertex( h)
       for b in self.structure.edges:
         b.order = 1
       for v in self.structure.vertices:
         v.symbol = v.symbol
         v.charge = 0
+      self.cleanup()
 
       # the code itself
       run += 1
       assert run < 20
       self.process_forced_charges()
-      hs = self.read_hydrogen_layer( run=run)
+      self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
       [a.raise_valency_to_senseful_value() for a in self.structure.vertices]
+      print [v.valency for v in self.structure.vertices if v.symbol == "N"]
       # if there is no possibility to improve via the hydrogen positioning we must try the retry here
       self.structure.add_missing_bond_orders()
 
@@ -189,7 +195,6 @@ class inchi( plugin):
 
 
   def read_hydrogen_layer( self, run=0):
-    added_hs = []
     layer = self.get_layer( "h")
     # check presence of the layer
     if not layer:
@@ -198,10 +203,10 @@ class inchi( plugin):
     re_for_brackets = "\([H\d,\-]+?\)"
     brackets = re.findall( re_for_brackets, layer)
     for bracket in brackets:
-      added_hs += self._process_moving_hydrogen( bracket[1:-1], run=run)
+      self._process_moving_hydrogen( bracket[1:-1], run=run)
 
     # we improve only in the _process_moving_hydrogen so if it was not called there is no possibility for improvement
-    if not added_hs:
+    if not self._added_hs:
       self._no_possibility_to_improve = True
       
     layer = re.sub( re_for_brackets, "", layer)  # clean the brackets out
@@ -213,9 +218,8 @@ class inchi( plugin):
           h.symbol = 'H'
           self.structure.add_vertex( h)
           self.structure.add_edge( v-1, h)
-          added_hs.append( h)
+          self._added_hs.add( h)
 
-    return added_hs
 
 
   def read_charge_layer( self):
@@ -323,7 +327,7 @@ class inchi( plugin):
     if not layer:
       return
 
-    p = int( layer[1:])
+    p = int( layer[1:]) - self._protonation_dealt_with_already
     old_p = p
 
     # at first add protons to negative charges
@@ -336,18 +340,18 @@ class inchi( plugin):
           self.structure.add_edge( v, h)
           p -= 1
           v.charge += 1
+          self._protonation_dealt_with_already += 1
 
-    if not p:
+    if self._protonation_dealt_with_already:
       # p was solved above
-      dp = sum( [v.charge for v in self.structure.vertices]) - old_p
-      if dp < 0:
+      dp = self._protonation_dealt_with_already - sum( [v.charge for v in self.structure.vertices])
+      if dp > 0:
         # there were no forced charges, so we are not in a zwittrion state, huh, who does not understand that?!
         for v in self.structure.vertices:
-          if dp < 0 and v.symbol in self.proton_acceptors:
+          if dp > 0 and v.symbol in self.proton_acceptors:
             v.charge += 1
-            dp += 1
+            dp -= 1
 
-    
     # then come the other additional protones
     while p:
       old_p = p
@@ -358,6 +362,7 @@ class inchi( plugin):
             h.symbol = 'H'
             self.structure.add_vertex( h)
             self.structure.add_edge( v, h)
+            self._added_hs.add( h)
             p -= 1
             v.charge += 1
             break
@@ -437,13 +442,11 @@ class inchi( plugin):
 
 
   def _process_moving_hydrogen( self, chunk, run=0):
-    added_hs = []
-    charge_change = 0
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
       if chks[0][1:].endswith("-"):
         hs = int( chks[0][1:-1] or 1) + 1  # number of atoms 
-        charge_change = -1
+        self._protonation_dealt_with_already += 1
       else:
         hs = int( chks[0][1:])  # number of atoms
     else:
@@ -456,43 +459,27 @@ class inchi( plugin):
     # here we generate still shorter combinations of vertices that receive hydrogens
     # because of applying them in circles in the next step, we simulate the case
     # where more than one hydrogen is put to one atom
-    if not charge_change:
-      while (run > misc.x_over_y( len( vs), take)) and take:
-        run -= misc.x_over_y( len( vs), take)
-        take -= 1
-      if not take:
-        self._no_possibility_to_improve = True
-        return []
-      variations = misc.gen_variations( vs, take)
-      for i in range( run):
-        vs = variations.next()
-    else:
-      # gen_combinations is overkill here? (is there always only one - ?)
-      variations = misc.gen_variations_and_one( vs, take)
-      for i in range( run):
-        try:
-          vs = variations.next()
-        except StopIteration:
-          self._no_possibility_to_improve = True
-          return []
+    while (run > misc.x_over_y( len( vs), take)) and take:
+      run -= misc.x_over_y( len( vs), take)
+      take -= 1
+    if not take:
+      self._no_possibility_to_improve = True
+      return []
+    variations = misc.gen_variations( vs, take)
+    for i in range( run):
+      vs = variations.next()
         
     while hs:
       for v in vs:
-        if charge_change and hs==1:
-          # the last atom in case of H-
-          v.charge += charge_change
-          self.forced_charge += charge_change
-        else:
-          h = self.structure.create_vertex()
-          h.symbol = 'H'
-          self.structure.add_vertex( h)
-          self.structure.add_edge( v, h)
-          added_hs.append( h)
+        h = self.structure.create_vertex()
+        h.symbol = 'H'
+        self.structure.add_vertex( h)
+        self.structure.add_edge( v, h)
+        self._added_hs.add( h)
         hs -= 1
         if not hs:
           break
 
-    return added_hs
 
 
   def _split_h_layer( self, layer):
@@ -545,16 +532,15 @@ class inchi( plugin):
 def generate_inchi( m):
   program = "/home/beda/inchi/cInChI-1"
 
-  #try:
-  name = os.path.join( tempfile.gettempdir(), "gen_inchi.mol")
-  file = open( name, 'w')
+  f, name = mkstemp( text=True)
+  os.close( f)
+  
+  file = open( name, "w")
   molfile.mol_to_file( m, file)
   file.close()
-#  except:
-#    print "It was imposible to write a temporary Molfile %s" % name
-#    return
 
-  in_name = os.path.join( tempfile.gettempdir(), "gen_inchi.temp")
+  f, in_name = mkstemp( text=True)
+  os.close( f)
 
   if os.name == 'nt':
     options = "/AUXNONE"
@@ -579,6 +565,9 @@ def generate_inchi( m):
     in_file.close()
   else:
     out = ''
+
+  os.remove( in_name)
+  os.remove( name)
 
   return out
 
@@ -639,15 +628,15 @@ if __name__ == '__main__':
     t1 = time.time()
     for jj in range( cycles):
       mol = text_to_mol( text)
-      print sum( [a.charge for a in mol.vertices])
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
       print "  inchi:  ", mol_to_text( mol)
+      print "  charge: ", sum( [a.charge for a in mol.vertices])
     t1 = time.time() - t1
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C7H13Cl2N2O4P/c8-1-3-11(4-2-9)16(14)10-6(5-15-16)7(12)13/h6H,1-5H2,(H,10,14)(H,12,13)" #"1/C34H22GeN8/c1-35(2)40-27-19-11-3-4-12-20(19)28(40)37-30-23-15-7-8-16-24(23)32(42(30)35)39-34-26-18-10-9-17-25(26)33(43(34)35)38-31-22-14-6-5-13-21(22)29(36-27)41(31)35/h3-18H,1-2H3/q+2"
+  inch = "1/C4H6N2O3S/c1-5-2-3-6(4-5)10(7,8)9/h2-4H,1H3/p+1"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch
