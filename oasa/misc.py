@@ -206,11 +206,8 @@ def gen_combinations( items, n):
     yield []
   else:
     for i in xrange( len( items)):
-      for v in gen_combinations( items, n-1):
-        index = i+(len(items)-n)
-        if index >= len( items):
-          index -= len( items)
-        yield [items[index]]+v
+      for v in gen_combinations( [x for x in items if x!=items[i]], n-1):
+        yield [items[i]]+v
 
 
 def x_over_y( x, y):
@@ -224,6 +221,12 @@ def factorial( x):
   return ret
 
 
+def gen_variations_and_one( items, length):
+  for i in items:
+    vars = gen_variations( [x for x in items if x!=i], length-1)
+    for vs in vars:
+      yield vs + [i]
 
 
-#print len( list( gen_variations( [1,2,3,4,5], 3)))
+#print x_over_y( 11, 7)
+#print len( list( gen_variations( [1,2,3,4,5,6,7,8,9,10,11,12], 8)))

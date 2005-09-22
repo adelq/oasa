@@ -45,13 +45,13 @@ class inchi( plugin):
   write = 0
 
   proton_donors = ['O','F','Cl','Br','I','N','S']
-  proton_acceptors = ['P','N','S']
+  proton_acceptors = ['P','N','S','O']
   
 
   def __init__( self, structure=None):
     self.structure = structure
     self._no_possibility_to_improve = False
-    self._movable_additional_protones = []
+    self.forced_charge = 0
 
   def set_structure( self, structure):
     self.structure = structure
@@ -107,7 +107,7 @@ class inchi( plugin):
     run = 0
     hs = []
     # we have to repeat this step in order to find the right positioning of movable hydrogens
-    while repeat and not self._no_possibility_to_improve and run<1000:
+    while repeat and not self._no_possibility_to_improve:
       # cleanup
       for h in hs:
         self.structure.remove_vertex( h)
@@ -119,6 +119,8 @@ class inchi( plugin):
 
       # the code itself
       run += 1
+      assert run < 20
+      self.process_forced_charges()
       hs = self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
@@ -221,11 +223,14 @@ class inchi( plugin):
     if not layer:
       return
 
-    charge = int( layer[1:])
+    charge = int( layer[1:]) - self.forced_charge
 
     change = True
     # at first we try to put the charge on atoms with negative free_valency
+    steps = 0
     while charge and change:
+      steps += 1
+      assert steps < 10
       change = False
       for v in self.structure.vertices:
         if v.free_valency == -1:
@@ -238,10 +243,13 @@ class inchi( plugin):
           break
 
 #    print 1
-
+    steps = 0
     change = True
     # then we try to put the charge on orphan atoms
     while charge and change:
+      steps += 1
+      assert steps < 10
+
       change = False
       for v in self.structure.vertices:
         if v.free_valency and sum( [n.free_valency for n in v.neighbors]) < v.free_valency:
@@ -254,13 +262,17 @@ class inchi( plugin):
 
     # this could be rewritten to put charges to places where a segment with odd number of free_valencies is
     # this would be more general than counting the free_valencies for the whole molecule
-
     free_valencies = sum( [a.free_valency for a in self.structure.vertices])
     if free_valencies % 2:
       # odd number of free_valencies means we have to put the charge somewhere to make a free_valency there
       change = True
+      steps = 0
+
       while charge and change:
         change = False
+        steps += 1
+        assert steps < 10
+
         for v in self.structure.vertices:
           if v.symbol != 'C' and not v.free_valency and filter( None, [n.free_valency for n in v.neighbors]):
             v.charge = charge
@@ -271,9 +283,13 @@ class inchi( plugin):
 #    print 3
 
     # then we do the others, at first trying heteroatoms
+    steps = 0
     change = True
     while charge and change:
       change = False
+      steps += 1
+      assert steps < 10
+
       for v in self.structure.vertices:
         if v.free_valency and v.symbol != 'C':
           charge = self._valency_to_charge( v, charge)
@@ -284,8 +300,12 @@ class inchi( plugin):
 #    print 4
 
     # then we try the carbon atoms as well
+    steps = 0
     change = True
     while charge and change:
+      steps += 1
+      assert steps < 10
+
       change = False
       for v in self.structure.vertices:
         if v.free_valency:
@@ -304,23 +324,33 @@ class inchi( plugin):
       return
 
     p = int( layer[1:])
+    old_p = p
 
-    # if there are movable additional protones process them first
-    if self._movable_additional_protones:
-      num_h, vs = self._movable_additional_protones[0], self._movable_additional_protones[1:]
-      for i in range( num_h):
-        v = vs[i]
-        h = self.structure.create_vertex()
-        h.symbol = 'H'
-        self.structure.add_vertex( h)
-        self.structure.add_edge( v, h)
-        p -= 1
-        v.charge += 1
-        self._movable_additional_protones = []
-        print v, v.free_valency, v.charge
+    # at first add protons to negative charges
+    for v in self.structure.vertices:
+      if p > 0:
+        if v.charge < 0:
+          h = self.structure.create_vertex()
+          h.symbol = 'H'
+          self.structure.add_vertex( h)
+          self.structure.add_edge( v, h)
+          p -= 1
+          v.charge += 1
 
+    if not p:
+      # p was solved above
+      dp = sum( [v.charge for v in self.structure.vertices]) - old_p
+      if dp < 0:
+        # there were no forced charges, so we are not in a zwittrion state, huh, who does not understand that?!
+        for v in self.structure.vertices:
+          if dp < 0 and v.symbol in self.proton_acceptors:
+            v.charge += 1
+            dp += 1
+
+    
     # then come the other additional protones
     while p:
+      old_p = p
       for v in self.structure.vertices:
         if p > 0:
           if v.symbol in self.proton_acceptors:
@@ -340,8 +370,8 @@ class inchi( plugin):
               p += 1
               v.charge -= 1
               break
-          
-    
+      assert p < old_p
+
 
 
 
@@ -385,8 +415,8 @@ class inchi( plugin):
   def _get_hs_in_moving_hydrogen( self, chunk):
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
-      if chks[0][1:] == "-":
-        hs = 0
+      if chks[0][1:].endswith( "-"):
+        hs = int( chks[0][1:-1] or 1)  # number of atoms 
       else:
         hs = int( chks[0][1:])  # number of atoms
     else:
@@ -408,20 +438,16 @@ class inchi( plugin):
 
   def _process_moving_hydrogen( self, chunk, run=0):
     added_hs = []
+    charge_change = 0
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
-      if chks[0][1:] == "-":
-        hs = 1
+      if chks[0][1:].endswith("-"):
+        hs = int( chks[0][1:-1] or 1) + 1  # number of atoms 
+        charge_change = -1
       else:
         hs = int( chks[0][1:])  # number of atoms
     else:
       hs = 1
-
-    # the movable protons do not come from the summary layer but from the p-layer
-    if hs < 0:
-      self._movable_additional_protones = [-hs] + [self.structure.vertices[ int( i)-1] for i in chks[1:]]
-      print map( str, self._movable_additional_protones)
-      return []
 
     vertices = [self.structure.vertices[ int( i)-1] for i in chks[1:]]
     vs = vertices
@@ -430,24 +456,39 @@ class inchi( plugin):
     # here we generate still shorter combinations of vertices that receive hydrogens
     # because of applying them in circles in the next step, we simulate the case
     # where more than one hydrogen is put to one atom
-    while (run > misc.x_over_y( len( vs), take)) and take:
-      run -= misc.x_over_y( len( vs), take)
-      take -= 1
-    if not take:
-      self._no_possibility_to_improve = True
-      return []
-    variations = misc.gen_variations( vs, take)
-    for i in range( run):
-      vs = variations.next()
-
+    if not charge_change:
+      while (run > misc.x_over_y( len( vs), take)) and take:
+        run -= misc.x_over_y( len( vs), take)
+        take -= 1
+      if not take:
+        self._no_possibility_to_improve = True
+        return []
+      variations = misc.gen_variations( vs, take)
+      for i in range( run):
+        vs = variations.next()
+    else:
+      # gen_combinations is overkill here? (is there always only one - ?)
+      variations = misc.gen_variations_and_one( vs, take)
+      for i in range( run):
+        try:
+          vs = variations.next()
+        except StopIteration:
+          self._no_possibility_to_improve = True
+          return []
+        
     while hs:
       for v in vs:
-        h = self.structure.create_vertex()
-        h.symbol = 'H'
-        self.structure.add_vertex( h)
-        self.structure.add_edge( v, h)
+        if charge_change and hs==1:
+          # the last atom in case of H-
+          v.charge += charge_change
+          self.forced_charge += charge_change
+        else:
+          h = self.structure.create_vertex()
+          h.symbol = 'H'
+          self.structure.add_vertex( h)
+          self.structure.add_edge( v, h)
+          added_hs.append( h)
         hs -= 1
-        added_hs.append( h)
         if not hs:
           break
 
@@ -486,7 +527,20 @@ class inchi( plugin):
         else:
           vertices.append( int( p))
       yield vertices, num_h
-      
+
+
+  def process_forced_charges( self):
+    """this marks the charges that are forced by the connectivity and thus helps
+    process zwitrions"""
+    forced_charge = 0
+    for v in self.structure.vertices:
+      if v.symbol in ("N",) and v.free_valency == -1:
+        v.charge = 1
+        forced_charge += 1
+        
+    self.forced_charge = forced_charge
+
+
 
 def generate_inchi( m):
   program = "/home/beda/inchi/cInChI-1"
@@ -585,7 +639,7 @@ if __name__ == '__main__':
     t1 = time.time()
     for jj in range( cycles):
       mol = text_to_mol( text)
-      print mol
+      print sum( [a.charge for a in mol.vertices])
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
       print "  inchi:  ", mol_to_text( mol)
@@ -593,11 +647,13 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C10H15N3O/c1-13(2,3)12-10(14)11-9-7-5-4-6-8-9/h4-8H,1-3H3,(H-,11,12,14)/p+1" #"1/C7H12N/c1-8-7-5-3-2-4-6-7/h1,7H,2-6H2/q+1" #"1/C19H35N2O2S/c1-2-3-4-5-6-7-8-9-10-11-12-13-16-21-17-14-15-19(18-21)24(20,22)23/h14-15,17-18H,2-13,16H2,1H3,(H2,20,22,23)/q+1" #"1/C14H13NO2/c1-11-5-6-12(13(16)9-11)14(17)10-15-7-3-2-4-8-15/h2-9H,10H2,1H3/p+1"
+  inch = "1/C7H13Cl2N2O4P/c8-1-3-11(4-2-9)16(14)10-6(5-15-16)7(12)13/h6H,1-5H2,(H,10,14)(H,12,13)" #"1/C34H22GeN8/c1-35(2)40-27-19-11-3-4-12-20(19)28(40)37-30-23-15-7-8-16-24(23)32(42(30)35)39-34-26-18-10-9-17-25(26)33(43(34)35)38-31-22-14-6-5-13-21(22)29(36-27)41(31)35/h3-18H,1-2H3/q+2"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch
   
+  #import profile
+  #profile.run( 'main( inch, repeat)')
   main( inch, repeat)
 
 # DEMO END

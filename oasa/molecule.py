@@ -103,11 +103,13 @@ class molecule( graph.graph):
             e.order = 4
       self.localize_aromatic_bonds()
 
-
     # now we process it
     processed = [1]
+    step = 0
     while processed:
       processed = []
+      step += 1
+      assert step < 100 # there is something strange if we reach this number
       for b in [bo for bo in self.edges if min( [a.free_valency for a in bo.vertices])]:
         a1, a2 = b.get_vertices()
         as1 = [a for a in a1.get_neighbors() if a.free_valency > 0]
