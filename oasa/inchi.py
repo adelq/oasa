@@ -129,8 +129,7 @@ class inchi( plugin):
       self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
-      [a.raise_valency_to_senseful_value() for a in self.structure.vertices]
-      print [v.valency for v in self.structure.vertices if v.symbol == "N"]
+      #[a.raise_valency_to_senseful_value() for a in self.structure.vertices]
       # if there is no possibility to improve via the hydrogen positioning we must try the retry here
       self.structure.add_missing_bond_orders()
 
@@ -246,7 +245,6 @@ class inchi( plugin):
           change = True
           break
 
-#    print 1
     steps = 0
     change = True
     # then we try to put the charge on orphan atoms
@@ -260,9 +258,6 @@ class inchi( plugin):
           charge = self._valency_to_charge( v, charge)
           change = True
           break
-
-
-#    print 2
 
     # this could be rewritten to put charges to places where a segment with odd number of free_valencies is
     # this would be more general than counting the free_valencies for the whole molecule
@@ -284,8 +279,6 @@ class inchi( plugin):
             change = True
             break
 
-#    print 3
-
     # then we do the others, at first trying heteroatoms
     steps = 0
     change = True
@@ -300,8 +293,6 @@ class inchi( plugin):
           change = True
           break
 
-
-#    print 4
 
     # then we try the carbon atoms as well
     steps = 0

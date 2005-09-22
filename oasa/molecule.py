@@ -84,6 +84,11 @@ class molecule( graph.graph):
     # NO2 is a typical example
     [v.raise_valency_to_senseful_value() for v in self.vertices if v.free_valency < 0]
 
+##     print map( lambda x: map( str, x), [x for x in self._gen_free_valency_connected_components()])
+
+##     print [map( str, n) for n in [v.neighbors for v in self.vertices if v.symbol == "N"]]
+##     print [v.charge for v in self.vertices if v.symbol == "N"]
+
     fix = True
     while fix:
       fix = False
@@ -95,6 +100,8 @@ class molecule( graph.graph):
               break
         if fix:
           break
+
+    #print [v.valency for v in self.vertices if v.symbol == "N"]
 
     if retry:
       for ring in self.get_smallest_independent_cycles_e():
@@ -135,6 +142,31 @@ class molecule( graph.graph):
             processed = [b]
             b.order += i
             break
+
+
+  def _gen_free_valency_connected_components( self):
+    done = Set()
+    vs = Set( copy.copy( self.vertices))
+    while vs:
+      now = Set()
+      v = vs.pop()
+      if v.free_valency:
+        now.add( v)
+        new = Set( now)
+        while new:
+          added = False
+          now_new = Set()
+          for v in new:
+            for n in v.neighbors:
+              if n.free_valency and not n in done:
+                now.add( n)
+                done.add( n)
+                now_new.add( n)
+          new = now_new
+        vs -= now
+        yield now
+      else:
+        done.add( v)
 
 
 
