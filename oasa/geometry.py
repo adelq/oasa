@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 #     This file is part of BKchem - a chemical drawing program
-#     Copyright (C) 2002, 2003 Beda Kosata <beda@zirael.org>
+#     Copyright (C) 2002-2004 Beda Kosata <beda@zirael.org>
 
 #     This program is free software; you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -16,15 +16,16 @@
 #     main directory of the program
 
 #--------------------------------------------------------------------------
-#
-#
-#
-#--------------------------------------------------------------------------
+
 
 """support module for some geometric mesurements ( geometric tramforms are in transform.py)"""
 
+from __future__ import division
 from math import sqrt, atan2, pi, cos, sin
-from misc import signum
+from misc import signum, normalize_coords
+import operator
+
+
 
 def find_parallel( x1, y1, x2, y2, d):
   "returns tuple of coordinates for parallel abscissa in distance d"
@@ -79,9 +80,10 @@ def get_parallel_signum( l1, l2):
   else:
     return signum( -x2a+x2b)
 
-def on_which_side_is_point( line, point):
+def on_which_side_is_point( line, point, threshold=0):
   """tells whether a point is on one side of a line or on the other (1,0,-1) - 0 is for point on line.
-  line is given as sequence of four coordinates, point as sequence of two coords"""
+  line is given as sequence of four coordinates, point as sequence of two coords,
+  threshold means what smallest angle is considered to still be on the line"""
   x1, y1, x2, y2 = line
   x, y = point
   a = atan2( y-y1, x-x1)
@@ -91,10 +93,10 @@ def on_which_side_is_point( line, point):
       a += 2*pi
     else:
       b += 2*pi
-  if a-b < 0:
+  if abs( a-b) <= threshold or abs( abs( a-b) -pi) <= threshold:
+    return 0    
+  elif a-b < 0:
     return 1
-  elif a-b == 0:
-    return 0
   else:
     return -1
 
@@ -120,7 +122,92 @@ def clockwise_angle_from_east( dx, dy):
     angle = 2*pi + angle
   return angle
 
-def line_length( (x1,y1,x2,y2)):
+
+
+def intersection_of_line_and_rect( line, rect, round_edges=0):
+  """finds a point where a line and a rectangle intersect,
+  both are given as lists of len == 4"""
+  lx0, ly0, lx1, ly1 = map( float, line)
+  rx0, ry0, rx1, ry1 = map( float, normalize_coords( rect))
+
+  # find which end of line is in the rect and reverse the line if needed
+  if (lx0 > rx0) and (lx0 < rx1) and (ly0 > ry0) and (ly0 < ry1):
+    lx0, lx1 = lx1, lx0
+    ly0, ly1 = ly1, ly0
+
+  # the computation itself
+  ldx = lx1 - lx0
+  ldy = ly1 - ly0
+
+  if abs( ldx) > 0:
+    # we calculate using y = f(x)
+    k = ldy/ldx
+    q = ly0 - k*lx0
+    if ldx < 0:
+      xx = rx1
+    else:
+      xx = rx0
+    xy = k*xx + q
+    # the result must be in the rectangle boundaries
+    # but sometimes is not because rounding problems
+    if not ry0 < xy < ry1:
+      xx = lx0
+      xy = ly0
+  else:
+    xx = lx0
+    xy = ly0
+    
+  if abs( ldy) > 0:
+    # we calculate using x = f(y)
+    k = ldx/ldy
+    q = lx0 - k*ly0
+    if ldy < 0:
+      yy = ry1
+    else:
+      yy = ry0
+    yx = k*yy + q
+    # the result must be in the rectangle boundaries
+    # but sometimes is not because rounding problems
+    if not rx0 < yx < rx1:
+      yy = ly0
+      yx = lx0
+  else:
+    yy = ly0
+    yx = lx0
+    
+  if point_distance( lx0, ly0, xx, xy) < point_distance( lx0, ly0, yx, yy):
+    return (yx, yy)
+  else:
+    return (xx, xy)
+
+
+
+def point_distance( x1, y1, x2, y2):
   return sqrt( (x2-x1)**2 + (y2-y1)**2)
 
 
+
+def rectangle_intersection( rect1, rect2):
+  pass
+
+
+def do_rectangles_intersect( rect1, rect2):
+  xs1 = [rect1[0], rect1[2]]
+  xs2 = [rect2[0], rect2[2]]  
+  xs = xs1 + xs2
+  ys1 = [rect1[1], rect1[3]]
+  ys2 = [rect2[1], rect2[3]]
+  ys = ys1 + ys2
+  
+  dx1 = abs( xs1[0] - xs1[1])
+  dx2 = abs( xs2[0] - xs2[1])
+  dx = max( xs) - min( xs)
+
+  dy1 = abs( ys1[0] - ys1[1])
+  dy2 = abs( ys2[0] - ys2[1])
+  dy = max( ys) - min( ys)
+
+  if dx1+dx2 > dx and dy1+dy2 > dy:
+    return True
+  else:
+    return False

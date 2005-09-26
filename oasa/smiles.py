@@ -404,7 +404,7 @@ def text_to_mol( text, calc_coords=1):
   for b in mol.bonds:
     b.aromatic = 0
   if calc_coords:
-    coords_generator.calculate_coords( mol)
+    coords_generator.calculate_coords( mol, bond_length=calc_coords)
   return mol
 
 def mol_to_file( mol, f):

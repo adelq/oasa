@@ -72,3 +72,15 @@ class oasa_inchi_error( oasa_error):
   def __str__( self):
     return "InChI error: %s" % self.what
 
+
+
+class oasa_unsupported_inchi_version_error( oasa_error):
+  
+  def __init__( self, version):
+    self.version = version
+
+  def __str__( self):
+    return "The InChI has an unsupported version: %s" % self.version
+
+
+

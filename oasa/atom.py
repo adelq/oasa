@@ -106,7 +106,7 @@ class atom( chem_vertex):
 ##       if not self._cache['occupied_valency'] == x:
 ##         print i, charge, self.multiplicity
 
-    self._cache['occupied_valency'] = x
+    #self._cache['occupied_valency'] = x
 
     return x
 

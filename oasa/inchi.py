@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
-#     Copyright (C) 2003 Beda Kosata <beda@zirael.org>
+#     Copyright (C) 2003-2005 Beda Kosata <beda@zirael.org>
 
 #     This program is free software; you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ import os.path
 import tempfile
 import popen2
 import coords_generator
-from oasa_exceptions import oasa_not_implemented_error
+from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
 from tempfile import mkstemp
 
 
@@ -95,15 +95,25 @@ class inchi( plugin):
         return l[1:]
 
 
-
-
   def read_inchi( self, text):
+    try:
+      self._read_inchi( text)
+    except AssertionError:
+      raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
+    except:
+      raise
+    
+
+  def _read_inchi( self, text):
     self.structure = molecule()
     self.layers = self.split_layers( text)
     # version support (very crude)
     self.version = self._check_version( self.layers[0])
     if not self.version:
-      raise ValueError, "this version of INChI is not supported - %s" % self.layers[0]
+      raise oasa_unsupported_inchi_version_error( self.layers[0])
+    elif str( self.version[0]) != '1' or str( self.version[1]) != '0':
+      print self.version
+      raise oasa_unsupported_inchi_version_error( self.layers[0])
     
     self.hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer()
     self.read_sum_layer()
@@ -129,7 +139,6 @@ class inchi( plugin):
       self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
-      #[a.raise_valency_to_senseful_value() for a in self.structure.vertices]
       # if there is no possibility to improve via the hydrogen positioning we must try the retry here
       self.structure.add_missing_bond_orders()
 
@@ -140,8 +149,8 @@ class inchi( plugin):
       else:
         pass
     if repeat and self._no_possibility_to_improve:
-      pass
-      #print "**error warning"
+      #pass
+      raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
 
 
 
@@ -185,8 +194,7 @@ class inchi( plugin):
         try:
           i = int( c)
         except:
-          print "should not happen", c
-          continue
+          raise ValueError, "unexpected characte %s in the connectivity layer" % c 
         # atom
         if last_atom:
           self.structure.add_edge( last_atom-1, i-1)
@@ -576,18 +584,24 @@ writes_text = 1
 writes_files = 1
 
 def text_to_mol( text, include_hydrogens=True, mark_aromatic_bonds=False, calc_coords=1):
-  inc = inchi()
-  inc.read_inchi( text)
-  mol = inc.structure
-  #mol.add_missing_bond_orders()
-  if not include_hydrogens:
-    mol.remove_all_hydrogens()
-  if calc_coords:
-    coords_generator.calculate_coords( mol)
-  if mark_aromatic_bonds:
-    mol.mark_aromatic_bonds()
-  return mol
-
+  try:
+    inc = inchi()
+    inc.read_inchi( text)
+    mol = inc.structure
+    #mol.add_missing_bond_orders()
+    if not include_hydrogens:
+      mol.remove_all_hydrogens()
+    if calc_coords:
+      coords_generator.calculate_coords( mol, bond_length=calc_coords)
+    if mark_aromatic_bonds:
+      mol.mark_aromatic_bonds()
+    return mol
+  except oasa_inchi_error:
+    raise
+  except oasa_not_implemented_error:
+    raise
+  except:
+    raise
 
 def file_to_mol( f):
   return text_to_mol( f.read())
@@ -648,3 +662,4 @@ if __name__ == '__main__':
 
 
 ##################################################
+                                               
