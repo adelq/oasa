@@ -80,6 +80,8 @@ def get_parallel_signum( l1, l2):
   else:
     return signum( -x2a+x2b)
 
+
+
 def on_which_side_is_point( line, point, threshold=0):
   """tells whether a point is on one side of a line or on the other (1,0,-1) - 0 is for point on line.
   line is given as sequence of four coordinates, point as sequence of two coords,
@@ -99,6 +101,8 @@ def on_which_side_is_point( line, point, threshold=0):
     return 1
   else:
     return -1
+
+
 
 def point_on_circle( center_x, center_y, radius, direction = (), resolution = 15):
   """finds point on circle in direction of (dx, dy), optionaly rounds the angle
@@ -181,6 +185,9 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
     return (xx, xy)
 
 
+def line_length( (x1,y1,x2,y2)):
+  return sqrt( (x2-x1)**2 + (y2-y1)**2)
+
 
 def point_distance( x1, y1, x2, y2):
   return sqrt( (x2-x1)**2 + (y2-y1)**2)
@@ -211,3 +218,5 @@ def do_rectangles_intersect( rect1, rect2):
     return True
   else:
     return False
+
+

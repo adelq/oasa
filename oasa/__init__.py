@@ -38,7 +38,12 @@ import config
 import query_atom
 import chem_vertex
 import oasa_exceptions
-import cairo_out
+
+no_cairo = False
+try:
+  import cairo_out
+except:
+  no_cairo = True
 
 atom = atom.atom
 molecule = molecule.molecule
@@ -47,8 +52,15 @@ query_atom = query_atom.query_atom
 chem_vertex = chem_vertex.chem_vertex
 
 
-__all__ = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',"linear_formula",'periodic_table','config',
-           'coords_optimizer','chem_vertex','query_atom','oasa_exceptions',"cairo_out"]
+all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
+       "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
+       'query_atom','oasa_exceptions']
+
+if not no_cairo:
+  all.append( "cairo_out")
+
+__all__ = all
+
 
 
 

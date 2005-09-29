@@ -112,7 +112,6 @@ class inchi( plugin):
     if not self.version:
       raise oasa_unsupported_inchi_version_error( self.layers[0])
     elif str( self.version[0]) != '1' or str( self.version[1]) != '0':
-      print self.version
       raise oasa_unsupported_inchi_version_error( self.layers[0])
     
     self.hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer()
@@ -528,8 +527,9 @@ class inchi( plugin):
 
 
 
-def generate_inchi( m):
-  program = "/home/beda/inchi/cInChI-1"
+def generate_inchi( m, program=None):
+  if not program:
+    program = "/home/beda/inchi/cInChI-1"
 
   f, name = mkstemp( text=True)
   os.close( f)
@@ -545,28 +545,39 @@ def generate_inchi( m):
     options = "/AUXNONE"
   else:
     options = "-AUXNONE"
-  command = ' '.join( (program, name, in_name, options))
-  popen = popen2.Popen4( command)
-  exit_code = popen.wait()
+  command = ' '.join( ('"'+os.path.abspath( program)+'"', name, in_name, options))
+  out, inp = popen2.popen4( command)
+  out.readlines()
+  out.close()
+  inp.close()
+  os.remove( name)
+
+  # the inchi program creates two more output files
+  for ext in (".prb", ".log"):
+    try:
+      os.remove( os.path.splitext( in_name)[0] + ext)
+    except:
+      pass
+
+
+  #exit_code = popen.wait()
   #exit_code = os.spawnv( os.P_WAIT, program, (program, name, in_name, options))
 
-  if exit_code == 0 or exit_code != 0:
-    in_file = open( in_name, 'r')
-    # go to the last line
-    i = 0
-    for line in in_file.readlines():
-      i += 1
-    if i > 1:
-      out = ( line[6:].strip())
-    else:
-      # single line file is the only way how to determine it has crashed
-      out = ""
-    in_file.close()
+  in_file = open( in_name, 'r')
+  # go to the last line
+  i = 0
+  for line in in_file.readlines():
+    i += 1
+  if i >= 3:
+    out = ( line[6:].strip())
   else:
-    out = ''
+    # single line file is the only way how to determine it has crashed
+    in_file.close()
+    os.remove( in_name)
+    raise oasa_inchi_error( "InChI program did not create any output")
+  in_file.close()
 
   os.remove( in_name)
-  os.remove( name)
 
   return out
 
@@ -607,8 +618,8 @@ def file_to_mol( f):
   return text_to_mol( f.read())
 
 
-def mol_to_text( mol):
-  return generate_inchi( mol)
+def mol_to_text( mol, program=None):
+  return generate_inchi( mol, program=program)
 
 
 def mol_to_file( mol, f):
@@ -641,7 +652,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C4H6N2O3S/c1-5-2-3-6(4-5)10(7,8)9/h2-4H,1H3/p+1"
+  inch = "1/C6H6/c1-2-4-6-5-3-1/h1-6H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch
@@ -662,4 +673,4 @@ if __name__ == '__main__':
 
 
 ##################################################
-                                               
+
