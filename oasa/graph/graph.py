@@ -45,6 +45,7 @@ class graph:
     else:
       self.vertices = []
     self.edges = Set()
+    self.disconnected_edges = Set()
     self._cache = {}
 
 
@@ -170,6 +171,8 @@ class graph:
     self._flush_cache()
     
 
+
+
   def remove_vertex( self, v):
     for neigh in v.get_neighbors():
       self.disconnect( v, neigh)
@@ -184,6 +187,28 @@ class graph:
         return e
     return None
 
+
+  def temporarily_disconnect_edge( self, e):
+    self.edges.remove( e)
+    self.disconnected_edges.add( e)
+    e.disconnected = True
+    self._flush_cache()
+
+
+  def reconnect_temporarily_disconnected_edge( self, e):
+    assert e in self.disconnected_edges
+    self.disconnected_edges.remove( e)
+    self.edges.add( e)
+    e.disconnected = False
+    self._flush_cache()
+    
+
+  def reconnect_temporarily_disconnected_edges( self):
+    while self.disconnected_edges:
+      e = self.disconnected_edges.pop()
+      e.disconnected = False
+      self.edges.add( e)
+    self._flush_cache()
 
 
   ## PROPERTIES METHODS
@@ -218,21 +243,30 @@ class graph:
 
   def contains_cycle( self):
     """this assumes that the graph is connected"""
-    if not self.is_connected():
-      return None
+    assert self.is_connected()
     return not self.is_tree()
 
+
   def is_edge_a_bridge( self, e):
-    v1, v2 = e.vertices
-    self.disconnect( v1, v2)
-    #x = len( [i for i in self.get_connected_components()])
-    x = self.get_connected_components().next()
-    if len( x) < len( self.vertices):
+    """tells whether an edge is bridge"""
+    start = list( e.vertices)[0]
+    # find number of vertices accessible from one of the edge endpoints
+    self.mark_vertices_with_distance_from( start)
+    c1 = len( [v for v in self.vertices if 'd' in v.properties_])
+    # disconnect the eddge
+    self.temporarily_disconnect_edge( e)
+    # find the number of vertices accessible now
+    self.mark_vertices_with_distance_from( start)
+    c2 = len( [v for v in self.vertices if 'd' in v.properties_])
+    # if they differ, we've got a bridge
+    if c1 > c2:
       x = 1
     else:
       x = 0
-    self.add_edge( v1, v2, e=e)
+    self.reconnect_temporarily_disconnected_edge( e)
     return x
+
+
 
   def is_edge_a_bridge_fast_and_dangerous( self, e):
     """should be used only in case of repetitive questions for the same edge in cases
@@ -247,12 +281,13 @@ class graph:
       else:
         return 0
 
+
   def get_pieces_after_edge_removal( self, e):
-    v1, v2 = e.vertices
-    self.disconnect( v1, v2)
+    self.temporarily_disconnect_edge( e)
     ps = [i for i in self.get_connected_components()]
-    self.add_edge( v1, v2, e=e)
+    self.reconnect_temporarily_disconnected_edge( e)
     return ps
+
 
   def get_size_of_pieces_after_edge_removal( self, e):
     v1, v2 = e.vertices
@@ -262,15 +297,6 @@ class graph:
     return map( len, ps)
     
 
-##   def contains_vertex_path( self):
-##     """can contain only two vertices with order different from 2"""
-##     non2 = 0
-##     for v in self.vertices:
-##       if v.get_degree() != 2:
-##         if non2 == 2:
-##           return False
-##         non2 += 1
-##     return True
 
   ## ANALYSIS
 
@@ -302,6 +328,7 @@ class graph:
       out.append( self.get_induced_subgraph_from_vertices( vs))
     return out
 
+
   def get_induced_subgraph_from_vertices( self, vs):
     """it creates a new graph, however uses the old vertices and edges!"""
     g = self.create_graph()
@@ -320,6 +347,7 @@ class graph:
     for v in self.vertices:
       yield v.get_degree()
   
+
   def get_neighbors( self, v):
     """Info - available also trough the vertex.get_neighbors()"""
     for i in self.get_neighbors_indexes( v):
@@ -337,40 +365,6 @@ class graph:
     other cycles in graph are guaranteed to be combinations of them"""
     return map( self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e())
                 
-
-
-  def get_smallest_independent_cycles_e( self):
-    """returns a set of smallest possible independent cycles as list of Sets of edges,
-    other cycles in graph are guaranteed to be combinations of them"""
-    # try cache first
-    cycles = self._get_cache( "smallest_cycles_e")
-    if cycles:
-      return cycles
-    # cache not hit
-    ncycles = len( self.edges) - len( self.vertices) + 1
-    if ncycles < 0:
-      warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
-      ncycles = 0
-    # well now the slow method is often faster than the fast one, so the bellow is not interesting
-    # we try to use the fast method
-    #cycles = self.get_almost_all_cycles_e()
-    # if it fails, we switch to the slow one
-    #if len( cycles) < ncycles:
-    cycles = self.get_all_cycles_e()
-      
-    while not len( cycles) <= ncycles:
-      d = len( cycles) - ncycles
-      cycles = filter_off_dependent_cycles( cycles)
-      if len( cycles) - ncycles == d:
-        # further cycling would not help
-        break
-    if len( cycles) < ncycles:
-      warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
-    elif len( cycles) > ncycles: 
-      warnings.warn( "The number of independent cycles found (%d) is larger than the theoretical value %d (|E|-|V|+1), but I cannot improve it." % (len( cycles), ncycles), UserWarning, 2)
-      
-    self._set_cache( 'smallest_cycles_e', cycles)
-    return cycles
 
 
 
@@ -394,24 +388,28 @@ class graph:
 
 
 
-  def get_all_cycles_e_old( self):
+  def get_all_cycles_e( self):
     """returns all cycles found in the graph as sets of edges;
-    it was obseleted and replaced by about 3x faster version found bellow"""
-    to_go = Set( self.vertices)
-    for v in self.vertices:
-      if v.degree == 1:
-        to_go.remove( v)
+    this version of the algorithm strips all non-cyclic (bridge) edges
+    and then searches for cycles in the rest"""
+    self.temporarily_strip_bridge_edges()
+
+    to_go = Set( [v for v in self.vertices if v.degree])
     all_cycles = []
     while to_go:
       v = to_go.pop()
       cycles = self._get_cycles_for_vertex( v, to_reach=v)
       all_cycles += cycles
+      to_go -= Set( [ver for ver in reduce( operator.or_, map( self.edge_subgraph_to_vertex_subgraph, cycles), Set()) if ver.degree == 2])
     all_cycles = Set( map( ImSet, all_cycles))
+
+    self.reconnect_temporarily_disconnected_edges()
+    
     return all_cycles
 
 
 
-  def get_all_cycles_e( self):
+  def get_all_cycles_e_old( self):
     """returns all cycles found in the graph as sets of edges"""
     to_go = Set( self.vertices)
     for v in self.vertices:
@@ -429,7 +427,9 @@ class graph:
 
 
 
-  def _get_cycles_for_vertex( self, v, to_reach=None, processed=Set()):
+  def _get_cycles_for_vertex( self, v, to_reach=None, processed=None):
+    if not processed:
+      processed = Set()
     for e, neigh in v.get_neighbor_edge_pairs():
       if neigh == to_reach and len( processed) > 1:
         return [Set( [e])]
@@ -444,6 +444,84 @@ class graph:
         all_cycles += cycles
     return all_cycles
 
+
+
+  def get_smallest_independent_cycles_e( self):
+    """returns a set of smallest possible independent cycles as list of Sets of edges,
+    other cycles in graph are guaranteed to be combinations of them"""
+    ncycles = len( self.edges) - len( self.vertices) + 1
+    if ncycles < 0:
+      warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
+      ncycles = 0
+
+    self.temporarily_strip_bridge_edges()
+
+    cycles = Set()
+    vs = [v for v in self.vertices if v.degree]
+    for v in vs:
+      gen = self._get_smallest_cycles_for_vertex( v, to_reach=v)
+      for x in gen:
+        if x:
+          cs = Set( map( ImSet, x))
+          cycles |= cs
+          break
+      
+    if len( cycles) < ncycles:
+      warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
+    elif len( cycles) > ncycles: 
+      warnings.warn( "The number of independent cycles found (%d) is larger than the theoretical value %d (|E|-|V|+1), but I cannot improve it." % (len( cycles), ncycles), UserWarning, 2)
+
+    self.reconnect_temporarily_disconnected_edges()
+      
+    return cycles
+
+
+
+  def _get_smallest_cycle_for_vertex( self, v, to_reach=None, came_from=None):
+    """ingenious generator base breadth-first search (BFS) to find one (random) smallest
+    cycle for given vertex. It yields None or cycle for each depth level"""
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if neigh == to_reach and e != came_from:
+        yield Set( [came_from, e])
+    gens = []
+    yield None
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if not e == came_from:
+        gens.append( self._get_smallest_cycle_for_vertex( neigh, to_reach=to_reach, came_from=e))
+    while 1:
+      for i, gen in enumerate( gens):
+        ret = gen.next()
+        if ret:
+          if came_from:
+            yield Set( [came_from]) | ret
+          else:
+            yield ret
+      yield None
+
+
+  def _get_smallest_cycles_for_vertex( self, v, to_reach=None, came_from=None):
+    """ingenious generator base breadth-first search (BFS) to find smallest
+    cycles for given vertex. It yields None or cycles for each depth level"""
+    ret = []
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if neigh == to_reach and e != came_from:
+        ret.append( Set( [came_from, e]))
+
+    yield ret
+    gens = []
+    for e, neigh in v.get_neighbor_edge_pairs():
+      if not e == came_from:
+        gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e))
+    while 1:
+      all_rets = []
+      for i, gen in enumerate( gens):
+        rets = gen.next()
+        if rets:
+          for ret in rets:
+            if came_from:
+              ret |= Set( [came_from])
+          all_rets.extend( rets)
+      yield all_rets
 
 
 
@@ -574,6 +652,28 @@ class graph:
       out.append( a)
       rng.remove( a)
     return out
+
+
+  def temporarily_strip_bridge_edges( self):
+    """strip all edges that ar ea bridge, thus leaving only the cycles connected"""
+    bridge_found = True
+    while bridge_found:
+      vs = [v for v in self.vertices if v.degree == 1]
+      while vs:
+        for v in vs:
+          # we have to ask the degree, because the bond might have been stripped in this run
+          if v.degree:
+            e = v.neighbor_edges[0]
+            self.temporarily_disconnect_edge( e)
+        vs = [v for v in self.vertices if v.degree == 1]
+      bridge_found = False
+      for e in self.edges:
+        if self.is_edge_a_bridge( e):
+          bridge_found = True
+          break
+      if bridge_found:
+        self.temporarily_disconnect_edge( e)
+
 
 
   ## STATIC METHODS

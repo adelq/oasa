@@ -68,7 +68,7 @@ class vertex( object):
 
 
   def get_neighbors( self):
-    return self._neighbors.values()
+    return [v for (e,v) in self._neighbors.iteritems() if not e.disconnected]
     #for i in self._neighbors.itervalues():
     #  yield i
 
@@ -83,22 +83,24 @@ class vertex( object):
     return None
 
   def get_degree( self):
-    return len( self._neighbors)
+    return len( self.neighbors)
 
 
   def get_neighbors_with_distance( self, d):
     ret = []
-    for v in self._neighbors.itervalues():
+    for v in self.neighbors:
       if 'd' in v.properties_ and v.properties_['d'] == d:
         ret.append( v)
     return ret
 
+
   def get_neighbor_edge_pairs( self):
-    for k,v in self._neighbors.iteritems():
-      yield k,v
+    for e,v in self._neighbors.iteritems():
+      if not e.disconnected:
+        yield e,v
 
   def get_neighbor_edges( self):
-    return self._neighbors.keys()
+    return [e for e in self._neighbors.keys() if not e.disconnected]
 
 
 

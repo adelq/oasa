@@ -26,6 +26,7 @@ class edge:
     self.vertices = Set([])
     self.set_vertices( vs)
     self.properties_ = {}
+    self.disconnected = False
 
   def __str__( self):
     return "edge between %s %s" % tuple( map( str, self.vertices))
