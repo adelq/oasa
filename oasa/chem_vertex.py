@@ -131,7 +131,7 @@ class chem_vertex( graph.vertex):
       return self._cache[ 'free_valency']
     except KeyError:
       x = self.valency - self.occupied_valency
-      #self._cache[ 'free_valency'] = x
+      self._cache[ 'free_valency'] = x
       return x
 
   free_valency = property( _get_free_valency, None, None, "atoms free valency")

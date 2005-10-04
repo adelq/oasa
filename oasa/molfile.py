@@ -243,7 +243,7 @@ if __name__ == "__main__":
   import time
 
   t = time.time()
-  lens = map( len, mol.get_all_cycles())
+  lens = map( len, mol.get_smallest_independent_cycles())
   lens.sort()
   print lens
   print time.time() -t 

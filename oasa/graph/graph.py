@@ -446,26 +446,91 @@ class graph:
 
 
 
+
+
   def get_smallest_independent_cycles_e( self):
     """returns a set of smallest possible independent cycles as list of Sets of edges,
-    other cycles in graph are guaranteed to be combinations of them"""
+    other cycles in graph are guaranteed to be combinations of them.
+    Gasteiger J. (Editor), Engel T. (Editor), Chemoinformatics : A Textbook, John Wiley & Sons 2001,
+    ISBN 3527306811, 174."""
     ncycles = len( self.edges) - len( self.vertices) + 1
+
+    # check if the graph is connected, don't know if we should do it...
     if ncycles < 0:
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
 
+    # the code itself
     self.temporarily_strip_bridge_edges()
 
     cycles = Set()
     vs = [v for v in self.vertices if v.degree]
-    for v in vs:
-      gen = self._get_smallest_cycles_for_vertex( v, to_reach=v)
-      for x in gen:
-        if x:
-          cs = Set( map( ImSet, x))
-          cycles |= cs
-          break
-      
+    while vs:
+      new_cycles = Set()
+      vs2 = [v for v in vs if v.degree == 2]
+      # disconnect something if there are no edges of degree 2
+      removed_e = None
+      if not vs2:
+        for v in vs:
+          if v.degree == 3:
+            removed_e = list( v.neighbor_edges)[0]
+            self.temporarily_disconnect_edge( removed_e)
+            break
+      vs2 = [v for v in vs if v.degree == 2]
+      assert len( vs2) > 0
+      # get rings for all degree==2 vertices
+      for v in vs2:
+        gen = self._get_smallest_cycle_for_vertex( v, to_reach=v)
+        for x in gen:
+          if x:
+            cs = ImSet( x)
+            new_cycles.add( cs)
+            break
+      cycles |= new_cycles
+      # strip the cycles
+      to_disconnect = Set()
+      for cycle in new_cycles:
+        # find the longest degree==2 chain in each cycle
+        paths = Set()
+        to_go = Set( [v for v in self.edge_subgraph_to_vertex_subgraph( cycle) if v.degree == 2])
+        now = Set( [to_go.pop()])
+        while to_go:
+          path = Set()
+          while now:
+            now = reduce( operator.or_, [Set( [n for n in v.neighbors if n.degree == 2]) for v in now])
+            now &= to_go
+            to_go -= now
+            path |= now
+          if path:
+            paths.add( path)
+        if not paths:
+          paths.add( now)
+        l = max( map( len, paths))
+        path = [p for p in paths if len( p) == l][0]
+        # now mark them for disconnection
+        v1 = Set( path).pop()
+        to_disconnect.add( list( v1.neighbor_edges)[0])
+
+      # disconnect the new edges
+      [self.temporarily_disconnect_edge( e) for e in to_disconnect]
+      # reconnect the edge removed on the top
+      if removed_e:
+        self.reconnect_temporarily_disconnected_edge( removed_e)
+
+      # strip the degree==1 vertices
+      vs1 = [v for v in self.vertices if v.degree == 1]
+      while vs1:
+        for v in vs1:
+          # we have to ask the degree, because the bond might have been stripped in this run
+          if v.degree:
+            e = v.neighbor_edges[0]
+            self.temporarily_disconnect_edge( e)
+        vs1 = [v for v in self.vertices if v.degree == 1]
+
+      vs = [v for v in self.vertices if v.degree]          
+
+
+    # count the cycles and report warnings if their number is wrong
     if len( cycles) < ncycles:
       warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
     elif len( cycles) > ncycles: 
