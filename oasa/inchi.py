@@ -142,13 +142,23 @@ class inchi( plugin):
       self.structure.add_missing_bond_orders()
 
       # here we check out if the molecule seems ok
-      if not filter( None, [v.free_valency for v in self.structure.vertices]) and \
-             not filter( None, [not v.order for v in self.structure.edges]):
+      fvs = [v for v in self.structure.vertices if v.free_valency]
+      if not fvs and not filter( None, [not v.order for v in self.structure.edges]):
         repeat = False
       else:
-        pass
+        if len( fvs) == 1:
+          a = fvs[0]
+          a.symbol = a.symbol # this resets the valency
+          a.raise_valency_to_senseful_value()
+          if a.free_valency:
+            repeat = False
+        else:
+          repeat = False
+
     if repeat and self._no_possibility_to_improve:
-      #pass
+      if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
+        print
+        print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
 
 
@@ -531,55 +541,27 @@ def generate_inchi( m, program=None):
   if not program:
     program = "/home/beda/inchi/cInChI-1"
 
-  f, name = mkstemp( text=True)
-  os.close( f)
-  
-  file = open( name, "w")
-  molfile.mol_to_file( m, file)
-  file.close()
-
-  f, in_name = mkstemp( text=True)
-  os.close( f)
-
+  mf = molfile.mol_to_text( m)
   if os.name == 'nt':
-    options = "/AUXNONE"
+    options = "/AUXNONE /STDIO"
   else:
-    options = "-AUXNONE"
-  command = ' '.join( ('"'+os.path.abspath( program)+'"', name, in_name, options))
-  out, inp = popen2.popen4( command)
-  out.readlines()
-  out.close()
+    options = "-AUXNONE -STDIO"
+  command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
+  out, inp, err = popen2.popen3( command)
+  inp.write( mf)
   inp.close()
-  os.remove( name)
+  inchi = ""
+  for line in out.readlines():
+    if line.startswith( "InChI="):
+      inchi = line[6:].strip()
+      break
+  out.close()
+  err.close()
 
-  # the inchi program creates two more output files
-  for ext in (".prb", ".log"):
-    try:
-      os.remove( os.path.splitext( in_name)[0] + ext)
-    except:
-      pass
-
-
-  #exit_code = popen.wait()
-  #exit_code = os.spawnv( os.P_WAIT, program, (program, name, in_name, options))
-
-  in_file = open( in_name, 'r')
-  # go to the last line
-  i = 0
-  for line in in_file.readlines():
-    i += 1
-  if i >= 3:
-    out = ( line[6:].strip())
-  else:
-    # single line file is the only way how to determine it has crashed
-    in_file.close()
-    os.remove( in_name)
-    raise oasa_inchi_error( "InChI program did not create any output")
-  in_file.close()
-
-  os.remove( in_name)
-
-  return out
+  if not inchi:
+    raise oasa_inchi_error( "InChI program did not create any output InChI")
+  
+  return inchi
 
     
 
@@ -652,7 +634,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C6H6/c1-2-4-6-5-3-1/h1-6H"
+  inch = "1/C13H11ClNO/c14-13-8-4-5-9-15(13)10-12(16)11-6-2-1-3-7-11/h1-9H,10H2/q+1" #1/C6H6/c1-2-4-6-5-3-1/h1-6H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi: %s" % inch
