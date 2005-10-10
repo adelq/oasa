@@ -30,13 +30,13 @@ import time
 import xml.dom.minidom as dom
 import dom_extensions
 import string
-import os.path
+import os
 import tempfile
 import popen2
 import coords_generator
 from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
-from tempfile import mkstemp
-
+import fcntl
+import select
 
 class inchi( plugin):
 
@@ -150,15 +150,14 @@ class inchi( plugin):
           a = fvs[0]
           a.symbol = a.symbol # this resets the valency
           a.raise_valency_to_senseful_value()
-          if a.free_valency:
+          if not a.free_valency:
             repeat = False
-        else:
-          repeat = False
 
     if repeat and self._no_possibility_to_improve:
-      if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
-        print
-        print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
+##       if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
+##         print
+##         print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
+      #pass
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
 
 
@@ -245,36 +244,38 @@ class inchi( plugin):
 
     charge = int( layer[1:]) - self.forced_charge
 
-    change = True
-    # at first we try to put the charge on atoms with negative free_valency
-    steps = 0
-    while charge and change:
-      steps += 1
-      assert steps < 10
-      change = False
-      for v in self.structure.vertices:
-        if v.free_valency == -1:
-          if charge > 0:
-            v.charge = -v.free_valency
-          else:
-            v.charge = v.free_valency
-          charge -= v.charge
-          change = True
-          break
 
-    steps = 0
-    change = True
-    # then we try to put the charge on orphan atoms
-    while charge and change:
-      steps += 1
-      assert steps < 10
+    if charge > 0:
+      # at first we try to put positive charge on atoms with negative free_valency
+      change = True
+      steps = 0
+      while charge and change:
+        steps += 1
+        assert steps < 10
+        change = False
+        for v in self.structure.vertices:
+          if v.free_valency == -1:
+            if charge > 0:
+              v.charge = -v.free_valency
+            else:
+              v.charge = v.free_valency
+            charge -= v.charge
+            change = True
+            break
 
-      change = False
-      for v in self.structure.vertices:
-        if v.free_valency and sum( [n.free_valency for n in v.neighbors]) < v.free_valency:
-          charge = self._valency_to_charge( v, charge)
-          change = True
-          break
+    if charge < 0:
+      # we try to put negative charge on orphan atoms
+      steps = 0
+      change = True
+      while charge and change:
+        steps += 1
+        assert steps < 10
+        change = False
+        for v in self.structure.vertices:
+          if v.free_valency and sum( [n.free_valency for n in v.neighbors]) < v.free_valency:
+            charge = self._valency_to_charge( v, charge)
+            change = True
+            break
 
     # this could be rewritten to put charges to places where a segment with odd number of free_valencies is
     # this would be more general than counting the free_valencies for the whole molecule
@@ -336,6 +337,7 @@ class inchi( plugin):
       return
 
     p = int( layer[1:]) - self._protonation_dealt_with_already
+    charges = self.forced_charge
     old_p = p
 
     # at first add protons to negative charges
@@ -372,7 +374,12 @@ class inchi( plugin):
             self.structure.add_edge( v, h)
             self._added_hs.add( h)
             p -= 1
-            v.charge += 1
+            if charges:
+              # the charge is already present as a forced charge
+              charges -= 1
+            else:
+              # the charge can normaly be delt with
+              v.charge += 1
             break
         elif p < 0:
           if v.symbol in self.proton_donors:
@@ -381,7 +388,12 @@ class inchi( plugin):
               h = hs[0]
               self.structure.remove_vertex( h)
               p += 1
-              v.charge -= 1
+              if charges:
+                # the charge is already present as a forced charge
+                charges += 1
+              else:
+                # the charge can normaly be delt with
+                v.charge -= 1
               break
       assert p < old_p
 
@@ -555,6 +567,8 @@ def generate_inchi( m, program=None):
     if line.startswith( "InChI="):
       inchi = line[6:].strip()
       break
+    elif line.startswith( "Error"):
+      break
   out.close()
   err.close()
 
@@ -563,7 +577,125 @@ def generate_inchi( m, program=None):
   
   return inchi
 
+
+import sys
+
+class inchi_popen:
+
+  inp = None
+  out = None
+  err = None
+
+  def start_process( self, program=None):
+    if not program:
+      program = "/home/beda/inchi/cInChI-1"
+
+    if os.name == 'nt':
+      options = "/STDIO"
+    else:
+      options = "-STDIO"
+    command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
+    #command = "cat"
+    #self.inp, self.out = os.popen4( command, 0)
+    self.out, self.inp, self.err = popen2.popen3( command) #, bufsize=0)
+    #flags = fcntl.fcntl(self.out, fcntl.F_GETFL)
+    #fcntl.fcntl(self.out, fcntl.F_SETFL, flags | os.O_NDELAY)
+    #flags = fcntl.fcntl(self.err, fcntl.F_GETFL)
+    #fcntl.fcntl(self.err, fcntl.F_SETFL, flags | os.O_NDELAY)
+
     
+    for i in range( 11):
+      self.err.readline()
+
+
+  #start_process = classmethod( start_process)
+
+
+
+  def stop_process( self):
+    self.inp.close()
+    self.out.close()
+    self.err.close()
+
+  #stop_process = classmethod( stop_process)
+
+
+  def gen_inchi( self, mf):
+    self.inp.write( mf + "\n$$$$\n")
+    self.inp.flush()
+    self.inp.write( mf + "\n$$$$\n")
+    self.inp.flush()
+    self.inp.write( mf + "\n$$$$\n")
+    self.inp.flush()
+    #self.inp.close()
+    self.out.flush()
+    inchi = ""
+    while 1:
+      #line = self.out.readline()
+      r, w, e = select.select( [self.out], [], [], 1)
+      if not r:
+        self.inp.write( mf + "\n$$$$\n")
+        self.inp.flush()
+        continue
+      else:
+        line = self.out.readline()
+        print line,
+        if line.startswith( "InChI="):
+          inchi = line[6:].strip()
+          break
+        elif line.startswith( "Error"):
+          break
+    if not inchi:
+      raise oasa_inchi_error( "InChI program did not create any output InChI")
+    return inchi
+    
+  #gen_inchi = classmethod( gen_inchi)
+
+
+
+#import pexpect
+
+
+class inchi_popen2:
+
+  inp = None
+  out = None
+  err = None
+  child = None
+
+  def start_process( self, program=None):
+    if not program:
+      program = "/home/beda/inchi/cInChI-1"
+
+    if os.name == 'nt':
+      options = "/STDIO"
+    else:
+      options = "-STDIO"
+    command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
+    self.child = pexpect.spawn( command)
+    self.inp, self.out = os.popen4( command, 0)
+
+  start_process = classmethod( start_process)
+
+
+
+  def stop_process( self):
+    pass
+
+  stop_process = classmethod( stop_process)
+
+
+  def gen_inchi( self, mf):
+    self.child.send( mf)
+    self.child.send( "\n$$$$\n")
+    a = self.child.expect( ["(InChI=)(.*\n)","Error"])
+    if a == 0:
+      return self.child.match.group(2)
+    else:
+      raise oasa_inchi_error( "InChI program did not create any output InChI")
+
+    
+  gen_inchi = classmethod( gen_inchi)
 
 
 
@@ -625,7 +757,7 @@ if __name__ == '__main__':
   def main( text, cycles):
     t1 = time.time()
     for jj in range( cycles):
-      mol = text_to_mol( text)
+      mol = text_to_mol( text, calc_coords=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
       print "  inchi:  ", mol_to_text( mol)
@@ -634,14 +766,15 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C13H11ClNO/c14-13-8-4-5-9-15(13)10-12(16)11-6-2-1-3-7-11/h1-9H,10H2/q+1" #1/C6H6/c1-2-4-6-5-3-1/h1-6H"
+  inch = "1/C14H13N2O2/c1-15-10-3-2-6-13(15)9-8-12-5-4-7-14(11-12)16(17)18/h2-11H,1H3/q+1"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
-  print "  inchi: %s" % inch
+  print "  inchi:   %s" % inch
   
   #import profile
   #profile.run( 'main( inch, repeat)')
   main( inch, repeat)
+
 
 # DEMO END
 ##################################################
