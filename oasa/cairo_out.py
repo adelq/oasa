@@ -125,8 +125,18 @@ class cairo_out:
       x2 = x + 12
       y1 = y - 12
       y2 = y + 2
+      text = v.symbol
+      if v.charge == 1:
+        text += "+"
+      elif v.charge == -1:
+        text += "-"
+      elif v.charge > 1:
+        text += str( v.charge) + "+"
+      elif v.charge < -1:
+        text += str( v.charge)
+        
       self._draw_rectangle( self.transformer.transform_4( (x1, y1, x2, y2)), fill_color=(1,1,1))
-      self._draw_text( self.transformer.transform_xy(x,y), v.symbol)
+      self._draw_text( self.transformer.transform_xy(x,y), text)
 
 
   def _draw_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT):

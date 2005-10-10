@@ -46,6 +46,8 @@ class inchi( plugin):
 
   proton_donors = ['O','F','Cl','Br','I','N','S']
   proton_acceptors = ['P','N','S','O']
+  electron_donors = ['O','N','S','P']
+  electron_acceptors = ['B']
   
 
   def __init__( self, structure=None):
@@ -54,6 +56,7 @@ class inchi( plugin):
     self.cleanup()
 
   def cleanup( self):
+    self.charge = 0
     self.forced_charge = 0
     self._protonation_dealt_with_already = 0
     self._added_hs = Set()
@@ -138,6 +141,8 @@ class inchi( plugin):
       self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
+      self.compensate_for_forced_charges()
+      self.deal_with_da_bonds()
       # if there is no possibility to improve via the hydrogen positioning we must try the retry here
       self.structure.add_missing_bond_orders()
 
@@ -157,7 +162,9 @@ class inchi( plugin):
 ##       if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
 ##         print
 ##         print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
-      #pass
+##       if sum( [v.charge for v in self.structure.vertices]) != self.charge:
+##         print "Charge problem", sum( [v.charge for v in self.structure.vertices]), self.charge
+      
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
 
 
@@ -243,6 +250,7 @@ class inchi( plugin):
       return
 
     charge = int( layer[1:]) - self.forced_charge
+    self.charge = int( layer[1:])
 
 
     if charge > 0:
@@ -336,7 +344,9 @@ class inchi( plugin):
     if not layer:
       return
 
+
     p = int( layer[1:]) - self._protonation_dealt_with_already
+    self.charge += p
     charges = self.forced_charge
     old_p = p
 
@@ -544,8 +554,49 @@ class inchi( plugin):
       if v.symbol in ("N",) and v.free_valency == -1:
         v.charge = 1
         forced_charge += 1
+
         
     self.forced_charge = forced_charge
+
+
+  def compensate_for_forced_charges( self):
+    """if there were foced charges and they the molecule should not have any charge,
+    we have to take care of it here"""
+    charge = self.charge - self.forced_charge
+    old_charge = charge
+    while not self.charge and charge:
+      for chunk in self.structure._gen_free_valency_connected_components():
+        if len( chunk) % 2:
+          if len( chunk) == 1:
+            vs = chunk
+          else:
+            vs = [v for v in chunk if len( Set( v.neighbors) & chunk) == 1]
+          for v in vs:
+            if charge < 0:
+              if v.symbol in self.proton_donors and v.free_valency:
+                v.charge -= 1
+                charge += 1
+            elif charge > 0:
+              if v.symbol in self.proton_acceptors:
+                v.charge += 1
+                charge -= 1
+            if not charge:
+              return
+##       if old_charge == charge:
+##         print "AAAAA", self.layers
+      assert old_charge != charge
+                
+        
+  def deal_with_da_bonds( self):
+    """deal with donor-acceptor bonds, this fixes mostly boron containing compounds"""
+    for v in self.structure.vertices:
+      if v.free_valency < 0 and v.symbol in self.electron_acceptors:
+        ns = [n for n in v.neighbors if n.symbol in self.electron_donors]
+        if ns:
+          n = ns[0]
+          n.charge += 1
+          v.charge -= 1
+
 
 
 
@@ -766,7 +817,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C14H13N2O2/c1-15-10-3-2-6-13(15)9-8-12-5-4-7-14(11-12)16(17)18/h2-11H,1H3/q+1"
+  inch = "1/C20H15NO2/c22-19(16-10-4-1-5-11-16)18(21-14-8-3-9-15-21)20(23)17-12-6-2-7-13-17/h1-15H/p+1"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch
