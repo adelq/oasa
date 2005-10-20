@@ -24,6 +24,7 @@ import graph
 from chem_vertex import chem_vertex
 import periodic_table as PT
 from common import is_uniquely_sorted
+from oasa_exceptions import oasa_invalid_atom_symbol
 
 import copy
 import itertools
@@ -147,6 +148,10 @@ class atom( chem_vertex):
     return en
 
   oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number")
+
+
+      
+
 
 
 

@@ -37,6 +37,7 @@ import coords_generator
 from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
 import fcntl
 import select
+import sys
 
 class inchi( plugin):
 
@@ -75,6 +76,8 @@ class inchi( plugin):
       doc = dom.parseString( text)
     except:
       # it seems not to be the case
+      if text.startswith( "InChI="):
+        text = text[6:]
       return re.split( "/", text.strip())
     structs = doc.getElementsByTagName( 'structure')
     if not structs:
@@ -102,12 +105,15 @@ class inchi( plugin):
     try:
       self._read_inchi( text)
     except AssertionError:
-      raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
+      raise ValueError, "aaaa"
+      #raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
     except:
       raise
     
 
   def _read_inchi( self, text):
+    if not text:
+      raise oasa_inchi_error( "No inchi was given")
     self.structure = molecule()
     self.layers = self.split_layers( text)
     # version support (very crude)
@@ -120,6 +126,7 @@ class inchi( plugin):
     self.hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer()
     self.read_sum_layer()
     self.read_connectivity_layer()
+    self._charge_mover = self._move_charge_somewhere_else()
     repeat = True
     run = 0
     # we have to repeat this step in order to find the right positioning of movable hydrogens
@@ -136,14 +143,13 @@ class inchi( plugin):
 
       # the code itself
       run += 1
-      assert run < 20
+      assert run < 200
       self.process_forced_charges()
       self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
       self.compensate_for_forced_charges()
       self.deal_with_da_bonds()
-      # if there is no possibility to improve via the hydrogen positioning we must try the retry here
       self.structure.add_missing_bond_orders()
 
       # here we check out if the molecule seems ok
@@ -158,15 +164,23 @@ class inchi( plugin):
           if not a.free_valency:
             repeat = False
 
+      if repeat and self._no_possibility_to_improve and self.charge:
+        try:
+          self._charge_mover.next()
+        except StopIteration:
+          pass
+        else:
+          self._no_possibility_to_improve = False
+          run = 0
+
     if repeat and self._no_possibility_to_improve:
 ##       if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
 ##         print
 ##         print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
 ##       if sum( [v.charge for v in self.structure.vertices]) != self.charge:
 ##         print "Charge problem", sum( [v.charge for v in self.structure.vertices]), self.charge
-      
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
-
+    print >> sys.stderr, "run:", run
 
 
 
@@ -551,7 +565,7 @@ class inchi( plugin):
     process zwitrions"""
     forced_charge = 0
     for v in self.structure.vertices:
-      if v.symbol in ("N",) and v.free_valency == -1:
+      if v.symbol in ("N","S") and v.free_valency == -1:
         v.charge = 1
         forced_charge += 1
 
@@ -597,6 +611,16 @@ class inchi( plugin):
           n.charge += 1
           v.charge -= 1
 
+  def _move_charge_somewhere_else( self):
+    if self.charge < 0:
+      pass
+    elif self.charge == 1:
+      for v in self.structure.vertices:
+        if v.symbol in self.proton_acceptors:
+          v.charge = 1
+          yield None
+
+          
 
 
 
@@ -817,7 +841,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C20H15NO2/c22-19(16-10-4-1-5-11-16)18(21-14-8-3-9-15-21)20(23)17-12-6-2-7-13-17/h1-15H/p+1"
+  inch = "1/C14H13BrNO2/c1-18-13-6-4-11(5-7-13)14(17)10-16-8-2-3-12(15)9-16/h2-9H,10H2,1H3/q+1"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

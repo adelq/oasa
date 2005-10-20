@@ -25,6 +25,7 @@ import coords_generator
 import misc
 from known_groups import name_to_smiles
 import smiles
+from oasa_exceptions import oasa_invalid_atom_symbol
 
 
 class linear_formula( object):
@@ -146,8 +147,7 @@ class linear_formula( object):
         v = mol.create_vertex()
         try:
           v.symbol = name
-        except ValueError:
-          # wrong atom symbol
+        except oasa_invalid_atom_symbol:
           return None
         v.charge = sign
         ret.append( v)
@@ -173,7 +173,13 @@ class linear_formula( object):
 
 
   def expand_abbrevs( self, text):
-    for key, val in name_to_smiles.iteritems():
+    # at first sort the text according to length, so that the longest are expanded first
+    # (MMTr and not Tr)
+    keys = [(len( k), k) for k in name_to_smiles.keys()]
+    keys.sort()
+    keys.reverse()
+    for l, key in keys:
+      val = name_to_smiles[ key]
       text = text.replace( key, "(!%s)" % val)
     return text
 
@@ -275,7 +281,7 @@ def reverse_formula( text):
   
 
 
-## form = '(CH3)2CHOAc'
+## form = 'HO3S'
 ## #form = "CH2(Cl)2"
 
 ## #print [i for i in gen_formula_fragments_helper( form)]

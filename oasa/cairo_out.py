@@ -23,6 +23,8 @@ import transform
 import geometry
 import math
 import misc
+import operator
+
 
 
 class cairo_out:
@@ -73,6 +75,8 @@ class cairo_out:
 
     self.context.set_source_rgb( 0, 0, 0)
 
+    self.molecule = mol
+
     for e in mol.edges:
       self._draw_edge( e)
     for v in mol.vertices:
@@ -100,18 +104,34 @@ class cairo_out:
     v1, v2 = e.vertices
     start = self.transformer.transform_xy( v1.x, v1.y)
     end = self.transformer.transform_xy( v2.x, v2.y)
-    self._draw_line( start, end, line_width=self.line_width)
+
+    if e.order == 1:
+      self._draw_line( start, end, line_width=self.line_width)
 
     if e.order == 2:
       side = 0
-      for v in v1.neighbors + v2.neighbors:
-        if v != v1 and v!= v2:
-          side += geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( v.x, v.y)))
-      side = side or 1 # fix
-      x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
-      self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+      # find how to center the bonds
+      # rings have higher prioriry in setting the positioning
+      for ring in self.molecule.get_smallest_independent_cycles():
+        if v1 in ring and v2 in ring:
+          side += reduce( operator.add, [geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( a.x,a.y))) for a in ring if a!=v1 and a!=v2])
+      # if rings did not decide, use the other neigbors
+      if not side:
+        for v in v1.neighbors + v2.neighbors:
+          if v != v1 and v!= v2:
+            side += geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( v.x, v.y)))
+      if side:
+        self._draw_line( start, end, line_width=self.line_width)
+        x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
+        self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+      else:
+        for i in (1,-1):
+          x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
+          self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+        
         
     elif e.order == 3:
+      self._draw_line( start, end, line_width=self.line_width)
       for i in (1,-1):
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
         self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)

@@ -137,6 +137,16 @@ class chem_vertex( graph.vertex):
   free_valency = property( _get_free_valency, None, None, "atoms free valency")
 
 
+  # weight
+  def _get_weight( self):
+    try:
+      return PT.periodic_table[self.symbol]['weight']
+    except:
+      return 0
+
+  weight = property( _get_weight, None, None, "atom weight")
+
+
 
 
 

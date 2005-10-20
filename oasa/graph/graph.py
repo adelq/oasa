@@ -465,7 +465,7 @@ class graph:
 
     cycles = Set()
     vs = [v for v in self.vertices if v.degree]
-    while vs:
+    while vs and len( cycles) < ncycles:
       new_cycles = Set()
       vs2 = [v for v in vs if v.degree == 2]
       # disconnect something if there are no edges of degree 2
@@ -480,11 +480,10 @@ class graph:
       assert len( vs2) > 0
       # get rings for all degree==2 vertices
       for v in vs2:
-        gen = self._get_smallest_cycle_for_vertex( v, to_reach=v)
+        gen = self._get_smallest_cycles_for_vertex( v, to_reach=v)
         for x in gen:
           if x:
-            cs = ImSet( x)
-            new_cycles.add( cs)
+            new_cycles |= Set( x)
             break
       cycles |= new_cycles
       # strip the cycles
@@ -493,9 +492,9 @@ class graph:
         # find the longest degree==2 chain in each cycle
         paths = Set()
         to_go = Set( [v for v in self.edge_subgraph_to_vertex_subgraph( cycle) if v.degree == 2])
-        now = Set( [to_go.pop()])
         while to_go:
-          path = Set()
+          now = Set( [to_go.pop()])            
+          path = Set( now)
           while now:
             now = reduce( operator.or_, [Set( [n for n in v.neighbors if n.degree == 2]) for v in now])
             now &= to_go
@@ -503,8 +502,8 @@ class graph:
             path |= now
           if path:
             paths.add( path)
-        if not paths:
-          paths.add( now)
+        #if not paths:
+        #  paths.add( now)
         l = max( map( len, paths))
         path = [p for p in paths if len( p) == l][0]
         # now mark them for disconnection
@@ -529,6 +528,10 @@ class graph:
 
       vs = [v for v in self.vertices if v.degree]          
 
+    # remove extra cycle in some cases like adamantane
+    if len( cycles) - ncycles == 1:
+      l = max( map( len, cycles))
+      cycles.remove( [c for c in cycles if len( c) == l][0])
 
     # count the cycles and report warnings if their number is wrong
     if len( cycles) < ncycles:
@@ -542,17 +545,18 @@ class graph:
 
 
 
-  def _get_smallest_cycle_for_vertex( self, v, to_reach=None, came_from=None):
-    """ingenious generator base breadth-first search (BFS) to find one (random) smallest
+  def _get_smallest_cycle_for_vertex( self, v, to_reach=None, came_from=None, went_through=None):
+    """ingenious generator-based breadth-first search (BFS) to find one (random) smallest
     cycle for given vertex. It yields None or cycle for each depth level"""
     for e, neigh in v.get_neighbor_edge_pairs():
       if neigh == to_reach and e != came_from:
         yield Set( [came_from, e])
     gens = []
     yield None
+    w = went_through and went_through+[v] or [v]
     for e, neigh in v.get_neighbor_edge_pairs():
-      if not e == came_from:
-        gens.append( self._get_smallest_cycle_for_vertex( neigh, to_reach=to_reach, came_from=e))
+      if (not went_through or neigh not in went_through) and not e == came_from:
+        gens.append( self._get_smallest_cycle_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
     while 1:
       for i, gen in enumerate( gens):
         ret = gen.next()
@@ -564,19 +568,21 @@ class graph:
       yield None
 
 
-  def _get_smallest_cycles_for_vertex( self, v, to_reach=None, came_from=None):
-    """ingenious generator base breadth-first search (BFS) to find smallest
+  def _get_smallest_cycles_for_vertex( self, v, to_reach=None, came_from=None, went_through=None):
+    """ingenious generator-based breadth-first search (BFS) to find smallest
     cycles for given vertex. It yields None or cycles for each depth level"""
     ret = []
     for e, neigh in v.get_neighbor_edge_pairs():
       if neigh == to_reach and e != came_from:
         ret.append( Set( [came_from, e]))
-
     yield ret
+
     gens = []
+    w = went_through and went_through+[v] or [v]
     for e, neigh in v.get_neighbor_edge_pairs():
-      if not e == came_from:
-        gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e))
+      # we dont want to go back, therefore we use went_through
+      if (not went_through or neigh not in went_through) and not e == came_from:
+        gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
     while 1:
       all_rets = []
       for i, gen in enumerate( gens):

@@ -43,6 +43,24 @@ name_to_smiles = {'Me': 'C',
                   'Bz': 'C(=O)c1ccccc1',
                   'Ac': 'C(=O)C',
                   'Ms': 'S(=O)(=O)C',
+                  'Tf': 'S(=O)(=O)C(F)(F)F',
                   'Ts': 'S(=O)(=O)c1ccc(C)cc1',
-                  'Bu': 'CCCC'
+                  'Bu': 'CCCC',
+
+                  'iPr':   'C(C)C',
+                  'tBu':   'C(C)(C)C',
+                  'Boc':   'C(=O)OC(C)(C)C',
+                  'Alloc': 'C(=O)OCC=C',
+                  'Z':     'C(=O)OCc1ccccc1',
+                  'Fmoc':  'CC(=O)OCC1c2ccccc2-c3c1cccc3',
+#                  'DMAM':  '
+                  'CE':    'CCC#N',
+                  #'MOP':   'Cc1cc(OC)ccn1=O',
+                  'Tr':    'C(c1ccccc1)(c2ccccc2)c3ccccc3',
+                  'MMTr':  'C(c1ccc(OC)cc1)(c2ccccc2)c3ccccc3',
+                  'DMTr':  'C(c1ccc(OC)cc1)(c2ccc(OC)cc2)c3ccccc3',
+                  'TMS':   'Si(C)(C)C',
+                  'TBDMS': 'Si(C)(C)C(C)(C)C',
+                  'TBDPS': 'Si(C(C)(C)C)(c1ccccc1)c2ccccc2',
+                  
                   }
