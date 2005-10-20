@@ -297,27 +297,29 @@ def formula_to_composition( formula):
 ## other support functions
 
 def text_to_hydrogenated_atom( text):
-  a = re.match( '([a-z]{0,2})(h)(\d*)([a-z]{0,2})', text.lower())
+  a = re.match( '^([a-z]{1,2})(h)(\d*)$', text.lower())
   if a:
-    hydrogens = a.group(3)
-    atom1 = a.group(1)
-    atom2 = a.group(4)
-    if atom1 and atom2:
-      return None
+    atom = a.group( 1)
+    hydrogens = a.group( 3)
+  else:
+    a = re.match( '^(h)(\d*)([a-z]{1,2})$', text.lower())
+    if a:
+      atom = a.group( 3)
+      hydrogens = a.group( 2)
     else:
-      atom = atom1 or atom2
-      if atom.capitalize() in periodic_table:
-        ret = formula_dict()
-        ret[ atom.capitalize()] = 1
-        if hydrogens:
-          ret[ 'H'] = int( hydrogens)
-        else:
-          ret[ 'H'] = 1
-        return ret
-      else:
-        return None
+      return None
+
+  if atom.capitalize() in periodic_table:
+    ret = formula_dict()
+    ret[ atom.capitalize()] = 1
+    if hydrogens:
+      ret[ 'H'] = int( hydrogens)
+    else:
+      ret[ 'H'] = 1
+    return ret
   else:
     return None
+
 
 
 def gen_bit_masks( length):
