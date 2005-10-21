@@ -528,10 +528,18 @@ class graph:
 
       vs = [v for v in self.vertices if v.degree]          
 
-    # remove extra cycle in some cases like adamantane
-    if len( cycles) - ncycles == 1:
-      l = max( map( len, cycles))
-      cycles.remove( [c for c in cycles if len( c) == l][0])
+    # remove extra cycles in some cases like adamantane
+    if len( cycles) - ncycles > 0:
+      # sort cycles according to length
+      cs = [(len( c), c) for c in cycles]
+      cs.sort()
+      cs = [c[1] for c in cs]
+      # now try to remove the biggest ones
+      while len( cs) - ncycles > 0:
+        c = cs.pop( -1)
+        if not c <= reduce( operator.or_, map( Set, cs)):
+          cs.insert( 0, c)
+      cycles = Set( cs)
 
     # count the cycles and report warnings if their number is wrong
     if len( cycles) < ncycles:
