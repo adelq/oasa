@@ -84,7 +84,7 @@ class molecule( graph.graph):
     # NO2 is a typical example
     [v.raise_valency_to_senseful_value() for v in self.vertices if v.free_valency < 0]
 
-##     print map( lambda x: map( str, x), [x for x in self._gen_free_valency_connected_components()])
+    #print [sum( [xxx.free_valency for xxx in x]) for x in self._gen_free_valency_connected_components()]
 
 ##     print [map( str, n) for n in [v.neighbors for v in self.vertices if v.symbol == "N"]]
 ##     print [v.charge for v in self.vertices if v.symbol == "N"]
@@ -103,12 +103,12 @@ class molecule( graph.graph):
 
     #print [v.valency for v in self.vertices if v.symbol == "N"]
 
-    if retry:
-      for ring in self.get_smallest_independent_cycles_e():
-        if not filter( lambda x: x<=0, [v.free_valency for v in self.edge_subgraph_to_vertex_subgraph( ring)]):
-          for e in ring:
-            e.order = 4
-      self.localize_aromatic_bonds()
+##     if retry:
+##       for ring in self.get_smallest_independent_cycles_e():
+##         if not filter( lambda x: x<=0, [v.free_valency for v in self.edge_subgraph_to_vertex_subgraph( ring)]):
+##           for e in ring:
+##             e.order = 4
+##       self.localize_aromatic_bonds()
 
     # now we process it
     processed = [1]

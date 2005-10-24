@@ -105,8 +105,7 @@ class inchi( plugin):
     try:
       self._read_inchi( text)
     except AssertionError:
-      raise ValueError, "aaaa"
-      #raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
+      raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
     except:
       raise
     
@@ -144,12 +143,14 @@ class inchi( plugin):
       # the code itself
       run += 1
       assert run < 200
+      self._deal_with_notorious_groups()
       self.process_forced_charges()
       self.read_hydrogen_layer( run=run)
       self.read_charge_layer()
       self.read_p_layer()
-      self.compensate_for_forced_charges()
       self.deal_with_da_bonds()
+      #self._deal_with_valencies()
+      self.compensate_for_forced_charges()
       self.structure.add_missing_bond_orders()
 
       # here we check out if the molecule seems ok
@@ -179,8 +180,9 @@ class inchi( plugin):
 ##         print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
 ##       if sum( [v.charge for v in self.structure.vertices]) != self.charge:
 ##         print "Charge problem", sum( [v.charge for v in self.structure.vertices]), self.charge
+      #pass
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
-    print >> sys.stderr, "run:", run
+#    print >> sys.stderr, "run:", run
 
 
 
@@ -206,6 +208,8 @@ class inchi( plugin):
 
   def read_connectivity_layer( self):
     layer = self.get_layer( "c")
+    if not layer:
+      return 
     chunks = re.split( "([0-9]*)", layer)
     chunks = filter( None, chunks)
     chunks = filter( lambda x: x!='-', chunks)
@@ -223,7 +227,7 @@ class inchi( plugin):
         try:
           i = int( c)
         except:
-          raise ValueError, "unexpected characte %s in the connectivity layer" % c 
+          raise ValueError, "unexpected character %s in the connectivity layer" % c 
         # atom
         if last_atom:
           self.structure.add_edge( last_atom-1, i-1)
@@ -621,6 +625,66 @@ class inchi( plugin):
           yield None
 
           
+  def _deal_with_notorious_groups( self):
+    """some groups such as NO2, SO3H etc. need the valency of the central atom to be risen,
+    this is done here"""
+    for v in self.structure.vertices:
+      if v.symbol == "N" and v.degree > 2:
+        for n in v.neighbors:
+          if n.symbol == "O" and n.degree == 1:
+            v.raise_valency()
+            break
+      elif v.symbol == "S" and v.symbol > 2:
+        for n in v.neighbors:
+          if n.symbol == "O" and n.degree == 1:
+            v.raise_valency()
+
+
+  def _deal_with_valencies( self):
+    go = True
+    i = 0
+    while go:
+      i += 1
+      if i> 100:
+        print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        break
+      go = False
+      # set all valency_raise to zero
+      for v in self.structure.vertices:
+        v.properties_['valency_raise'] = 0
+      # mark vertices with the demands to raise valency
+      for comp in self.structure._gen_free_valency_connected_components():
+#        print map( str, comp)
+        if sum( [v.free_valency for v in comp]) % 2:
+          go = True
+          for v in comp:
+            for ne in v.neighbors:
+              if ne not in comp:
+                ne.properties_['valency_raise'] += 1
+      # raise the valency of the most asked for atom
+      vs = [(v.properties_['valency_raise'], v) for v in self.structure.vertices]
+      vs.sort()
+      vs.reverse()
+      for (x, v) in vs:
+#        print x, v, v.valency, v.free_valency
+        if x and v.raise_valency():
+          break
+##           if v.free_valency == 0 and v.symbol in self.proton_acceptors:
+##             if v.charge == 0:
+##               v.charge = 1
+##             elif v.charge == 1:
+##               if v.raise_valency():
+##                 v.charge = 0
+##                 break
+##           elif v.raise_valency():
+##             break
+#          print x, v, v.symbol, v.degree, v.valency, v.free_valency
+#          print [e.order for e in v.neighbor_edges]
+#          break
+#        elif x == 0:
+#          break
+        
+    
 
 
 
@@ -832,7 +896,7 @@ if __name__ == '__main__':
   def main( text, cycles):
     t1 = time.time()
     for jj in range( cycles):
-      mol = text_to_mol( text, calc_coords=False)
+      mol = text_to_mol( text, calc_coords=False, include_hydrogens=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
       print "  inchi:  ", mol_to_text( mol)
@@ -841,7 +905,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C14H13BrNO2/c1-18-13-6-4-11(5-7-13)14(17)10-16-8-2-3-12(15)9-16/h2-9H,10H2,1H3/q+1"
+  inch = "1/C14H12N2O3S/c1-2-15-11-5-3-4-6-13(11)20(19)14-9-10(16(17)18)7-8-12(14)15/h3-9H,2H2,1H3"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

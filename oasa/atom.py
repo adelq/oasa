@@ -178,7 +178,7 @@ class atom( chem_vertex):
     for v in PT.periodic_table[ self.symbol]['valency']:
       if v > self.valency:
         self.valency = v
-        self._clean_cache()
+        #self._clean_cache()
         return True
     return False
 
