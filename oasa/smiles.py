@@ -83,7 +83,12 @@ class smiles( plugin):
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
-          mol.add_edge( last_atom, a)
+          b = mol.add_edge( last_atom, a)
+          if is_small_text.match( c):
+            # aromatic bond
+            b.order = 4
+            b.type = 'n'
+            a.properties_['aromatic'] = 1  #we need this bellow
         last_atom = a
         if is_small_text.match( c):
           # aromatic bond
@@ -444,20 +449,11 @@ if __name__ == '__main__':
     text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
   else:
     text = sys.argv[1]
-  #text = "c1ccc2c1ccccc2"
-  #text = "C=1ccC=2C=1C=CC=CC=2"
 
   print "oasa::SMILES DEMO"
   print "converting following smiles to smiles (%d times)" % repeat
   print "  starting with: %s" % text
   main( text, repeat)
-  #import profile
-  #profile.run( 'main( text, repeat)')
-
-##   # test of equal function for comparison of molecules
-##   a = text_to_mol('C=C(C)C(C)=C')
-##   b = text_to_mol('C=CC')
-##   print [map( str, frag) for frag in a.select_matching_substructures( b)]
 
 # DEMO END
 ##################################################

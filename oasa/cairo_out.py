@@ -24,7 +24,8 @@ import geometry
 import math
 import misc
 import operator
-
+import copy
+import sys
 
 
 class cairo_out:
@@ -77,7 +78,7 @@ class cairo_out:
 
     self.molecule = mol
 
-    for e in mol.edges:
+    for e in copy.copy( mol.edges):
       self._draw_edge( e)
     for v in mol.vertices:
       self._draw_vertext( v)

@@ -142,7 +142,7 @@ class inchi( plugin):
 
       # the code itself
       run += 1
-      assert run < 200
+      assert run < 50
       self._deal_with_notorious_groups()
       self.process_forced_charges()
       self.read_hydrogen_layer( run=run)
