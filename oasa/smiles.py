@@ -115,6 +115,7 @@ class smiles( plugin):
             last_bond.type = 'n'
           else:
             last_bond = None
+          del numbers[ c]
         else:
           numbers[c] = last_atom
       elif c == '(':
