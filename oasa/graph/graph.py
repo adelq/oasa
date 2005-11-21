@@ -32,7 +32,7 @@ import operator
 import time
 
 
-class graph:
+class graph( object):
   """provides a minimalistic graph implementation suitable for analysis of chemical problems,
   even if some care was taken to make the graph work with nonsimple graphs, there are cases where it won't!"""
 
@@ -193,6 +193,8 @@ class graph:
     self.disconnected_edges.add( e)
     e.disconnected = True
     self._flush_cache()
+    return e
+
 
 
   def reconnect_temporarily_disconnected_edge( self, e):

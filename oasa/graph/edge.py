@@ -19,6 +19,8 @@
 
 
 from sets import Set
+from warnings import warn
+
 
 class edge:
 
@@ -51,3 +53,13 @@ class edge:
     out2 = [e for e in v2.get_neighbor_edges() if e!=self]
     return out1, out2
     
+  def _get_disconnected( self):
+    return self._disconnected
+
+  def _set_disconnected( self, d):
+    self._disconnected = d
+   # if d:
+   #   warn(a "aaaaaa", UserWarning, 4)
+
+
+  disconnected = property( _get_disconnected, _set_disconnected)

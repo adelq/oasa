@@ -149,8 +149,8 @@ class smiles( plugin):
 
 
 
-  def get_smiles( self, molec):
-    mol = molec.copy()
+  def get_smiles( self, mol):
+    #mol = molec.copy()
     self.ring_joins = []
     self.branches = {}
     # at first we mark all the atoms with aromatic bonds
@@ -160,7 +160,14 @@ class smiles( plugin):
       if e.aromatic:
         for v in e.vertices:
           v.properties_[ 'aromatic'] = 1
-    return ''.join( [i for i in self._get_smiles( mol)])
+    ret = ''.join( [i for i in self._get_smiles( mol)])
+    mol.reconnect_temporarily_disconnected_edges()
+    # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
+    # generation failed - it splits the molecule while reusing the same atoms and bonds and thus disconnected bonds accounting fails
+    for e in self.edges:
+      e.disconnected = False
+
+    return ret
 
 
 
@@ -180,9 +187,9 @@ class smiles( plugin):
     while not (is_line( mol) and (not start_from or start_from.get_degree() <= 1)):
       if is_pure_ring( mol):
         if start_from:
-          self.ring_joins.append( mol.disconnect( start_from, start_from.get_neighbors()[0]))
+          self.ring_joins.append( mol.temporarily_disconnect_edge( start_from.neighbor_edges[0]))
         else:
-          self.ring_joins.append( mol.disconnect( mol.vertices[0], mol.vertices[1])) # edge is returned from disconnect
+          self.ring_joins.append( mol.temporarily_disconnect_edge( list( mol.edges)[0]))
       else:
         e, mol, branch_vertex, branch = self.disconnect_something( mol, start_from=start_from)
         if branch_vertex:
@@ -250,15 +257,18 @@ class smiles( plugin):
 
 
 
+
+
+
   def disconnect_something( self, mol, start_from=None):
     """returns (broken edge, resulting mol, atom where mol was disconnected, disconnected branch)"""
     # we cannot do much about this part
     if start_from and start_from.get_degree() != 1:
       for e,n in start_from.get_neighbor_edge_pairs():
         if n.get_degree() > 2:
-          mol.disconnect( start_from, n)
+          mol.temporarily_disconnect_edge( e)
           return e, mol, None, None
-      mol.disconnect( start_from, n)
+      mol.temporarily_disconnect_edge( e)
       return e, mol, None, None
     # at first try to find edges for which degree of neighbors is bigger
     # than [2,2] and at best they are not bridges
@@ -268,13 +278,13 @@ class smiles( plugin):
     for e in mol.edges:
       d1, d2 = [x.get_degree() for x in e.get_vertices()]
       if d1 > 2 and d2 > 2 and not mol.is_edge_a_bridge_fast_and_dangerous( e):
-        mol.disconnect_edge( e)
+        mol.temporarily_disconnect_edge( e)
         return e, mol, None, None
     # the other valuable non-bridge edges
     for e in mol.edges:
       d1, d2 = [x.get_degree() for x in e.get_vertices()]
       if (d1 > 2 or d2 > 2) and not mol.is_edge_a_bridge_fast_and_dangerous( e):
-        mol.disconnect_edge( e)
+        mol.temporarily_disconnect_edge( e)
         return e, mol, None, None
     # there are no non-bridges
     # we want to split off the smallest possible chunks
@@ -297,7 +307,7 @@ class smiles( plugin):
         p1, p2 = ps
         the_mol = (len( p1) < len( p2)) and p2 or p1
         the_branch = (p1 == the_mol) and p2 or p1
-        ring_joints = sum([1 for i in the_branch if i in ring_join_vertices])
+        ring_joints = len( [i for i in the_branch if i in ring_join_vertices])
         if not min_size or ms < min_size or ring_joints_in_branch > ring_joints:
           min_size = ms
           the_right_edge = e
@@ -308,8 +318,7 @@ class smiles( plugin):
       # what is possible to make here instead in the loop is made here
       # it saves time
       v1, v2 = the_right_edge.vertices
-      v1.remove_neighbor( v2)
-      v2.remove_neighbor( v1)
+      mol.temporarily_disconnect_edge( the_right_edge)
       the_right_branch_atom = (v1 in the_right_mol) and v1 or v2
       the_right_mol = mol.get_induced_subgraph_from_vertices( the_right_mol)
       the_right_branch = mol.get_induced_subgraph_from_vertices( the_right_branch)
@@ -440,6 +449,7 @@ if __name__ == '__main__':
       mol = text_to_mol( text)
       mol.remove_all_hydrogens()
       text = mol_to_text( mol)
+      #print mol.get_smallest_independent_cycles_e()
       print "  generated: %s" % text
     t = time.time()-t
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
