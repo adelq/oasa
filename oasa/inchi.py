@@ -575,15 +575,25 @@ class inchi( plugin):
   def _parse_h_layer( self, layer):
     chunks = self._split_h_layer( layer)
     for chunk in chunks:
-      head, tail = chunk.split( 'H')
+      try:
+        head, tail = chunk.split( 'H')
+      except Exception, e:
+        raise oasa_inchi_error( "error in hydrogen layer - missing H symbol")
       num_h = tail and int( tail) or 1
       vertices = []
       for p in head.split( ","):
         if "-" in p:
-          a, b = map( int, p.split("-"))
+          try:
+            a, b = map( int, p.split("-"))
+          except Exception, e:
+            raise oasa_inchi_error( "error in hydrogen layer - non-number character(s) present in atom range specification")
           vertices.extend( range( a, b+1))
         else:
-          vertices.append( int( p))
+          try:
+            vertices.append( int( p))
+          except Exception, e:
+            raise oasa_inchi_error( "error in hydrogen layer - non-number character(s) present in atom specification")
+
       yield vertices, num_h
 
 
@@ -931,7 +941,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "InChI=1/C21H39N7O12/c1-5-21(36,4-30)16(40-17-9(26-2)13(34)10(31)6(3-29)38-17)18(37-5)39-15-8(28-20(24)25)11(32)7(27-19(22)23)12(33)14(15)35/h4-18,26,29,31-36H,3H2,1-2H3,(H4,22,23,27)(H4,24,25,28)" #InChI=1/C19H22O6/c1-9-7-17-8-18(9,24)5-3-10(17)19-6-4-11(20)16(2,15(23)25-19)13(19)12(17)14(21)22/h4,6,10-13,20,24H,1,3,5,7-8H2,2H3,(H,21,22)/t10?,11-,12+,13?,16+,17-,18-,19+/m0/s1" #InChI=1/C5H9NO/c7-5-3-1-2-4-6-5/h1-4H2,(H,6,7)/f/h6H"
+  inch = "1/C6H6/c1-2-3-4-5-6-1/h1-6"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

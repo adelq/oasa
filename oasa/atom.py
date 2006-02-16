@@ -58,7 +58,7 @@ class atom( chem_vertex):
       self.valency = PT.periodic_table[ symbol]['valency'][0]
       self.symbol_number = PT.periodic_table[ symbol]['ord']
     except KeyError:
-      raise oasa_invalid_atom_symbol( "wrong atom symbol %s", symbol)
+      raise oasa_invalid_atom_symbol( "invalid atom symbol", symbol)
     self._symbol = symbol
 
   def _get_symbol( self):
