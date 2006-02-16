@@ -27,6 +27,8 @@ import sys
 sys.path.append( '../')
 
 import graph
+from warnings import warn
+
 
 class bond( graph.edge, object):
   """is based on edge, however the vertices are not a Set anymore,
@@ -59,6 +61,8 @@ class bond( graph.edge, object):
   def set_vertices( self, vs=[]):
     """sets the vertices this edge connects"""
     assert len( vs) == 2 or len( vs) == 0
+    if len( vs) == 2 and vs[0] == vs[1]:
+      warn( "creating bond with both ends equal", UserWarning, 2)
     self._vertices = list( vs)
 
   def get_vertices( self):

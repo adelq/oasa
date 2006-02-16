@@ -31,13 +31,12 @@ import xml.dom.minidom as dom
 import dom_extensions
 import string
 import os
-import tempfile
 import popen2
 import coords_generator
 from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
-import fcntl
 import select
 import sys
+
 
 class inchi( plugin):
 
@@ -78,7 +77,17 @@ class inchi( plugin):
       # it seems not to be the case
       if text.startswith( "InChI="):
         text = text[6:]
-      return re.split( "/", text.strip())
+      layers = re.split( "/", text.strip())
+      # fixed hydrogen layer is marked stupidly by f/h :(, we have to deal with it
+      i = None
+      for l in layers:
+        if l.startswith("f"):
+          i = layers.index( l)
+          break
+      if i != None:
+        del layers[i]
+        layers[i] = 'f'+layers[i][1:]
+      return layers
     structs = doc.getElementsByTagName( 'structure')
     if not structs:
       raise "no structures found in xml string %s" % text
@@ -240,15 +249,29 @@ class inchi( plugin):
     if not layer:
       return
 
-    re_for_brackets = "\([H\d,\-]+?\)"
-    brackets = re.findall( re_for_brackets, layer)
-    for bracket in brackets:
-      self._process_moving_hydrogen( bracket[1:-1], run=run)
+    fixed_layer = self.get_layer( "f")
+    if fixed_layer:
+      # we can skip movable hydrogens
+      self._read_simple_hydrogen_layer( fixed_layer)
+    else:
+      re_for_brackets = "\([H\d,\-]+?\)"
+      brackets = re.findall( re_for_brackets, layer)
+      for bracket in brackets:
+        self._process_moving_hydrogen( bracket[1:-1], run=run)
 
     # we improve only in the _process_moving_hydrogen so if it was not called there is no possibility for improvement
-    if not self._added_hs:
+    if not self._added_hs or fixed_layer:
       self._no_possibility_to_improve = True
       
+    self._read_simple_hydrogen_layer( layer)
+
+
+
+  def _read_simple_hydrogen_layer( self, layer):
+    """just takes the layer and adds hydrogens according to what it seas,
+    it does not care about moving hydrogens and stuff"""
+
+    re_for_brackets = "\([H\d,\-]+?\)"
     layer = re.sub( re_for_brackets, "", layer)  # clean the brackets out
 
     for vs, num in self._parse_h_layer( layer):
@@ -688,32 +711,39 @@ class inchi( plugin):
 
 
 
-def generate_inchi( m, program=None):
+def generate_inchi( m, program=None, fixed_hs=False):
   if not program:
     program = "/home/beda/inchi/cInChI-1"
 
   mf = molfile.mol_to_text( m)
   if os.name == 'nt':
-    options = "/AUXNONE /STDIO"
+    options = "/AUXNONE /STDIO" + (fixed_hs and " /FixedH" or "")
   else:
-    options = "-AUXNONE -STDIO"
+    options = "-AUXNONE -STDIO" + (fixed_hs and " -FixedH" or "")
   command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
-  out, inp, err = popen2.popen3( command)
+  if os.name == "nt":
+    out, inp = popen2.popen4( command)
+  else:
+    p = popen2.Popen4( command)
+    out, inp = p.fromchild, p.tochild
   inp.write( mf)
   inp.close()
   inchi = ""
   for line in out.readlines():
     if line.startswith( "InChI="):
-      inchi = line[6:].strip()
+      inchi = line.strip()
       break
     elif line.startswith( "Error"):
       break
   out.close()
-  err.close()
+
+  if os.name != "nt":
+    p.poll()
+    del p
 
   if not inchi:
     raise oasa_inchi_error( "InChI program did not create any output InChI")
-  
+
   return inchi
 
 
@@ -737,11 +767,6 @@ class inchi_popen:
     #command = "cat"
     #self.inp, self.out = os.popen4( command, 0)
     self.out, self.inp, self.err = popen2.popen3( command) #, bufsize=0)
-    #flags = fcntl.fcntl(self.out, fcntl.F_GETFL)
-    #fcntl.fcntl(self.out, fcntl.F_SETFL, flags | os.O_NDELAY)
-    #flags = fcntl.fcntl(self.err, fcntl.F_GETFL)
-    #fcntl.fcntl(self.err, fcntl.F_SETFL, flags | os.O_NDELAY)
-
     
     for i in range( 11):
       self.err.readline()
@@ -871,8 +896,8 @@ def file_to_mol( f):
   return text_to_mol( f.read())
 
 
-def mol_to_text( mol, program=None):
-  return generate_inchi( mol, program=program)
+def mol_to_text( mol, program=None, fixed_hs=False):
+  return generate_inchi( mol, program=program, fixed_hs=fixed_hs)
 
 
 def mol_to_file( mol, f):
@@ -899,13 +924,14 @@ if __name__ == '__main__':
       mol = text_to_mol( text, calc_coords=False, include_hydrogens=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
-      print "  inchi:  ", mol_to_text( mol)
+      print "  inchi:  ", mol_to_text( mol, fixed_hs=True)
       print "  charge: ", sum( [a.charge for a in mol.vertices])
+      print "  mw:     ", mol.weight
     t1 = time.time() - t1
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C14H12N2O3S/c1-2-15-11-5-3-4-6-13(11)20(19)14-9-10(16(17)18)7-8-12(14)15/h3-9H,2H2,1H3"
+  inch = "InChI=1/C21H39N7O12/c1-5-21(36,4-30)16(40-17-9(26-2)13(34)10(31)6(3-29)38-17)18(37-5)39-15-8(28-20(24)25)11(32)7(27-19(22)23)12(33)14(15)35/h4-18,26,29,31-36H,3H2,1-2H3,(H4,22,23,27)(H4,24,25,28)" #InChI=1/C19H22O6/c1-9-7-17-8-18(9,24)5-3-10(17)19-6-4-11(20)16(2,15(23)25-19)13(19)12(17)14(21)22/h4,6,10-13,20,24H,1,3,5,7-8H2,2H3,(H,21,22)/t10?,11-,12+,13?,16+,17-,18-,19+/m0/s1" #InChI=1/C5H9NO/c7-5-3-1-2-4-6-5/h1-4H2,(H,6,7)/f/h6H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

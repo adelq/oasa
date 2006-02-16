@@ -27,6 +27,7 @@ import copy
 import common
 import operator
 import misc
+import periodic_table as PT
 
 
 
@@ -63,6 +64,19 @@ class molecule( graph.graph):
   def create_graph( self):
     import config
     return config.Config.molecule_class()
+
+
+  # analytics
+
+  def get_mol_weight( self):
+    w = 0
+    for v in self.vertices:
+      w += v.weight
+      if v.free_valency > 0:
+        w += v.free_valency * PT.periodic_table['H']['weight']
+    return w
+
+  weight = property( get_mol_weight, None, None, "molecular weight")
 
 
 
@@ -605,8 +619,27 @@ class molecule( graph.graph):
         
 
 
-
   # // --- end of the fragment matching routines ---
+
+
+  def mark_morgan( self):
+    old_morgs = 0
+    for v in self.vertices:
+      v.properties_['new_morgan'] = v.degree #sum( [n.degree for n in v.neighbors])
+    new_morgs = len( Set( [v.properties_['new_morgan'] for v in self.vertices]))
+
+    while new_morgs > old_morgs:
+      for v in self.vertices:
+        v.properties_['morgan'] = v.properties_['new_morgan'] 
+
+      for v in self.vertices:
+        v.properties_['new_morgan'] = v.properties_['morgan'] + sum( [n.properties_['morgan'] for n in v.neighbors])
+      old_morgs = new_morgs
+      new_morgs = len( Set( [v.properties_['new_morgan'] for v in self.vertices]))
+      
+    print "morgan", old_morgs, [v.properties_['morgan'] for v in self.vertices]
+
+
 
 
 

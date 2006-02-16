@@ -164,7 +164,7 @@ class smiles( plugin):
     mol.reconnect_temporarily_disconnected_edges()
     # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
     # generation failed - it splits the molecule while reusing the same atoms and bonds and thus disconnected bonds accounting fails
-    for e in self.edges:
+    for e in mol.edges:
       e.disconnected = False
 
     return ret
@@ -451,6 +451,7 @@ if __name__ == '__main__':
       text = mol_to_text( mol)
       #print mol.get_smallest_independent_cycles_e()
       print "  generated: %s" % text
+      mol.mark_morgan()
     t = time.time()-t
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
 
