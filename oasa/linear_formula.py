@@ -63,7 +63,10 @@ class linear_formula( object):
       if not self.molecule.is_connected():
         return None
 
-      self.molecule.remove_all_hydrogens()
+      # remove hydrogens, but only if the molecule is not completely made of them :)
+      if [v for v in self.molecule.vertices if v.symbol != 'H']:
+        self.molecule.remove_all_hydrogens()
+
       return self.molecule
 
 
@@ -99,9 +102,14 @@ class linear_formula( object):
             mol.add_vertex( a)
             if last_atom:
               max_val = min( last_atom.free_valency, a.free_valency, 3)
+              if max_val <= 0 and last_atom.free_valency <= 0:
+                if last_atom.raise_valency():
+                  max_val = min( last_atom.free_valency, a.free_valency, 3)
               b = mol.create_edge()
               b.order = max_val
               mol.add_edge( last_atom, a, b)
+            else:
+              last_atom = a
     else:
       for chunk, count in gen_formula_fragments( form, reverse=reverse):
         if chunk:
@@ -281,7 +289,7 @@ def reverse_formula( text):
   
 
 
-## form = 'HO3S'
+## form = 'HSO3H'
 ## #form = "CH2(Cl)2"
 
 ## #print [i for i in gen_formula_fragments_helper( form)]
