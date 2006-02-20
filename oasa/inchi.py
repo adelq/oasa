@@ -201,8 +201,10 @@ class inchi( plugin):
 
     form = pt.formula_dict( self.layers[1])
     processed_hs = 0 #for diborane and similar compounds we must process some Hs here
+    j = 0
     for k in form.sorted_keys():
       for i in range( form[k]):
+        j += 1
         if k == 'H':
           # we want to process only the Hs that are not in the h-layer
           if processed_hs >= form[k] - self.hs_in_hydrogen_layer:
@@ -212,6 +214,7 @@ class inchi( plugin):
         a = self.structure.create_vertex()
         a.symbol = k
         self.structure.add_vertex( a)
+        a.properties_['inchi_number'] = j
 
 
 
