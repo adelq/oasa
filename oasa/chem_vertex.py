@@ -46,7 +46,7 @@ class chem_vertex( graph.vertex):
       self.x = None
       self.y = None 
       self.z = None
-    self.multiplicity = 1
+    self._multiplicity = 1
 
 
   def matches( self, other):

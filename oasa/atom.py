@@ -111,6 +111,19 @@ class atom( chem_vertex):
 
 
 
+  # multiplicity (overrides chem_vertex multiplicity)
+  def _set_multiplicity( self, multiplicity):
+    chem_vertex._set_multiplicity( self, multiplicity)
+    if self.free_valency < 0:
+      self.raise_valency_to_senseful_value()
+
+  def _get_multiplicity( self):
+    return self._multiplicity
+
+  multiplicity = property( _get_multiplicity, _set_multiplicity, None, "atom multiplicity")
+
+
+
   # free_sites
   def _set_free_sites( self, free_sites):
     self._free_sites = free_sites
@@ -146,6 +159,11 @@ class atom( chem_vertex):
   oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number")
 
 
+  # electron pairs
+  def _get_electron_pairs( self):
+    return (PT.periodic_table[ self.symbol][ 'els'] - sum( [b.order for b in self.neighbor_edges]) -self.charge -self.free_valency -self.multiplicity+1) / 2.0
+
+  electron_pairs = property( _get_electron_pairs, None, None, "get number of atoms electron pairs")
       
 
 
