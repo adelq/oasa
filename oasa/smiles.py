@@ -452,6 +452,7 @@ if __name__ == '__main__':
       #print mol.get_smallest_independent_cycles_e()
       print "  generated: %s" % text
       mol.mark_morgan()
+      #print mol.get_diameter()
     t = time.time()-t
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
 

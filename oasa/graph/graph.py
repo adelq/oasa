@@ -630,7 +630,10 @@ class graph( object):
         pass
 
 
-  def get_diameter( self):
+  def _gen_diameter_progress( self):
+    """this generator iteratively generates graph diameter during its computation,
+    the result is the last value, it is only interesting for monitoring of the computation
+    as it can be pretty time consuming"""
     diameter = 0
     best = None
     best_path = None
@@ -640,13 +643,15 @@ class graph( object):
         diameter = dist
         best = v
         end = [x for x in self.vertices if x.properties_['d'] == dist][0]
-        best_path = get_path_down_to( end, v)
-    print best
-    print "path"
-    best_path.reverse()
-    for v in best_path:
-      print v
-    return diameter
+        #best_path = get_path_down_to( end, v)
+        yield diameter
+    #best_path.reverse()
+
+
+
+  def get_diameter( self):
+    g = self._gen_diameter_progress()
+    return [i for i in g][-1]
 
 
 
@@ -818,6 +823,8 @@ class graph( object):
       to_mark_next = Set()
       for i in to_mark:
         i.properties_['d'] = d
+
+      for i in to_mark:
         for j in i.get_neighbors():
           if 'd' not in j.properties_:
             to_mark_next.add( j)
@@ -966,6 +973,7 @@ def get_paths_down_to( end, start):
         paths.append( ps)
   return paths
 
+
 def get_path_down_to( end, start):
   if end == start:
     return []
@@ -975,6 +983,7 @@ def get_path_down_to( end, start):
       if ps != None:
         ps.append( end)
         return ps
+
   return None
 
 
