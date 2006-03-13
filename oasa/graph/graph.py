@@ -323,6 +323,7 @@ class graph( object):
     yield comp
 
 
+
   def get_disconnected_subgraphs( self):
     vss = self.get_connected_components()
     out = []
@@ -336,7 +337,7 @@ class graph( object):
     g = self.create_graph()
     for v in vs:
       g.add_vertex( v)
-    for e in self.edges:
+    for e in self.vertex_subgraph_to_edge_subgraph( vs):
       v1, v2 = e.get_vertices()
       if v1 in vs and v2 in vs:
         g.add_edge( v1, v2, e)  # BUG - it should copy the edge?
@@ -645,13 +646,22 @@ class graph( object):
         end = [x for x in self.vertices if x.properties_['d'] == dist][0]
         #best_path = get_path_down_to( end, v)
         yield diameter
+    if diameter == 0:
+      yield 0
     #best_path.reverse()
 
 
 
   def get_diameter( self):
-    g = self._gen_diameter_progress()
-    return [i for i in g][-1]
+    d = self._get_cache( "diameter")
+    if not d:
+      g = self._gen_diameter_progress()
+      for i in g:
+        pass
+      self._set_cache( "diameter", i)
+      return i
+    else:
+      return d
 
 
 
