@@ -643,12 +643,31 @@ class graph( object):
       if dist > diameter:
         diameter = dist
         best = v
-        end = [x for x in self.vertices if x.properties_['d'] == dist][0]
+        #end = [x for x in self.vertices if x.properties_['d'] == dist][0]
         #best_path = get_path_down_to( end, v)
         yield diameter
     if diameter == 0:
       yield 0
     #best_path.reverse()
+
+
+
+  def _get_width_from_vertex( self, v):
+    """returns width of the graph as calculated from vertex v"""
+    d = 0
+    to_mark = Set([v])
+    marked = Set()
+    while to_mark:
+      marked_before = marked
+      marked = to_mark
+
+      to_mark_next = Set( reduce( operator.add, [i.get_neighbors() for i in to_mark], []))
+
+      to_mark = to_mark_next - marked - marked_before
+      d += 1
+
+    return d-1
+
 
 
 

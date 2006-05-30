@@ -28,6 +28,7 @@ sys.path.append( '../')
 
 import graph
 from warnings import warn
+import math
 
 
 class bond( graph.edge, object):
@@ -84,6 +85,15 @@ class bond( graph.edge, object):
       return self._order
 
 
+  def get_length( self):
+    if len( self.vertices) == 2:
+      v1, v2 = self.vertices
+      return math.sqrt( (v1.x-v2.x)**2 + (v1.y-v2.y)**2)
+    else:
+      return 0
+      
+
+
   ## PROPERTIES
 
   vertices = property( get_vertices, set_vertices, None,
@@ -94,6 +104,9 @@ class bond( graph.edge, object):
                     localized order is not available, for localized aromatic bonds
                     check the bond.aromatic boolean attribute""")
   
+  length = property( get_length, None, None,
+                     """the bond length""")
+
   ## END OF PROPERTIES
 
 ### TODO
