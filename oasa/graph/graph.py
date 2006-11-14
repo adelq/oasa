@@ -369,6 +369,14 @@ class graph( object):
     return map( self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e())
                 
 
+  def get_smallest_independent_cycles_dangerous_and_cached( self):
+    try:
+      return self._cache['cycles']
+    except KeyError:
+      self._cache['cycles'] = self.get_smallest_independent_cycles()
+      return self._cache['cycles']
+    
+
 
 
   def get_almost_all_cycles_e( self):
@@ -456,7 +464,7 @@ class graph( object):
     other cycles in graph are guaranteed to be combinations of them.
     Gasteiger J. (Editor), Engel T. (Editor), Chemoinformatics : A Textbook, John Wiley & Sons 2001,
     ISBN 3527306811, 174."""
-    ncycles = len( self.edges) - len( self.vertices) + 1
+    ncycles = len( self.edges) - len( self.vertices) + 2 - len( self.get_disconnected_subgraphs())
 
     # check if the graph is connected, don't know if we should do it...
     if ncycles < 0:
@@ -682,6 +690,42 @@ class graph( object):
     else:
       return d
 
+
+# does not work because the mark_vertices_with_distance_from is not thread safe,
+# it writes to v.properties_['d']. It would have to be switched to v.properties_['dX']
+# where X is the number of the thread
+##   def get_diameter_multi_thread( self, processes=2, group_by=100):
+##     threads = []
+##     attrs = list( self.vertices)
+##     diameter = 0
+    
+##     while attrs or threads:
+##       if len( threads) < processes and attrs:
+##         if len( attrs) > group_by:
+##           as = attrs[0:group_by]
+##           del attrs[0:group_by]
+##         else:
+##           as = attrs
+##           attrs = []
+
+##         t = MyThread( self.mark_vertices_with_distance_from, as)
+##         threads.append( t)
+##         t.start()
+##       else:
+##         time.sleep( 0.05)
+
+##       dead = [t for t in threads if not t.isAlive()]
+##       for d in dead:
+##         dist = max( d.ret)
+##         if dist > diameter:
+##           diameter = dist
+
+##       threads = [t for t in threads if t.isAlive()]
+
+##     return diameter
+
+
+    
 
 
   def vertex_subgraph_to_edge_subgraph( self, cycle):
@@ -1068,6 +1112,31 @@ def gen_variations(items, n):
       for i in xrange( len(items)-n+1):
         for v in gen_variations(items[i+1:],n-1):
           yield [items[i]]+v
+
+
+
+
+from threading import Thread
+import time
+
+
+class MyThread( Thread):
+
+  def __init__( self, function, attrs):
+    """function is the function to run, attrs a list of attrs for which to run the
+    consecutively the function, additional_attrs and kw_attrs are attrs that are added to
+    each call of function"""
+    Thread.__init__( self)
+    self.function = function
+    self.attrs = attrs
+    self.ret = []
+
+
+  def run( self):
+    for a in self.attrs:
+      self.ret.append( self.function( a))
+
+
 
 
 

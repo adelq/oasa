@@ -164,7 +164,7 @@ class atom( chem_vertex):
     return (PT.periodic_table[ self.symbol][ 'els'] - sum( [b.order for b in self.neighbor_edges]) -self.charge -self.free_valency -self.multiplicity+1) / 2.0
 
   electron_pairs = property( _get_electron_pairs, None, None, "get number of atoms electron pairs")
-      
+
 
 
 
