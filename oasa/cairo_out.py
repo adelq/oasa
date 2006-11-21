@@ -81,7 +81,7 @@ class cairo_out:
     for e in copy.copy( mol.edges):
       self._draw_edge( e)
     for v in mol.vertices:
-      self._draw_vertext( v)
+      self._draw_vertex( v)
 
     self.context.show_page()
     self.surface.write_to_png( filename)
@@ -138,7 +138,7 @@ class cairo_out:
         self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
     
 
-  def _draw_vertext( self, v):
+  def _draw_vertex( self, v):
     if v.symbol != "C":
       x = v.x - 5
       y = v.y + 6

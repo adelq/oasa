@@ -20,6 +20,7 @@
 from plugin import plugin
 from molecule import molecule, equals
 import periodic_table as PT
+import oasa_exceptions
 
 from config import Config
 
@@ -150,6 +151,8 @@ class smiles( plugin):
 
 
   def get_smiles( self, mol):
+    if not mol.is_connected():
+      raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc.")
     #mol = molec.copy()
     self.ring_joins = []
     self.branches = {}

@@ -325,6 +325,8 @@ class graph( object):
 
 
   def get_disconnected_subgraphs( self):
+    """returns the subgraphs of self, it is dangerous as it reuses the original vertices and
+    edges, therefore it should be used only when the old self is no longer needed."""
     vss = self.get_connected_components()
     out = []
     for vs in vss:
@@ -464,7 +466,7 @@ class graph( object):
     other cycles in graph are guaranteed to be combinations of them.
     Gasteiger J. (Editor), Engel T. (Editor), Chemoinformatics : A Textbook, John Wiley & Sons 2001,
     ISBN 3527306811, 174."""
-    ncycles = len( self.edges) - len( self.vertices) + 2 - len( self.get_disconnected_subgraphs())
+    ncycles = len( self.edges) - len( self.vertices) + 2 - len( list( self.get_connected_components()))
 
     # check if the graph is connected, don't know if we should do it...
     if ncycles < 0:

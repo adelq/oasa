@@ -28,7 +28,8 @@ import common
 import operator
 import misc
 import periodic_table as PT
-
+import math
+import transform3d
 
 
 class molecule( graph.graph):
@@ -640,7 +641,49 @@ class molecule( graph.graph):
     print "morgan", old_morgs, [v.properties_['morgan'] for v in self.vertices]
 
 
+  ## some geometry related things
 
+  def normalize_bond_length( self, bond_length=30):
+    """make the average bond-length be bond_length by scaling the structure up"""
+    if not self.edges or len( self.vertices) < 2:
+      return False
+
+    minx = None
+    maxx = None
+    miny = None
+    maxy = None
+    # atoms
+    for v in self.vertices:
+      if not maxx or v.x > maxx:
+        maxx = v.x
+      if not minx or v.x < minx:
+        minx = v.x
+      if not miny or v.y < miny:
+        miny = v.y
+      if not maxy or v.y > maxy:
+        maxy = v.y
+
+
+    scale = bond_length / self.get_mean_bond_length()
+    movex = (maxx+minx)/2
+    movey = (maxy+miny)/2
+    trans = transform3d.transform3d()
+    trans.set_move( -movex, -movey, 0)
+    trans.set_scaling( scale)
+    trans.set_move( movex, movey, 0)
+    for v in self.atoms:
+      v.x, v.y, v.z = trans.transform_xyz( v.x, v.y, v.z)
+    return True
+
+
+  def get_mean_bond_length( self):
+    """returns the mean bond length of bonds in the molecule"""
+    bond_length = 0.0
+    for e in self.edges:
+      v1, v2 = e.vertices
+      bond_length += math.sqrt( (v1.x-v2.x)**2 + (v1.y-v2.y)**2)
+    bl = bond_length / len( self.edges)
+    return bl
 
 
 def the_right_sorting_function( t1, t2):

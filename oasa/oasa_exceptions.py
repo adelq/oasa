@@ -61,7 +61,7 @@ class oasa_not_implemented_error( oasa_error):
     self.what = what
 
   def __str__( self):
-    return "Not implemented error in %s: %s" % (self.where, self.what)
+    return "'Not implemented' error in %s: %s" % (self.where, self.what)
 
 
 class oasa_inchi_error( oasa_error):
