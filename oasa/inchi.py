@@ -204,13 +204,13 @@ class inchi( plugin):
     j = 0
     for k in form.sorted_keys():
       for i in range( form[k]):
-        j += 1
         if k == 'H':
           # we want to process only the Hs that are not in the h-layer
           if processed_hs >= form[k] - self.hs_in_hydrogen_layer:
             continue
           else:
             processed_hs += 1
+        j += 1
         a = self.structure.create_vertex()
         a.symbol = k
         self.structure.add_vertex( a)

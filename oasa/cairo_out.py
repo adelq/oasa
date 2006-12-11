@@ -43,11 +43,14 @@ class cairo_out:
             'miter': cairo.LINE_JOIN_MITER,
             'bevel': cairo.LINE_JOIN_BEVEL}
 
+  show_hydrogens_on_hetero = False
+  margin = 15
+  line_width = 2
+  bond_width = 6
+
 
   def __init__( self):
-    self.margin = 15
-    self.line_width = 2
-    self.bond_width = 6
+    pass
 
   def mol_to_cairo( self, mol, filename):
     x1, y1, x2, y2 = None, None, None, None
@@ -147,6 +150,12 @@ class cairo_out:
       y1 = y - 12
       y2 = y + 2
       text = v.symbol
+      if self.show_hydrogens_on_hetero:
+        if v.free_valency == 1:
+          text += "H"
+        elif v.free_valency > 1:
+          text += "H%d" % v.free_valency
+
       if v.charge == 1:
         text += "+"
       elif v.charge == -1:
