@@ -81,6 +81,15 @@ class molecule( graph.graph):
 
 
 
+  def get_formula_dict( self):
+    """returns a formula dict as defined in the periodic_table.py::formula_dict"""
+    comp = PT.formula_dict()
+    for a in self.atoms:
+      comp += a.get_formula_dict()
+    return comp
+
+
+
   def add_missing_hydrogens( self):
     hs = Set()
     for v in copy.copy( self.vertices):

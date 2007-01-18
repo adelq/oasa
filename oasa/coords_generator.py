@@ -17,9 +17,8 @@
 
 #--------------------------------------------------------------------------
 
-
-from math import pi, sqrt, sin, cos
 from __future__ import division
+from math import pi, sqrt, sin, cos
 import geometry
 import misc
 from sets import Set

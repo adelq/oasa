@@ -175,6 +175,15 @@ class atom( chem_vertex):
 
 
 
+  def get_formula_dict( self):
+    """returns formula as dictionary that can
+    be passed to functions in periodic_table"""
+    ret = PT.formula_dict( self.symbol)
+    if self.free_valency > 0:
+      ret['H'] = self.free_valency
+    return ret
+
+
 
 
   def raise_valency_to_senseful_value( self):
