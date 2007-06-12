@@ -104,6 +104,7 @@ periodic_table = {
   "Po" : {'weight': 208.9824,  'ord': 84,  'en': 2.00,  'els':  6,  'valency': (2, 4, 6)},
   "At" : {'weight': 209.9871,  'ord': 85,  'en': 2.20,  'els':  7,  'valency': (1, 7)},
   "Rn" : {'weight': 222.0176,  'ord': 86,  'en': 0.00,  'els':  8,  'valency': (0, 2)},
+  "Ra" : {'weight': 226.0254,  'ord': 88,  'en': 0.90,  'els':  2,  'valency': (2,)},
   "U"  : {'weight': 238.0289,  'ord': 92,  'en': 1.38,  'els':  6,  'valency': (3, 4, 5, 6)},
 
   # query atoms

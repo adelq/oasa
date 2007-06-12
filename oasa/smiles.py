@@ -60,6 +60,7 @@ class smiles( plugin):
 
   def read_smiles( self, text):
     mol = Config.create_molecule()
+    text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
     is_small_text = re.compile( '^[a-z]')
     is_numer = re.compile("[0-9]")

@@ -38,6 +38,7 @@ import config
 import query_atom
 import chem_vertex
 import oasa_exceptions
+import name_database
 
 no_cairo = False
 try:
@@ -54,7 +55,7 @@ chem_vertex = chem_vertex.chem_vertex
 
 all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
        "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
-       'query_atom','oasa_exceptions']
+       'query_atom','oasa_exceptions','name_database']
 
 if not no_cairo:
   all.append( "cairo_out")

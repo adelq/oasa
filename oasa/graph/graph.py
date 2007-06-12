@@ -836,6 +836,32 @@ class graph( object):
         self.temporarily_disconnect_edge( e)
 
 
+  def dump_simple_text_file( self, f):
+    """dumps itself into a simple text file, one edge per line described as
+    indexes of vertices separated with a space, the first line has the vertex
+    count.
+    f is an file-like object opened for writing"""
+    f.write( "%d\n" % len( self.vertices))
+    for v in self.vertices:
+      i1 = self.vertices.index( v)
+      for n in v.neighbors:
+        i2 = self.vertices.index( n)
+        f.write( "%d %d\n" % (i1, i2))
+
+
+  def read_simple_text_file( self, f):
+    """fills itself from a simple text file, one edge per line described as
+    indexes of vertices separated with a space, the first line has the vertex
+    count.
+    f is an file-like object opened for reading"""
+    num = int( f.readline().strip())
+    for i in range( num):
+      self.add_vertex( vertex())
+    for line in f:
+      i1, i2 = map( int, line.split())
+      self.add_edge( self.vertices[i1], self.vertices[i2])
+
+
 
   ## STATIC METHODS
 
