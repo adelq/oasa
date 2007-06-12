@@ -32,3 +32,6 @@ class Config:
 
   create_molecule = classmethod( create_molecule)
 
+
+
+  inchi_binary_path = "/home/beda/inchi/cInChI-1"

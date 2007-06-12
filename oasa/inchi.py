@@ -726,7 +726,8 @@ class inchi( plugin):
 
 def generate_inchi( m, program=None, fixed_hs=False):
   if not program:
-    program = "/home/beda/inchi/cInChI-1"
+    import config
+    program = config.Config.inchi_binary_path
 
   mf = molfile.mol_to_text( m)
   if os.name == 'nt':
