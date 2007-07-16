@@ -742,9 +742,12 @@ def generate_inchi( m, program=None, fixed_hs=False):
   inp.write( mf)
   inp.close()
   inchi = ""
+  warnings = []
   for line in out.readlines():
-    if line.startswith( "InChI="):
-      inchi = line.strip()
+    if line.startswith( "Warning"):
+      warnings.append(line.strip() + "\n")
+    elif line.startswith( "InChI="):
+      inchi = inchi + line.strip()
       break
     elif line.startswith( "Error"):
       break
@@ -757,7 +760,7 @@ def generate_inchi( m, program=None, fixed_hs=False):
   if not inchi:
     raise oasa_inchi_error( "InChI program did not create any output InChI")
 
-  return inchi
+  return inchi, warnings
 
 
 import sys
