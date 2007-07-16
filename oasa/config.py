@@ -21,17 +21,14 @@
 import molecule
 
 
-class Config:
+class Config (object):
   """this is a singleton class for library wide configuration"""
   
   molecule_class = molecule.molecule
 
-
   def create_molecule( self):
     return self.molecule_class()
-
   create_molecule = classmethod( create_molecule)
-
 
 
   inchi_binary_path = "/home/beda/inchi/cInChI-1"
