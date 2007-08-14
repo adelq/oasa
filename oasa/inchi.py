@@ -913,7 +913,7 @@ def file_to_mol( f):
 
 
 def mol_to_text( mol, program=None, fixed_hs=False):
-  return generate_inchi( mol, program=program, fixed_hs=fixed_hs)
+  return generate_inchi( mol, program=program, fixed_hs=fixed_hs)[0]
 
 
 def mol_to_file( mol, f):
