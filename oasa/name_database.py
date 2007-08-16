@@ -22,7 +22,7 @@ import anydbm
 
 
 class Config:
-    database_file = os.path.abspath( os.path.join( sys.path[0], "names.db"))
+    database_file = os.path.abspath( os.path.join( os.path.dirname( __file__), "names.db"))
 
 
 def normalize_inchi( inchi):
