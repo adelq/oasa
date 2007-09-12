@@ -44,6 +44,7 @@ def database_string_to_compound( line):
     
 
 def mydb_to_gdbm( infilename, outfilename):
+    import gdbm
     infile = file( infilename, "r")
     base = gdbm.open( outfilename, "n")
     for line in infile:
@@ -54,8 +55,8 @@ def mydb_to_gdbm( infilename, outfilename):
 
 def get_compound_from_database( inchi, database_file=None):
     inchi = normalize_inchi( inchi)
-    for fname in database_file, Config.database_file,:
-        if os.path.exists(fname):
+    for fname in (database_file, Config.database_file):
+        if fname and os.path.exists(fname):
             break
     else:
         raise Exception("Name database not found")
@@ -76,5 +77,15 @@ def name_molecule( mol, database_file=None):
 
 
 if __name__ == "__main__":
-    #mydb_to_gdbm( "output.db", Config.database_file)
-    print get_compound_from_database( "1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
+    import sys
+    if len( sys.argv) > 1:
+        fname = sys.argv[1]
+        if os.path.exists( fname):
+            try:
+                mydb_to_gdbm( fname, Config.database_file)
+            except:
+                print "given file must be a text file with one compound per line in format 'InChI CID ### name'"
+        else:
+            print "you must supply a valid filename to update the database or no argument for a test to run"
+    else:
+        print get_compound_from_database( "1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
