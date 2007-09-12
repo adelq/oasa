@@ -31,6 +31,7 @@ class oasa_periodic_table_error( oasa_error):
   """exception for reporting periodic_table related error"""
 
   def __init__( self, id, value, symbol=None):
+    oasa_error.__init__(self)
     self.id = id
     self.value = value
 
@@ -45,6 +46,7 @@ class oasa_invalid_atom_symbol( oasa_error):
   """exception for reporting invalid atom symbol use"""
 
   def __init__( self, value, symbol):
+    oasa_error.__init__(self)
     self.value = value
     self.symbol = symbol
 
@@ -57,6 +59,7 @@ class oasa_invalid_atom_symbol( oasa_error):
 class oasa_not_implemented_error( oasa_error):
 
   def __init__( self, where, what):
+    oasa_error.__init__(self)
     self.where = where
     self.what = what
 
@@ -67,6 +70,7 @@ class oasa_not_implemented_error( oasa_error):
 class oasa_inchi_error( oasa_error):
 
   def __init__( self, what):
+    oasa_error.__init__(self)
     self.what = what
 
   def __str__( self):
@@ -77,6 +81,7 @@ class oasa_inchi_error( oasa_error):
 class oasa_unsupported_inchi_version_error( oasa_error):
   
   def __init__( self, version):
+    oasa_error.__init__(self)
     self.version = version
 
   def __str__( self):
