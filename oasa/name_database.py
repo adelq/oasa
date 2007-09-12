@@ -54,7 +54,11 @@ def mydb_to_gdbm( infilename, outfilename):
 
 def get_compound_from_database( inchi, database_file=None):
     inchi = normalize_inchi( inchi)
-    fname = database_file or Config.database_file
+    for fname in database_file, Config.database_file,:
+        if os.path.exists(fname):
+            break
+    else:
+        raise Exception("Name database not found")
     base = anydbm.open( fname)
     if base.has_key( inchi):
         cid, name = base[ inchi].split( " ", 1)
