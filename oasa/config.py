@@ -31,4 +31,4 @@ class Config (object):
   create_molecule = classmethod( create_molecule)
 
 
-  inchi_binary_path = "/home/beda/inchi/cInChI-1"
+  inchi_binary_path = "/home/beda/bin/cInChI-1-102b"

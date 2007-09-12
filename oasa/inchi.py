@@ -722,17 +722,15 @@ class inchi( plugin):
         
     
 
-
-
-def generate_inchi( m, program=None, fixed_hs=False):
+def generate_inchi_and_inchikey( m, program=None, fixed_hs=False):
   if not program:
     import config
     program = config.Config.inchi_binary_path
   mf = molfile.mol_to_text( m)
   if os.name == 'nt':
-    options = "/AUXNONE /STDIO" + (fixed_hs and " /FixedH" or "")
+    options = "/AUXNONE /STDIO /Key" + (fixed_hs and " /FixedH" or "")
   else:
-    options = "-AUXNONE -STDIO" + (fixed_hs and " -FixedH" or "")
+    options = "-AUXNONE -STDIO -Key" + (fixed_hs and " -FixedH" or "")
   command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
   if os.name == "nt":
     out, inp = popen2.popen4( command)
@@ -742,13 +740,18 @@ def generate_inchi( m, program=None, fixed_hs=False):
   inp.write( mf)
   inp.close()
   inchi = ""
+  key = ""
   warnings = []
   for line in out.readlines():
     if line.startswith( "Warning"):
       warnings.append(line.strip() + "\n")
+    elif line.startswith( "End of file detected"):
+      pass
+    elif line.startswith( "InChIKey="):
+      key = line.strip()
+      break
     elif line.startswith( "InChI="):
       inchi = inchi + line.strip()
-      break
     elif line.startswith( "Error"):
       break
   out.close()
@@ -759,125 +762,16 @@ def generate_inchi( m, program=None, fixed_hs=False):
 
   if not inchi:
     raise oasa_inchi_error( "InChI program did not create any output InChI")
+  return inchi, key, warnings
 
+
+def generate_inchi( m, program=None, fixed_hs=False):
+  inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
   return inchi, warnings
 
-
-import sys
-
-class inchi_popen:
-
-  inp = None
-  out = None
-  err = None
-
-  def start_process( self, program=None):
-    if not program:
-      program = "/home/beda/inchi/cInChI-1"
-
-    if os.name == 'nt':
-      options = "/STDIO"
-    else:
-      options = "-STDIO"
-    command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
-    #command = "cat"
-    #self.inp, self.out = os.popen4( command, 0)
-    self.out, self.inp, self.err = popen2.popen3( command) #, bufsize=0)
-    
-    for i in range( 11):
-      self.err.readline()
-
-
-  #start_process = classmethod( start_process)
-
-
-
-  def stop_process( self):
-    self.inp.close()
-    self.out.close()
-    self.err.close()
-
-  #stop_process = classmethod( stop_process)
-
-
-  def gen_inchi( self, mf):
-    self.inp.write( mf + "\n$$$$\n")
-    self.inp.flush()
-    self.inp.write( mf + "\n$$$$\n")
-    self.inp.flush()
-    self.inp.write( mf + "\n$$$$\n")
-    self.inp.flush()
-    #self.inp.close()
-    self.out.flush()
-    inchi = ""
-    while 1:
-      #line = self.out.readline()
-      r, w, e = select.select( [self.out], [], [], 1)
-      if not r:
-        self.inp.write( mf + "\n$$$$\n")
-        self.inp.flush()
-        continue
-      else:
-        line = self.out.readline()
-        print line,
-        if line.startswith( "InChI="):
-          inchi = line[6:].strip()
-          break
-        elif line.startswith( "Error"):
-          break
-    if not inchi:
-      raise oasa_inchi_error( "InChI program did not create any output InChI")
-    return inchi
-    
-  #gen_inchi = classmethod( gen_inchi)
-
-
-
-#import pexpect
-
-
-class inchi_popen2:
-
-  inp = None
-  out = None
-  err = None
-  child = None
-
-  def start_process( self, program=None):
-    if not program:
-      program = "/home/beda/inchi/cInChI-1"
-
-    if os.name == 'nt':
-      options = "/STDIO"
-    else:
-      options = "-STDIO"
-    command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
-    self.child = pexpect.spawn( command)
-    self.inp, self.out = os.popen4( command, 0)
-
-  start_process = classmethod( start_process)
-
-
-
-  def stop_process( self):
-    pass
-
-  stop_process = classmethod( stop_process)
-
-
-  def gen_inchi( self, mf):
-    self.child.send( mf)
-    self.child.send( "\n$$$$\n")
-    a = self.child.expect( ["(InChI=)(.*\n)","Error"])
-    if a == 0:
-      return self.child.match.group(2)
-    else:
-      raise oasa_inchi_error( "InChI program did not create any output InChI")
-
-    
-  gen_inchi = classmethod( gen_inchi)
-
-
+def generate_inchi_key( m, program=None, fixed_hs=False):
+  inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
+  return key, warnings
 
 
 ##################################################
