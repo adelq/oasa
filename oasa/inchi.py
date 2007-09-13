@@ -773,6 +773,21 @@ def generate_inchi_key( m, program=None, fixed_hs=False):
   inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
   return key, warnings
 
+def compute_inchi_check( key):
+  assert type( key) == type( "") or type( key) == type( u"")
+  if key.startswith( "InChIKey="):
+    key = key[9:]
+  m = re.match( "^([A-Z]{14})-([A-Z]{9})$", key)
+  if not m:
+    raise Exception( "The submitted string does not have the format of an base of InChIKey ('^[A-Z]{14}-[A-Z]{9}$')")
+  base = m.group(1) + m.group(2)
+  weight_vector = (1,3,5,7,9,11,15,17,19,21,23,25,1,3,5,7,9,11,15,17,19,21,23)
+  base_vector = [ord(x) for x in base]
+  new_check_num = sum( map( operator.mul, weight_vector, base_vector)) % 26
+  new_check = chr(new_check_num+65)
+  return new_check
+  
+
 def check_inchi_key( key):
   """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta"""
   assert type( key) == type( "") or type( key) == type( u"")
@@ -781,12 +796,9 @@ def check_inchi_key( key):
   m = re.match( "^([A-Z]{14})-([A-Z]{9})([A-Z])$", key)
   if not m:
     raise Exception( "The submitted string does not have the format of an InChIKey ('^[A-Z]{14}-[A-Z]{10}$')")
-  base = m.group(1) + m.group(2)
+  base = m.group(1) + "-" + m.group(2)
   orig_check = m.group(3)
-  weight_vector = (1,3,5,7,9,11,15,17,19,21,23,25,1,3,5,7,9,11,15,17,19,21,23)
-  base_vector = [ord(x) for x in base]
-  new_check_num = sum( map( operator.mul, weight_vector, base_vector)) % 26
-  new_check = chr(new_check_num+65)
+  new_check = compute_inchi_check( base)
   if new_check != orig_check:
     return False
   return True
