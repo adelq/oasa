@@ -1192,18 +1192,32 @@ def key_from_inchi( inp):
   elif version not in "123":
     raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
   del parts[0]
-  parts_major = [parts[0]] + [part for part in parts if part[0] in "chq"]
+  i = 1
+  next = True
+  parts_major = [parts[0]]
+  # sort the layers into a major and minor part - these are hashed separately
+  while next:
+    if i == len( parts):
+      break
+    if parts[i][0] in "chq":
+      parts_major.append( parts[i])
+      i += 1
+    else:
+      next = False
   major = "/".join( parts_major)
-  parts_minor = [part for part in parts if part not in parts_major]
+  parts_minor = parts[i:]
   minor = "/".join( parts_minor)
+  minor = minor and "/"+minor or minor
+  if len( minor) < 256: # interesting property of the original algorithm
+    minor = 2*minor
   base = major_digest( major) + "-" + minor_digest( minor) + flag( int(version), parts_minor)
   check = compute_inchi_check( base)
-  return base+check
+  return "InChIKey="+base+check
 
 
 if __name__ == "__main__":
-  inp = "1/C6H6/c1-2-4-6-5-3-1/h1-6H"
-  out = "UHOVQNZJYSORNB-UHFFFAOYAH"
+  inp = "InChI=1/C9H17NO4/c1-7(11)14-8(5-9(12)13)6-10(2,3)4/h8H,5-6H2,1-4H3/p+1"
+  out = "InChIKey=RDHQFKQIGNGIED-IKLDFBCSAV"
   ret = key_from_inchi( inp)
   print ret
   print ret == out
