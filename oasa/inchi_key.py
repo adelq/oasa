@@ -1,4 +1,26 @@
-import mhash
+#--------------------------------------------------------------------------
+#     This file is part of OASA - a free chemical python library
+#     Copyright (C) 2003-2007 Beda Kosata <beda@zirael.org>
+
+#     This program is free software; you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation; either version 2 of the License, or
+#     (at your option) any later version.
+
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+
+#     Complete text of GNU GPL can be found in the file gpl.txt in the
+#     main directory of the program
+
+#--------------------------------------------------------------------------
+
+try:
+  import mhash
+except:
+  raise Exception( "python-mhash library was not found, make sure it is installed")
 import operator
 import re
 
@@ -1188,7 +1210,10 @@ def key_from_inchi( inp):
   parts = inp.split( "/")
   version = parts[0]
   if not version.isdigit():
-    raise Exception( "Invalid data in version part of InChI - '%s' in '%s'" % (version, inp))
+    if len( parts) == 1:
+      raise Exception( "Invalid InChI string '%s'" % inp)
+    else:
+      raise Exception( "Invalid data in version part of InChI - '%s' in '%s'" % (version, inp))
   elif version not in "123":
     raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
   del parts[0]
@@ -1197,7 +1222,7 @@ def key_from_inchi( inp):
   parts_major = [parts[0]]
   # sort the layers into a major and minor part - these are hashed separately
   while next:
-    if i == len( parts):
+    if i >= len( parts):
       break
     if parts[i][0] in "chq":
       parts_major.append( parts[i])
@@ -1213,6 +1238,22 @@ def key_from_inchi( inp):
   base = major_digest( major) + "-" + minor_digest( minor) + flag( int(version), parts_minor)
   check = compute_inchi_check( base)
   return "InChIKey="+base+check
+
+
+def check_inchi_key( key):
+  """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta"""
+  assert type( key) == type( "") or type( key) == type( u"")
+  if key.startswith( "InChIKey="):
+    key = key[9:]
+  m = re.match( "^([A-Z]{14})-([A-Z]{9})([A-Z])$", key)
+  if not m:
+    raise Exception( "The submitted string does not have the format of an InChIKey ('[A-Z]{14}-[A-Z]{10}')")
+  base = m.group(1) + "-" + m.group(2)
+  orig_check = m.group(3)
+  new_check = compute_inchi_check( base)
+  if new_check != orig_check:
+    return False
+  return True
 
 
 if __name__ == "__main__":
