@@ -30,48 +30,58 @@ from oasa_exceptions import oasa_invalid_atom_symbol
 
 class linear_formula( object):
 
-  def __init__( self, text="", valency=0, mol=None):
+  def __init__( self, text="", start_valency=0, end_valency=0, mol=None):
     """valency specifies the already occupied valency of the submited formula,
     it is usually used when parsing groups"""
+    self.molecule = None
     if text:
-      self.molecule = self.parse_text( text, valency=valency, mol=mol)
+      self.parse_text( text, start_valency=start_valency, end_valency=end_valency, mol=mol)
 
 
-  def parse_text( self, text, valency=0, mol=None):
+  def parse_text( self, text, start_valency=0, end_valency=0, mol=None):
     text = self.expand_abbrevs( text)
-    mol = self.parse_form( text, valency=valency, mol=mol, reverse=False)
+    mol = self.parse_form( text, start_valency=start_valency, mol=mol, reverse=False)
     if mol:
-      self.molecule = mol
-
       # are there any atoms?
-      if not self.molecule.vertices:
+      if not mol.vertices:
         return None
       
       # now we check if the structure is complete
-      for v in self.molecule.vertices:
+      for v in mol.vertices:
         if v.free_valency:
-          return None
+          # we permit free valency at the last atom if end_valency was given
+          if not (v == self.get_last_free_atom(mol) and v.free_valency == end_valency):
+            return None
 
-      if valency:
-        self.molecule.remove_vertex( self.molecule.vertices[0]) # remove the dummy
+      if start_valency:
+        mol.remove_vertex( mol.vertices[0]) # remove the dummy
 
       # are there any atoms, again?
-      if not self.molecule.vertices:
+      if not mol.vertices:
         return None
 
       # is the molecule connected?
-      if not self.molecule.is_connected():
+      if not mol.is_connected():
         return None
 
       # remove hydrogens, but only if the molecule is not completely made of them :)
-      if [v for v in self.molecule.vertices if v.symbol != 'H']:
-        self.molecule.remove_all_hydrogens()
+      if [v for v in mol.vertices if v.symbol != 'H']:
+        mol.remove_all_hydrogens()
 
-      return self.molecule
+      # set some objects attributes for later reading
+      self.molecule = mol
+      if start_valency:
+        self.first_atom = mol.vertices[0]
+      else:
+        self.first_atom = None
+      if end_valency:
+        self.last_atom = self.get_last_free_atom(mol)
+      else:
+        self.last_atom = None
+      return mol
 
 
-
-  def parse_form( self, text, valency=0, mol=None, reverse=False):
+  def parse_form( self, text, start_valency=0, mol=None, reverse=False):
     form = text
 
     # the code itself
@@ -79,9 +89,9 @@ class linear_formula( object):
       mol = Config.create_molecule()
 
     # create the dummy atom
-    if valency:
+    if start_valency:
       last_atom = mol.create_vertex()
-      last_atom.valency = valency
+      last_atom.valency = start_valency
       mol.add_vertex( last_atom)
     else:
       last_atom = None
@@ -129,7 +139,7 @@ class linear_formula( object):
               smile = True
             else:
               val = last_atom and 1 or 0
-              m = self.parse_form( chunk, valency=val, mol=mol.create_graph())
+              m = self.parse_form( chunk, start_valency=val, mol=mol.create_graph())
               smile = False
             if not m:
               return None
@@ -296,13 +306,14 @@ def reverse_formula( text):
   
   
 if __name__ == "__main__":
-  form = '(CH2)7COOH'
-  #print [i for i in gen_formula_fragments_helper( form)]
-  #print [i for i in gen_formula_fragments( form)]
+  form = 'CH3(CH2)7'
+  #form = 'CH3((CH2)2)2O'
 
-  a = linear_formula( form , valency=1)
+  a = linear_formula( form , start_valency=0, end_valency=1)
   if a.molecule:
     m = a.molecule
     coords_generator.calculate_coords( m)
     coords_generator.show_mol( m)
+  else:
+    print "nothing"
 
