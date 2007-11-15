@@ -114,6 +114,9 @@ class linear_formula( object):
       for chunk, count in gen_formula_fragments( form, reverse=reverse):
         if chunk:
           last_atom = self.get_last_free_atom( mol)
+          do_linear = False # should we string the fragments rather than adding them all to the last atom
+          if last_atom and last_atom.free_valency < count:
+            do_linear = True
 
           for j in range( count):
             if chunk[0] == "!":
@@ -130,15 +133,20 @@ class linear_formula( object):
               smile = False
             if not m:
               return None
+
             if not last_atom:
-              mol.insert_a_graph( m) 
+              # !!! this should not happen in here
+              mol.insert_a_graph( m)
+              # if there are multiple chunks without a previous atom, we should create a linear fragment
+              #last_atom = [v for v in mol.vertices if v.free_valency > 0][-1]
             else:
               if not smile:
                 m.remove_vertex( m.vertices[0]) # remove the dummy
               mol.insert_a_graph( m)
               b = mol.create_edge()
               mol.add_edge( last_atom, m.vertices[0], b)
-                          
+              if do_linear:
+                last_atom = m.vertices[0]
 
     return mol
         
@@ -287,27 +295,14 @@ def reverse_formula( text):
   return all_chunks
   
   
+if __name__ == "__main__":
+  form = '(CH2)7COOH'
+  #print [i for i in gen_formula_fragments_helper( form)]
+  #print [i for i in gen_formula_fragments( form)]
 
+  a = linear_formula( form , valency=1)
+  if a.molecule:
+    m = a.molecule
+    coords_generator.calculate_coords( m)
+    coords_generator.show_mol( m)
 
-## form = 'HSO3H'
-## #form = "CH2(Cl)2"
-
-## #print [i for i in gen_formula_fragments_helper( form)]
-## #print [i for i in gen_formula_fragments( form)]
-
-## a = linear_formula( form , valency=0)
-## m = a.molecule
-## #coords_generator.calculate_coords( m)
-
-## print m
-
-## import smiles
-## print form
-
-## if m:
-##   print smiles.mol_to_text( m)
-
-## #coords_generator.show_mol( m)
-
-
-## #print [i for i in gen_formula_fragments( "CO(OH)2")]

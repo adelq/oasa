@@ -115,7 +115,7 @@ class cairo_out:
     if e.order == 2:
       side = 0
       # find how to center the bonds
-      # rings have higher prioriry in setting the positioning
+      # rings have higher priority in setting the positioning
       for ring in self.molecule.get_smallest_independent_cycles():
         if v1 in ring and v2 in ring:
           side += reduce( operator.add, [geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( a.x,a.y))) for a in ring if a!=v1 and a!=v2])
