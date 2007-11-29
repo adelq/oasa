@@ -87,7 +87,7 @@ for i in range( len( TestSubstructure.formulas)):
 
 class TestEqualSMILES(unittest.TestCase):
 
-  formulas = [("Sc1ccccc1","S-c1ccccc1",True),
+  formulas = [("Sc1ccccc1","S-c1ccccc1",True),  # check Sc (in PT scandium) bug
               ("Oc1ccccc1","O-c1ccccc1",True),
               ]
     
