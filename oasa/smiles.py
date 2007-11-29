@@ -141,7 +141,7 @@ class smiles( plugin):
     while i < len( chunks):
       c = chunks[i]
       if is_text.match( c):
-        if not c in PT.periodic_table:
+        if not c in PT.periodic_table or c == "Sc": # Sc is S-c not scandium
           a,b = c
           del chunks[i]
           chunks.insert( i, b)

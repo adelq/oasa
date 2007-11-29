@@ -628,6 +628,14 @@ class molecule( graph.graph):
     return True
         
 
+  def contains_substructure( self, other, implicit_freesites=True):
+    found = False
+    for i in self.select_matching_substructures( other, implicit_freesites=implicit_freesites, auto_cleanup=False):
+      found = True
+      break
+    self.clean_after_search( other)
+    return found
+
 
   # // --- end of the fragment matching routines ---
 
