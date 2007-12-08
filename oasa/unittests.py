@@ -65,6 +65,14 @@ class TestSubstructure(unittest.TestCase):
               ("CCCC","CCC",True),
               ("CC(=O)C","C=O",True),
               ("C=O","CC(=O)C",False),
+              ("C(=O)H","C=O",True),
+              ("C=O","C(=O)H",True),      # implicit hydrogens work
+              ("C(=O)O","C(=O)OH",True),  # implicit hydrogens work
+              ("C(=O)OH","C(=O)O",True),
+              ("C(=O)OC","C(=O)OH",False),  # explicit hydrogens work
+              ("C(=O)OC","C(=O)O",True),
+              #
+              ("CC(=O)H","C(=O)H",True),
               ]
     
   def setUp(self):
