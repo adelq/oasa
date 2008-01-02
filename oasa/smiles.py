@@ -62,8 +62,6 @@ class smiles( plugin):
     mol = Config.create_molecule()
     text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
-    is_small_text = re.compile( '^[a-z]')
-    is_numer = re.compile("[0-9]")
     chunks = re.split( "([A-Z][a-z]?|[^A-Z]|[a-z])", text)
     chunks = filter( None, chunks)
     self._check_the_chunks( chunks)
@@ -73,26 +71,26 @@ class smiles( plugin):
     bracket_openings = []
     for c in chunks:
       # atom
-      if is_text.match( c) or is_small_text.match( c):
-        if is_small_text.match( c):
+      if is_text.match( c) or c.islower():
+        if c.islower():
           symbol = c.upper()
         else:
           symbol = c
         a = mol.create_vertex()
         a.symbol = symbol
         mol.add_vertex( a)
-        if last_bond and not (not is_small_text.match( c) and last_bond.aromatic):
+        if last_bond and not (not c.islower() and last_bond.aromatic):
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
           b = mol.add_edge( last_atom, a)
-          if is_small_text.match( c):
+          if c.islower():
             # aromatic bond
             b.order = 4
             b.type = 'n'
             a.properties_['aromatic'] = 1  #we need this bellow
         last_atom = a
-        if is_small_text.match( c):
+        if c.islower():
           # aromatic bond
           last_bond = mol.create_edge()
           last_bond.order = 4
@@ -107,7 +105,7 @@ class smiles( plugin):
         last_bond.order = order
         last_bond.type = 'n'
       # ring closure
-      elif is_numer.match( c):
+      elif c.isdigit():
         b = last_bond or mol.create_edge()
         if c in numbers:
           mol.add_edge( last_atom, numbers[c], e=b)
