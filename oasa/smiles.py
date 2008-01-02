@@ -80,28 +80,27 @@ class smiles( plugin):
           # just atom symbol
           if c.islower():
             symbol = c.upper()
+            a.properties_['aromatic'] = 1
           else:
             symbol = c
           a.symbol = symbol
 
         mol.add_vertex( a)
-        if last_bond and not (not c.islower() and last_bond.aromatic):
+        if last_bond and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
           b = mol.add_edge( last_atom, a)
-          if c.islower():
+          if 'aromatic' in a.properties_:
             # aromatic bond
             b.order = 4
             b.type = 'n'
-            a.properties_['aromatic'] = 1  #we need this bellow
         last_atom = a
-        if c.islower():
+        if 'aromatic' in a.properties_:
           # aromatic bond
           last_bond = mol.create_edge()
           last_bond.order = 4
           last_bond.type = 'n'
-          last_atom.properties_['aromatic'] = 1  #we need this bellow
         else:
           last_bond = None
       # bond
@@ -191,7 +190,7 @@ class smiles( plugin):
     if _stereo:
       stereo = _stereo.group(0)
       a.properties_['stereo'] = stereo
-          
+
   def _check_the_chunks( self, chunks):
     is_text = re.compile("^[A-Z][a-z]?$")
     i = 0
@@ -205,8 +204,6 @@ class smiles( plugin):
           chunks.insert( i, a)
           i += 1
       i += 1
-
-
 
   def get_smiles( self, mol):
     if not mol.is_connected():
@@ -309,6 +306,11 @@ class smiles( plugin):
 
 
   def _create_atom_smiles( self, v):
+    if 'aromatic' in v.properties_.keys():
+      symbol = v.symbol.lower()
+    else:
+      symbol = v.symbol
+
     if v.isotope or v.charge != 0 or v.valency != PT.periodic_table[ v.symbol]['valency'][0] or 'stereo' in v.properties_:
       # we must use square bracket
       isotope = v.isotope and str( v.isotope) or ""
@@ -319,20 +321,14 @@ class smiles( plugin):
       else:
         charge = ""
       # explicit hydrogens
-      if v.valency != PT.periodic_table[ v.symbol]['valency'][0]:
-        num_h = v.valency - v.occupied_valency
-        h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
-      else:
-        h_spec = ""
+      num_h = v.valency - v.occupied_valency
+      h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
       # stereo
       stereo = v.properties_.get( "stereo", "")
-      return "[%s%s%s%s%s]" % (isotope, v.symbol, stereo, h_spec, charge)
-    # no need to use square brackets
-    if 'aromatic' in v.properties_.keys():
-      return v.symbol.lower()
+      return "[%s%s%s%s%s]" % (isotope, symbol, stereo, h_spec, charge)
     else:
-      return v.symbol
-
+      # no need to use square brackets
+      return symbol
 
 
   def disconnect_something( self, mol, start_from=None):
@@ -525,9 +521,10 @@ if __name__ == '__main__':
       mol.remove_all_hydrogens()
       text = mol_to_text( mol)
       #print mol.get_smallest_independent_cycles_e()
-      print "  generated: %s" % text
       print mol.get_formula_dict()
-      mol.mark_morgan()
+
+      print "  generated: %s" % text
+      #mol.mark_morgan()
       #print mol.get_diameter()
     t = time.time()-t
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'

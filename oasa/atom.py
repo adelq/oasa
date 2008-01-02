@@ -79,10 +79,15 @@ class atom( chem_vertex):
       pass
 
     i = 0
+    odd_aromatic = False
     for b in self._neighbors.keys():
       ord = b.order
       if ord == 4:
-        ord = 1
+        if odd_aromatic:
+          ord = 1
+        else:
+          ord = 2
+        odd_aromatic = not odd_aromatic
       i += ord
 
     if self.charge:

@@ -221,11 +221,11 @@ class molecule( graph.graph):
 
   def _get_atoms_possible_aromatic_electrons( self, at, ring):
     out = Set()
-    if at.charge > 0:
+    if at.charge > 0 and at.symbol not in PT.accept_cation:
       out.add( 0)
     elif at.charge < 0:
       out.add( 2)
-    if at.symbol in ('N','S','O','Se','P'):
+    if at.symbol in PT.accept_cation and not at.charge > 0:
       out.add( 2)
     if at.symbol in ('B','Al'):
       out.add( 0)
