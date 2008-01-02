@@ -38,6 +38,7 @@ class atom( chem_vertex):
     chem_vertex.__init__( self, coords=coords)
     self.symbol = symbol
     self.charge = charge
+    self.isotope = None
 
 
 
@@ -132,6 +133,19 @@ class atom( chem_vertex):
     return self._free_sites
 
   free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
+
+
+  # isotope
+  def _set_isotope( self, isotope):
+    if isotope != None and type( isotope) != type( 1):
+      # isotope must be a number or None
+      raise oasa_exceptions.oasa_invalid_value( "isotope", isotope)
+    self._isotope = isotope
+
+  def _get_isotope( self):
+    return self._isotope
+
+  isotope = property( _get_isotope, _set_isotope, None, "isotope")
 
 
 

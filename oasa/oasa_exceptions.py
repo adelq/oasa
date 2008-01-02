@@ -35,7 +35,6 @@ class oasa_periodic_table_error( oasa_error):
     self.id = id
     self.value = value
 
-
   def __str__( self):
     return "OASA periodic_table error, id=%s, value=%s" % (self.id, self.value)
 
@@ -50,9 +49,21 @@ class oasa_invalid_atom_symbol( oasa_error):
     self.value = value
     self.symbol = symbol
 
-
   def __str__( self):
     return "Symbol '%s' not allowed (%s)" % (self.symbol, self.value)
+
+
+
+class oasa_invalid_value( oasa_error):
+  """exception for reporting invalid values"""
+
+  def __init__( self, meaning, value):
+    oasa_error.__init__(self)
+    self.value = value
+    self.meaning = meaning
+
+  def __str__( self):
+    return "The value for '%s' is not allowed (%s)" % (self.meaning, self.value)
 
 
 

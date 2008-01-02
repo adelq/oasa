@@ -62,7 +62,7 @@ class smiles( plugin):
     mol = Config.create_molecule()
     text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
-    chunks = re.split( "([A-Z][a-z]?|[^A-Z]|[a-z])", text)
+    chunks = re.split( "(\[.*?\]|[A-Z][a-z]?|[^A-Z]|[a-z])", text)
     chunks = filter( None, chunks)
     self._check_the_chunks( chunks)
     last_atom = None
@@ -71,13 +71,19 @@ class smiles( plugin):
     bracket_openings = []
     for c in chunks:
       # atom
-      if is_text.match( c) or c.islower():
-        if c.islower():
-          symbol = c.upper()
-        else:
-          symbol = c
+      if is_text.match( c) or c.islower() or c[0] == "[":
         a = mol.create_vertex()
-        a.symbol = symbol
+        if c[0] == "[":
+          # atom spec in square brackets
+          self._parse_atom_spec( c, a)
+        else:
+          # just atom symbol
+          if c.islower():
+            symbol = c.upper()
+          else:
+            symbol = c
+          a.symbol = symbol
+
         mol.add_vertex( a)
         if last_bond and not (not c.islower() and last_bond.aromatic):
           mol.add_edge( last_atom, a, e=last_bond)
@@ -125,7 +131,10 @@ class smiles( plugin):
 
     ## FINISH
     for a in mol.vertices:
-      a.raise_valency_to_senseful_value()
+      if not 'explicit_hydrogens' in a.properties_:
+        a.raise_valency_to_senseful_value()
+      else:
+        a.valency = a.occupied_valency + a.properties_['explicit_hydrogens']
       try:
         del a.properties_['aromatic']
       except:
@@ -133,6 +142,56 @@ class smiles( plugin):
 
     self.structure = mol 
 
+
+  def _parse_atom_spec( self, c, a):
+    """c is the text spec,
+    a is an empty prepared vertex (atom) instance"""
+    bracketed_atom = re.compile("^\[(\d*)([A-z])(.*?)\]")
+    m = bracketed_atom.match( c)
+    if m:
+      isotope, symbol, rest = m.groups()
+    else:
+      raise ValueError( "unparsable square bracket content '%s'" % c)
+    if symbol.islower():
+      symbol = symbol.upper()
+      a.properties_['aromatic'] = 1
+    a.symbol = symbol
+    if isotope:
+      a.isotope = int( isotope)
+    # hydrogens
+    _hydrogens = re.search( "H(\d*)", rest)
+    h_count = 0
+    if _hydrogens:
+      if _hydrogens.group(1):
+        h_count = int( _hydrogens.group(1))
+      else:
+        h_count = 1
+    a.properties_['explicit_hydrogens'] = h_count
+    # charge
+    charge = 0
+    # one possible spec of charge
+    _charge = re.search( "[-+]{2,10}", rest)
+    if _charge:
+      charge = len( _charge.group(0))
+      if _charge.group(0)[0] == "-":
+        charge *= -1
+    # second one, only if the first one failed
+    else:
+      _charge = re.search( "([-+])(\d?)", rest)
+      if _charge:
+        if _charge.group(2):
+          charge = int( _charge.group(2))
+        else:
+          charge = 1
+        if _charge.group(1) == "-":
+          charge *= -1
+    a.charge = charge
+    # stereo
+    _stereo = re.search( "@+", rest)
+    if _stereo:
+      stereo = _stereo.group(0)
+      a.properties_['stereo'] = stereo
+          
   def _check_the_chunks( self, chunks):
     is_text = re.compile("^[A-Z][a-z]?$")
     i = 0
@@ -177,10 +236,7 @@ class smiles( plugin):
     # single atoms
     if len( mol.vertices) == 1:
       v = mol.vertices[0]
-      if 'aromatic' in v.properties_.keys():
-        yield v.symbol.lower()
-      else:
-        yield v.symbol
+      yield self._create_atom_smiles( v)
       for e in self.ring_joins:
         if v in e.get_vertices():
           yield self.recode_oasa_to_smiles_bond( e)
@@ -211,10 +267,7 @@ class smiles( plugin):
     v = start
     last = None
     while v != end:
-      if 'aromatic' in v.properties_.keys():
-        yield v.symbol.lower()
-      else:
-        yield v.symbol
+      yield self._create_atom_smiles( v)
       # the atom
       for e in self.ring_joins:
         if v in e.get_vertices():
@@ -238,10 +291,7 @@ class smiles( plugin):
           v = neighbor
           break
     # the last atom - should make it somehow not to need this piece of code
-    if 'aromatic' in v.properties_.keys():
-      yield v.symbol.lower()
-    else:
-      yield v.symbol
+    yield self._create_atom_smiles( v)
     for e in self.ring_joins:
       if v in e.get_vertices():
         yield self.recode_oasa_to_smiles_bond( e)
@@ -258,7 +308,30 @@ class smiles( plugin):
 
 
 
-
+  def _create_atom_smiles( self, v):
+    if v.isotope or v.charge != 0 or v.valency != PT.periodic_table[ v.symbol]['valency'][0] or 'stereo' in v.properties_:
+      # we must use square bracket
+      isotope = v.isotope and str( v.isotope) or ""
+      # charge
+      if v.charge:
+        sym = v.charge < 0 and "-" or "+"
+        charge = sym + (abs( v.charge) > 1 and str( abs( v.charge)) or "")
+      else:
+        charge = ""
+      # explicit hydrogens
+      if v.valency != PT.periodic_table[ v.symbol]['valency'][0]:
+        num_h = v.valency - v.occupied_valency
+        h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
+      else:
+        h_spec = ""
+      # stereo
+      stereo = v.properties_.get( "stereo", "")
+      return "[%s%s%s%s%s]" % (isotope, v.symbol, stereo, h_spec, charge)
+    # no need to use square brackets
+    if 'aromatic' in v.properties_.keys():
+      return v.symbol.lower()
+    else:
+      return v.symbol
 
 
 
@@ -453,6 +526,7 @@ if __name__ == '__main__':
       text = mol_to_text( mol)
       #print mol.get_smallest_independent_cycles_e()
       print "  generated: %s" % text
+      print mol.get_formula_dict()
       mol.mark_morgan()
       #print mol.get_diameter()
     t = time.time()-t
@@ -486,9 +560,6 @@ if __name__ == '__main__':
 # at first get rid of the edges common to two or more rings, not critical
 # handling of the start_from in disconnect_something as in disconnect_something_simple
 # could in disconnect_something happen that a start_from will be returned in a branch?
-
-# in the reading code the more possibilities will be there the more cleanup (last_bond=None,
-# last_shit=None ...) will be need. Any way around this?
 # if I do "print m.get_smiles( m.structure)" the ring counting does not work after that
 ## the transformation can be destructive!!!  - check
 
