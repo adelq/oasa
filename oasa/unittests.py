@@ -40,9 +40,6 @@ class TestLinearFormula(unittest.TestCase):
               ("(CH2)7Cl","CCCCCCCCl",1,0),
               ]
     
-  def setUp(self):
-    pass
-    
   def _testformula(self, num):
     l = linear_formula.linear_formula()
     linear, smile, start_valency, end_valency = self.formulas[num]
@@ -55,6 +52,7 @@ for i in range( len( TestLinearFormula.formulas)):
   setattr( TestLinearFormula, "testformula"+str(i+1), create_test(i,"_testformula"))
 
 ## // linear formula testing
+
 
 
 ## substructure testing
@@ -75,9 +73,6 @@ class TestSubstructure(unittest.TestCase):
               ("CC(=O)H","C(=O)H",True),
               ]
     
-  def setUp(self):
-    pass
-    
   def _testformula(self, num):
     smile1, smile2, result = self.formulas[num]
     m1 = smiles.text_to_mol( smile1)
@@ -97,10 +92,9 @@ class TestEqualSMILES(unittest.TestCase):
 
   formulas = [("Sc1ccccc1","S-c1ccccc1",True),  # check Sc (in PT scandium) bug
               ("Oc1ccccc1","O-c1ccccc1",True),
+              ("c1ccccc1","C:1:C:C:C:C:C:1", True),
+              ("c1ccccc1","[CH]:1:[CH]:[CH]:[CH]:[CH]:[CH]:1", True),
               ]
-    
-  def setUp(self):
-    pass
     
   def _testformula(self, num):
     smile1, smile2, result = self.formulas[num]
@@ -112,7 +106,34 @@ class TestEqualSMILES(unittest.TestCase):
 for i in range( len( TestEqualSMILES.formulas)):
   setattr( TestEqualSMILES, "testformula"+str(i+1), create_test(i,"_testformula"))
 
-## // substructure testing
+## // SMILES equality testing
+
+
+## SMILES reading testing
+
+class TestSMILESReading(unittest.TestCase):
+
+  formulas = [("Sc1ccccc1",("C6H6S",)),
+              ("Oc1ccccc1",("C6H6O",)),
+              ("[Na+].[Cl-]", ("Na","Cl")),
+              ("[O-]c1ccccc1.[Na+]",("C6H5O","Na")),
+              ("O=C[O-].[NH4+]",("CHO2","H4N")),
+              ("c1ccccc1-c1ccccc1",("C12H10",)),
+              ]
+    
+  def _testformula(self, num):
+    smile1, sum_forms = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.text_to_mols( smile1)
+    for i,mol in enumerate( mols):
+      assert i < len( sum_forms)
+      self.assertEqual( str( mol.get_formula_dict()), sum_forms[i]) 
+
+# this creates individual test for substructures
+for i in range( len( TestSMILESReading.formulas)):
+  setattr( TestSMILESReading, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+## // SMILES equality testing
 
 
 

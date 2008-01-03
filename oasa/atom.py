@@ -83,7 +83,7 @@ class atom( chem_vertex):
     for b in self._neighbors.keys():
       ord = b.order
       if ord == 4:
-        if odd_aromatic:
+        if not odd_aromatic:
           ord = 1
         else:
           ord = 2
@@ -108,9 +108,7 @@ class atom( chem_vertex):
       charge = 0
 
     x = i+charge+self.multiplicity-1
-
     #self._cache['occupied_valency'] = x
-
     return x
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")

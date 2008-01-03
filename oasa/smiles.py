@@ -86,7 +86,7 @@ class smiles( plugin):
           a.symbol = symbol
 
         mol.add_vertex( a)
-        if last_bond and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
+        if last_bond: # and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
@@ -96,13 +96,7 @@ class smiles( plugin):
             b.order = 4
             b.type = 'n'
         last_atom = a
-        if 'aromatic' in a.properties_:
-          # aromatic bond
-          last_bond = mol.create_edge()
-          last_bond.order = 4
-          last_bond.type = 'n'
-        else:
-          last_bond = None
+        last_bond = None
       # bond
       elif c in '-=#:.':
         order = self.smiles_to_oasa_bond_recode[ c]
@@ -111,15 +105,15 @@ class smiles( plugin):
         last_bond.type = 'n'
       # ring closure
       elif c.isdigit():
-        b = last_bond or mol.create_edge()
         if c in numbers:
-          mol.add_edge( last_atom, numbers[c], e=b)
-          if 'aromatic' in last_atom.properties_:
-            last_bond = mol.create_edge()
-            last_bond.order = 4
-            last_bond.type = 'n'
+          if last_bond:
+            b = last_bond
           else:
-            last_bond = None
+            b = mol.create_edge()
+            if "aromatic" in numbers[c].properties_:
+              b.order = 4
+          mol.add_edge( last_atom, numbers[c], e=b)
+          last_bond = None
           del numbers[ c]
         else:
           numbers[c] = last_atom
@@ -134,6 +128,7 @@ class smiles( plugin):
         a.raise_valency_to_senseful_value()
       else:
         a.valency = a.occupied_valency + a.properties_['explicit_hydrogens']
+        del a.properties_['explicit_hydrogens']
       try:
         del a.properties_['aromatic']
       except:
@@ -145,7 +140,7 @@ class smiles( plugin):
   def _parse_atom_spec( self, c, a):
     """c is the text spec,
     a is an empty prepared vertex (atom) instance"""
-    bracketed_atom = re.compile("^\[(\d*)([A-z]+)(.*?)\]")
+    bracketed_atom = re.compile("^\[(\d*)([A-z][a-z]?)(.*?)\]")
     m = bracketed_atom.match( c)
     if m:
       isotope, symbol, rest = m.groups()
