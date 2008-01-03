@@ -35,7 +35,7 @@ class smiles( plugin):
   read = 1
   write = 1
 
-  smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4}
+  smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0}
   oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
 
   def __init__( self, structure=None):
@@ -138,14 +138,14 @@ class smiles( plugin):
         del a.properties_['aromatic']
       except:
         pass
-
+        
     self.structure = mol 
 
 
   def _parse_atom_spec( self, c, a):
     """c is the text spec,
     a is an empty prepared vertex (atom) instance"""
-    bracketed_atom = re.compile("^\[(\d*)([A-z])(.*?)\]")
+    bracketed_atom = re.compile("^\[(\d*)([A-z]+)(.*?)\]")
     m = bracketed_atom.match( c)
     if m:
       isotope, symbol, rest = m.groups()
@@ -467,8 +467,78 @@ def is_line( mol):
 def is_pure_ring( mol):
   return filter( lambda x: x.get_degree() != 2, mol.vertices) == []
 
+
 ##################################################
-## MODULE INTERFACE
+## MODULE INTERFACE - newstyle
+
+from converter_base import converter_base
+
+class smiles_converter( converter_base):
+
+  # standard converter attrs
+  reads_text = True
+  writes_text = True
+  reads_files = True
+  writes_files = True
+
+  default_configuration = {"R_GENERATE_COORDS": True,
+                           "R_BOND_LENGTH": 1,
+                           "R_LOCALIZE_AROMATIC_BONDS": True,
+                           
+                           "W_AROMATIC_BOND_AUTODETECT": True,
+                           "W_INDIVIDUAL_MOLECULE_SEPARATOR": ".",
+                           }
+
+  def __init__( self):
+    converter_base.__init__( self)
+
+  def mols_to_text( self, structures):
+    converter_base.mols_to_text( self, structures)
+    sm = smiles()
+    ret = []
+    for mol in structures:
+      if self.configuration["W_AROMATIC_BOND_AUTODETECT"]:
+        mol.mark_aromatic_bonds()
+      ret.append( sm.get_smiles( mol))
+    return self.configuration["W_INDIVIDUAL_MOLECULE_SEPARATOR"].join( ret)
+
+  def text_to_mols( self, text):
+    converter_base.text_to_mols( self, text)
+    sm = smiles()
+    sm.read_smiles( text)
+    mol = sm.structure
+    zero_bonds = [e for e in mol.edges if e.order == 0]
+    for b in zero_bonds:
+      mol.disconnect_edge( b)
+    mols = mol.get_disconnected_subgraphs()
+    for mol in mols:
+      if self.configuration["R_LOCALIZE_AROMATIC_BONDS"]:
+        mol.localize_aromatic_bonds()
+        for b in mol.bonds:
+          b.aromatic = 0
+      if self.configuration["R_GENERATE_COORDS"]:
+        coords_generator.calculate_coords( mol, bond_length=self.configuration['R_BOND_LENGTH'])
+    return mols
+
+  def mols_to_file( self, structures, f):
+    converter_base.mols_to_file( self, structures, f)
+    f.write( self.mols_to_text( structures))
+
+  def file_to_mols( self, f):
+    converter_base.file_to_mols( self, f)
+    mols = []
+    for line in f:
+      mol = self.text_to_mols( line)
+      mols.extend( mol)
+    return mols
+    
+converter = smiles_converter
+
+# END OF MODULE INTERFACE
+##################################################
+
+##################################################
+## MODULE INTERFACE - oldstyle
 
 import coords_generator
 
@@ -514,18 +584,15 @@ if __name__ == '__main__':
 
   def main( text, cycles):
     t = time.time()
-    #mol = molecule()
-    #mol._read_file()
+    conv = converter()
     for j in range( cycles):
-      mol = text_to_mol( text)
-      mol.remove_all_hydrogens()
-      text = mol_to_text( mol)
-      #print mol.get_smallest_independent_cycles_e()
-      print mol.get_formula_dict()
-
-      print "  generated: %s" % text
-      #mol.mark_morgan()
-      #print mol.get_diameter()
+      mols = conv.text_to_mols( text)
+      for mol in mols:
+        mol.remove_all_hydrogens()
+        print "  summary formula:   ", mol.get_formula_dict()        
+      text = conv.mols_to_text( mols)
+      print "  generated SMILES:   %s" % text
+      print "  --"
     t = time.time()-t
     print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
 
@@ -538,7 +605,8 @@ if __name__ == '__main__':
 
   print "oasa::SMILES DEMO"
   print "converting following smiles to smiles (%d times)" % repeat
-  print "  starting with: %s" % text
+  print "  starting with:      %s" % text
+  print "  --------------------"
   main( text, repeat)
 
 # DEMO END
