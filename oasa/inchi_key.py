@@ -23,6 +23,7 @@ except:
   raise Exception( "python-mhash library was not found, make sure it is installed")
 import operator
 import re
+from sets import Set
 
 triplets = [ 
 "AAA","AAB","AAC","AAD","AAE","AAF","AAG","AAH","AAI","AAJ","AAK","AAL","AAM","AAN","AAO","AAP",
@@ -1192,12 +1193,12 @@ def compute_inchi_check( key):
 def flag( version, parts):
   assert type( version) == type( 0) and 1 <= version <= 3
   flag = 0
-  starts = set( [x[0] for x in parts])
-  if starts & set( "tbms"):
+  starts = Set( [x[0] for x in parts])
+  if starts & Set( "tbms"):
     flag |= 0x01
-  if starts & set( "f"):
+  if starts & Set( "f"):
     flag |= 0x02
-  if starts & set( "i"):
+  if starts & Set( "i"):
     flag |= 0x04
   version_flag_set = ["ABCDEFGH","IJKLMNOP","QRSTUVWX"]
   return version_flag_set[int(version)-1][flag]
@@ -1237,7 +1238,7 @@ def key_from_inchi( inp):
     minor = 2*minor
   base = major_digest( major) + "-" + minor_digest( minor) + flag( int(version), parts_minor)
   check = compute_inchi_check( base)
-  return "InChIKey="+base+check
+  return base+check
 
 
 def check_inchi_key( key):
