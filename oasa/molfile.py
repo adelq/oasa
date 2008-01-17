@@ -58,6 +58,10 @@ class molfile( plugin):
     for k in range( bonds):
       b, i, j = self._read_bond( file)
       self.structure.add_edge( i, j, e=b)
+    for line in file:
+      #print line.strip()
+      if line.strip() == "M  END":
+        break
 
   def _read_atom( self, file):
     x = read_molfile_value( file, 10, conversion=float)
@@ -95,6 +99,7 @@ class molfile( plugin):
     self._write_header( file)
     self._write_counts_line( file)
     self._write_body( file)
+    self._write_m_lines( file)
     file.write( 'M  END\n')
 
   def get_text( self):
@@ -156,6 +161,31 @@ class molfile( plugin):
     #         1  2  3  4 5
     return "%3d%3d%3d%3d%s" % (a1,a2,order,type,rest)
 
+  def _write_m_lines( self, file):
+    m_lines = self._get_m_lines()
+    if m_lines:
+      file.write( "\n".join( m_lines) + "\n")
+
+  def _get_m_lines( self):
+    # radicals
+    radicals = {}
+    i = 1
+    for v in self.structure.vertices:
+      print v.multiplicity
+      if v.multiplicity != 1:
+        radicals[i] = v.multiplicity
+      i += 1
+    if radicals:
+      assert len( radicals) <= 8
+      nums = radicals.keys()
+      nums.sort()
+      rads = " ".join( ["%3d %3d" % (n,radicals[n]) for n in nums])
+      rad_line = "M  RAD%3d %s" % (len(nums), rads)
+    else:
+      rad_line = None
+    # return m_lines
+    m_lines = filter( None, [rad_line])
+    return m_lines
 
   def _read_molfile_charge( self, value):
     if value == 0:

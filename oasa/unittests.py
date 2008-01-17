@@ -94,6 +94,7 @@ class TestEqualSMILES(unittest.TestCase):
               ("Oc1ccccc1","O-c1ccccc1",True),
               ("c1ccccc1","C:1:C:C:C:C:C:1", True),
               ("c1ccccc1","[CH]:1:[CH]:[CH]:[CH]:[CH]:[CH]:1", True),
+              ("c1cscc1","C1=C-S-C=C1", True),
               ]
     
   def _testformula(self, num):
@@ -119,6 +120,7 @@ class TestSMILESReading(unittest.TestCase):
               ("[O-]c1ccccc1.[Na+]",("C6H5O","Na")),
               ("O=C[O-].[NH4+]",("CHO2","H4N")),
               ("c1ccccc1-c1ccccc1",("C12H10",)),
+              ("c1cscc1",("C4H4S",)),
               ]
     
   def _testformula(self, num):

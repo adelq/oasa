@@ -127,8 +127,12 @@ class smiles( plugin):
       if not 'explicit_hydrogens' in a.properties_:
         a.raise_valency_to_senseful_value()
       else:
-        a.valency = a.occupied_valency + a.properties_['explicit_hydrogens']
-        del a.properties_['explicit_hydrogens']
+        # detect radicals (but not biradicals - problem of triplet vs. singlet)
+        if a.valency - a.properties_['explicit_hydrogens'] - a.occupied_valency == 1:
+          a.multiplicity += 1
+        else:
+          a.valency = a.occupied_valency + a.properties_['explicit_hydrogens']
+          del a.properties_['explicit_hydrogens']
       try:
         del a.properties_['aromatic']
       except:
@@ -306,7 +310,7 @@ class smiles( plugin):
     else:
       symbol = v.symbol
 
-    if v.isotope or v.charge != 0 or v.valency != PT.periodic_table[ v.symbol]['valency'][0] or 'stereo' in v.properties_:
+    if v.isotope or v.charge != 0 or v.valency != PT.periodic_table[ v.symbol]['valency'][0] or 'stereo' in v.properties_ or v.multiplicity != 1:
       # we must use square bracket
       isotope = v.isotope and str( v.isotope) or ""
       # charge

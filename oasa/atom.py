@@ -78,17 +78,22 @@ class atom( chem_vertex):
     except KeyError:
       pass
 
-    i = 0
+    bonds_alternating_aromatic = 0
+    bonds_single_aromatic = 0
     odd_aromatic = False
     for b in self._neighbors.keys():
-      ord = b.order
-      if ord == 4:
+      order = b.order
+      if order == 4:
         if not odd_aromatic:
-          ord = 1
+          order = 1
         else:
-          ord = 2
+          order = 2
+        bonds_single_aromatic += 1
+        bonds_alternating_aromatic += order
         odd_aromatic = not odd_aromatic
-      i += ord
+      else:
+        bonds_single_aromatic += order
+        bonds_alternating_aromatic += order
 
     if self.charge:
       # now we deal with charge
@@ -107,7 +112,14 @@ class atom( chem_vertex):
     else:
       charge = 0
 
-    x = i+charge+self.multiplicity-1
+    x = bonds_alternating_aromatic+charge+self.multiplicity-1
+    if x > self.valency:
+      # we have computed occupied_valency using alternating single and double
+      # bonds for aromatic bonds, however it led to occupied_valency being higher
+      # than valency - lets replace it using single bonds for aromatic
+      # (this fixed thiophene where occupied_valency of S would be computed to be 3
+      #  and valency raise would be triggered)
+      x = bonds_single_aromatic+charge+self.multiplicity-1
     #self._cache['occupied_valency'] = x
     return x
 
