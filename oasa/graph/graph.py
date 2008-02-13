@@ -466,6 +466,7 @@ class graph( object):
     other cycles in graph are guaranteed to be combinations of them.
     Gasteiger J. (Editor), Engel T. (Editor), Chemoinformatics : A Textbook, John Wiley & Sons 2001,
     ISBN 3527306811, 174."""
+    assert self.is_connected()
     ncycles = len( self.edges) - len( self.vertices) + 2 - len( list( self.get_connected_components()))
 
     # check if the graph is connected, don't know if we should do it...

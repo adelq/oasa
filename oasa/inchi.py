@@ -722,7 +722,7 @@ class inchi( plugin):
         
     
 
-def generate_inchi_and_inchikey( m, program=None, fixed_hs=False):
+def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
   if not program:
     import config
     program = config.Config.inchi_binary_path
@@ -765,11 +765,11 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=False):
   return inchi, key, warnings
 
 
-def generate_inchi( m, program=None, fixed_hs=False):
+def generate_inchi( m, program=None, fixed_hs=True):
   inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
   return inchi, warnings
 
-def generate_inchi_key( m, program=None, fixed_hs=False):
+def generate_inchi_key( m, program=None, fixed_hs=True):
   inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
   return key, warnings
 
@@ -807,7 +807,7 @@ def file_to_mol( f):
   return text_to_mol( f.read())
 
 
-def mol_to_text( mol, program=None, fixed_hs=False):
+def mol_to_text( mol, program=None, fixed_hs=True):
   return generate_inchi( mol, program=program, fixed_hs=fixed_hs)[0]
 
 
