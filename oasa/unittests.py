@@ -126,7 +126,7 @@ class TestSMILESReading(unittest.TestCase):
   def _testformula(self, num):
     smile1, sum_forms = self.formulas[num]
     conv = smiles.converter()
-    mols = conv.text_to_mols( smile1)
+    mols = conv.read_text( smile1)
     for i,mol in enumerate( mols):
       assert i < len( sum_forms)
       self.assertEqual( str( mol.get_formula_dict()), sum_forms[i]) 
@@ -138,6 +138,42 @@ for i in range( len( TestSMILESReading.formulas)):
 ## // SMILES equality testing
 
 
+## SMILES Reaction support
+
+class TestSMILESReactionSupport(unittest.TestCase):
+  
+  def test1(self):
+    """tests handling of reactions by the SMILES reader on a preparation of methyl-formate"""
+    c = smiles.converter()
+    reacts = c.read_text( "O=CO.CO>[H+]>O=COC.O")
+    self.assertEqual( reacts, c.result)
+    self.assertEqual( c.last_status, c.STATUS_OK)
+    self.assertEqual( len( reacts), 1)
+    react = reacts[0]
+    self.assertEqual( len( react.reactants), 2)
+    self.assertEqual( len( react.reactants[0].molecule.atoms), 3)
+    self.assertEqual( len( react.reactants[1].molecule.atoms), 2)
+    self.assertEqual( len( react.reagents[0].molecule.atoms), 1)
+    self.assertEqual( len( react.products[0].molecule.atoms), 4)
+    self.assertEqual( len( react.products[1].molecule.atoms), 1)
+    self.assertEqual( str( react.products[0].molecule.get_formula_dict()), "C2H4O2")
+
+## // SMILES Reaction support
+
+## Reaction test
+
+import reaction
+
+class TestReactionComponent(unittest.TestCase):
+
+  def test1(self):
+    mol = smiles.text_to_mol( "CCCO")
+    rc = reaction.reaction_component( mol, 2)
+    self.assertEqual( rc.stoichiometry, 2)
+    self.assertRaises( Exception, reaction.reaction_component, mol, "x")
+    self.assertRaises( Exception, rc._set_stoichiometry, "x")
+    self.assertRaises( Exception, reaction.reaction_component, 2, 2)
+    self.assertRaises( Exception, rc._set_molecule, "x")    
 
 
 if __name__ == '__main__':

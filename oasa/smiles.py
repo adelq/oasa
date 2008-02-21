@@ -21,6 +21,8 @@ from plugin import plugin
 from molecule import molecule, equals
 import periodic_table as PT
 import oasa_exceptions
+import reaction
+
 
 from config import Config
 
@@ -499,10 +501,39 @@ class smiles_converter( converter_base):
       if self.configuration["W_AROMATIC_BOND_AUTODETECT"]:
         mol.mark_aromatic_bonds()
       ret.append( sm.get_smiles( mol))
+    self.last_status = self.STATUS_OK
     return self.configuration["W_INDIVIDUAL_MOLECULE_SEPARATOR"].join( ret)
 
-  def text_to_mols( self, text):
-    converter_base.text_to_mols( self, text)
+  def read_text( self, text):
+    # reaction support
+    if ">" in text:
+      if text.count(">") != 2:
+        raise oasa_exceptions.oasa_smiles_error( "Only two '>' characters are supported in SMILES reactions. %d present" % text.count(">"))
+      parts = text.split( ">")
+      res = []
+      for part in parts:
+        res.append( self._read_string( part))
+        if not self.last_status == self.STATUS_OK:
+          res = []
+          break
+      if not res:
+        self.result = []
+        return []
+      else:
+        react = reaction.reaction()
+        for p in res[0]:
+          react.reactants.append( reaction.reaction_component( p))
+        for p in res[2]:
+          react.products.append( reaction.reaction_component( p))
+        for p in res[1]:
+          react.reagents.append( reaction.reaction_component( p))
+        self.result = [react]
+        return self.result
+    else:
+      return self._read_string( text)
+
+  def _read_string( self, text):
+    converter_base.read_text( self, text)
     sm = smiles()
     sm.read_smiles( text)
     mol = sm.structure
@@ -517,14 +548,16 @@ class smiles_converter( converter_base):
           b.aromatic = 0
       if self.configuration["R_GENERATE_COORDS"]:
         coords_generator.calculate_coords( mol, bond_length=self.configuration['R_BOND_LENGTH'])
+    self.result = mols
+    self.last_status = self.STATUS_OK
     return mols
 
   def mols_to_file( self, structures, f):
     converter_base.mols_to_file( self, structures, f)
     f.write( self.mols_to_text( structures))
 
-  def file_to_mols( self, f):
-    converter_base.file_to_mols( self, f)
+  def read_file( self, f):
+    converter_base.read_file( self, f)
     mols = []
     for line in f:
       mol = self.text_to_mols( line)
@@ -585,7 +618,7 @@ if __name__ == '__main__':
     t = time.time()
     conv = converter()
     for j in range( cycles):
-      mols = conv.text_to_mols( text)
+      mols = conv.read_text( text)
       for mol in mols:
         mol.remove_all_hydrogens()
         print "  summary formula:   ", mol.get_formula_dict()        

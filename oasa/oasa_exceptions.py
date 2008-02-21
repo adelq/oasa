@@ -100,3 +100,14 @@ class oasa_unsupported_inchi_version_error( oasa_error):
 
 
 
+class oasa_smiles_error( oasa_error):
+  
+  def __init__( self, value):
+    oasa_error.__init__(self)
+    self.value = value
+
+  def __str__( self):
+    return "SMILES Error: %s" % self.value
+
+
+

@@ -23,6 +23,9 @@
 
 class converter_base( object):
 
+  STATUS_OK = 1
+  STATUS_CRITICAL_ERROR = 2
+
   # standard converter attrs
   reads_text = False
   writes_text = False
@@ -35,7 +38,7 @@ class converter_base( object):
     self.configuration = {}
     for k,v in self.default_configuration.iteritems():
       self.configuration[k] = v
-    self.clean_logs()
+    self.cleanup()
 
   def clean_logs( self):
     # here all warnings for the last run should be stored
@@ -47,7 +50,7 @@ class converter_base( object):
     self.clean_logs()
     pass
 
-  def text_to_mols( self, text):
+  def read_text( self, text):
     self.clean_logs()
     pass
 
@@ -55,7 +58,11 @@ class converter_base( object):
     self.clean_logs()
     pass
 
-  def file_to_mols( self, f):
+  def read_file( self, f):
     self.clean_logs()
     pass
 
+  def cleanup( self):
+    self.clean_logs()
+    self.result = []
+    self.last_status = None
