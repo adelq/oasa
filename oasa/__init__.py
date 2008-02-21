@@ -19,7 +19,7 @@
 
 import sys
 if not (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 3)):
-  raise ImportError, "system version %d.%d is lower than 2.3 which is needed by OASA" % sys.version_info[0:2]
+  raise ImportError, "Python version %d.%d is lower than 2.3 which is needed by OASA" % sys.version_info[0:2]
 
 
 import atom
@@ -39,7 +39,6 @@ import query_atom
 import chem_vertex
 import oasa_exceptions
 import name_database
-import inchi_key
 
 no_cairo = False
 try:
@@ -56,10 +55,18 @@ chem_vertex = chem_vertex.chem_vertex
 
 all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
        "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
-       'query_atom','oasa_exceptions','name_database','inchi_key']
+       'query_atom','oasa_exceptions','name_database']
 
 if not no_cairo:
   all.append( "cairo_out")
+
+try:
+  import inchi_key
+except Exception, e:
+  import warnings
+  warnings.warn( "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n%s" % e)
+else:
+  all.append( "inchi_key")
 
 __all__ = all
 
