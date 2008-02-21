@@ -131,6 +131,13 @@ class TestSMILESReading(unittest.TestCase):
       assert i < len( sum_forms)
       self.assertEqual( str( mol.get_formula_dict()), sum_forms[i]) 
 
+  def test_empty_smiles( self):
+    conv = smiles.converter()
+    for text in ("", "  "):
+      mols = conv.read_text( "")
+      self.assertEqual( mols, [])
+
+
 # this creates individual test for substructures
 for i in range( len( TestSMILESReading.formulas)):
   setattr( TestSMILESReading, "testformula"+str(i+1), create_test(i,"_testformula"))
@@ -158,6 +165,19 @@ class TestSMILESReactionSupport(unittest.TestCase):
     self.assertEqual( len( react.products[1].molecule.atoms), 1)
     self.assertEqual( str( react.products[0].molecule.get_formula_dict()), "C2H4O2")
 
+  def test2(self):
+    """test reactions with some empty parts"""
+    c = smiles.converter()
+    reacts = c.read_text( "C=C.[H][H]>>CC")
+    self.assertEqual( len( reacts), 1)
+    react = reacts[0]
+    self.assertEqual( len( react.reagents), 0)
+    self.assertEqual( len( react.reactants), 2)
+    self.assertEqual( len( react.products), 1)
+
+
+
+
 ## // SMILES Reaction support
 
 ## Reaction test
@@ -174,6 +194,7 @@ class TestReactionComponent(unittest.TestCase):
     self.assertRaises( Exception, rc._set_stoichiometry, "x")
     self.assertRaises( Exception, reaction.reaction_component, 2, 2)
     self.assertRaises( Exception, rc._set_molecule, "x")    
+
 
 
 if __name__ == '__main__':

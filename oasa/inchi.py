@@ -720,7 +720,33 @@ class inchi( plugin):
 #        elif x == 0:
 #          break
         
-    
+
+def _run_command( command, input):
+  if os.name == "nt":
+    out, inp = popen2.popen4( command)
+  else:
+    p = popen2.Popen4( command)
+    out, inp = p.fromchild, p.tochild
+  inp.write( input)
+  inp.close()
+  outf = out.fileno()
+  result = ""
+  try:
+    while 1:
+      ready = select.select( [outf], [], [])
+      if ready[0]:
+        text = os.read( ready[0][0], 1024)
+        if not text:
+          break
+        result += text
+      time.sleep(0.01)
+  finally:
+    out.close()
+    if os.name != "nt":
+      p.poll()
+      del p
+  return result
+
 
 def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
   if not program:
@@ -732,17 +758,11 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
   else:
     options = "-AUXNONE -STDIO -Key" + (fixed_hs and " -FixedH" or "")
   command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
-  if os.name == "nt":
-    out, inp = popen2.popen4( command)
-  else:
-    p = popen2.Popen4( command)
-    out, inp = p.fromchild, p.tochild
-  inp.write( mf)
-  inp.close()
+  text = _run_command( command, mf)
   inchi = ""
   key = ""
   warnings = []
-  for line in out.readlines():
+  for line in text.splitlines():
     if line.startswith( "Warning"):
       warnings.append(line.strip() + "\n")
     elif line.startswith( "End of file detected"):
@@ -754,12 +774,6 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
       inchi = inchi + line.strip()
     elif line.startswith( "Error"):
       break
-  out.close()
-
-  if os.name != "nt":
-    p.poll()
-    del p
-
   if not inchi:
     raise oasa_inchi_error( "InChI program did not create any output InChI")
   return inchi, key, warnings

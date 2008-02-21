@@ -140,6 +140,8 @@ class smiles( plugin):
       except:
         pass
         
+    if len(mol.vertices) == 0:
+      mol = None
     self.structure = mol 
 
 
@@ -537,6 +539,8 @@ class smiles_converter( converter_base):
     sm = smiles()
     sm.read_smiles( text)
     mol = sm.structure
+    if mol == None:
+      return []
     zero_bonds = [e for e in mol.edges if e.order == 0]
     for b in zero_bonds:
       mol.disconnect_edge( b)
