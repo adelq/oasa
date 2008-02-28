@@ -695,6 +695,8 @@ class molecule( graph.graph):
 
   def get_mean_bond_length( self):
     """returns the mean bond length of bonds in the molecule"""
+    if len( self.edges) == 0:
+      return None
     bond_length = 0.0
     for e in self.edges:
       v1, v2 = e.vertices
