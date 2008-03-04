@@ -94,7 +94,6 @@ class digraph( graph.graph):
       recent = Set() # [not_processed.pop()])
     processed = Set()
       
-
     while not_processed:
       recent = Set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
       processed = recent | comp
@@ -104,7 +103,6 @@ class digraph( graph.graph):
           recent.add( v2)
         elif (v2 in processed and v1 in not_processed):
           recent.add( v1)
-
       if not recent:
         if comp:
           yield comp
@@ -115,7 +113,6 @@ class digraph( graph.graph):
         not_processed -= recent
     # when there is only one atom in the last piece it is not yielded in the loop
     yield comp
-
 
   
   def get_random_longest_path_numbered( self, start, end):

@@ -1,0 +1,45 @@
+# name; SMILES; optional indexes of atoms to be ignored (they just define the surrounding)
+
+# carboxyles and carbonyles
+aldehyde; carbonyl group; HC=O
+ketone; carbonyl group; CC(=O)C; 1,4
+carboxylic acid; carboxyl group; HOC=O
+ester; carboxyl group; COC=O; 1
+anhydride; ; O=COC=O
+acyl chloride; ; O=CCl
+acyl flouride; ; O=CF
+acyl bromide; ; O=CBr
+acyl iodide; ; O=CI
+
+# simple one-atom groups
+alkyl chloride; ; C-Cl; 1
+alkyl bromide; ; C-Br; 1
+alkyl fluoride; ; C-F; 1
+alkyl iodide; ; C-I; 1
+alcohole; hydroxy group; C-[OH]; 1
+ether; ; C-O-C; 1,3
+thiol; ; C-[SH]; 1
+thioether; ; C-S-C; 1,3
+primary amine; amino group; C-[NH2]; 1
+secondary amine; amino group; C-[NH]-C; 1,3
+tertiary amine; amino group; CN(C)C; 1,3,4
+quarternary ammonium salt; amino group; C[N+](C)(C)C; 1,3,4,5
+borane; ; C-[BH2]; 1
+borane; ; C-[BH]-C; 1,3
+borane; ; C-B(C)C; 1,3,4
+
+# more complex hetero functional groups
+nitro compound; nitro group; C-N(=O)=O; 1
+sulfonic acid; sulfonyl group; C-S(=O)(=O)O; 1
+
+# rings
+benzene; ; c1ccccc1
+pyridine; ; c1ccncc1
+thiophene; ; c1cscc1
+pyrrole; ; c1cncc1
+furane; ; c1cocc1
+
+
+
+
+# what about formic acid??
