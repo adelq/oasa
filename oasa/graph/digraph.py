@@ -134,5 +134,18 @@ class digraph( graph.graph):
     return path
 
 
-
-
+  def get_graphviz_text_dump( self):
+    ret = '''digraph "dump" {
+    fontpath="/usr/share/fonts/corefonts";
+    ratio=compress
+    nodesep=0.1;
+    ranksep=0.3;
+    rankdir=LR;
+    node [shape=box,fontsize=10,fontname=Arial,height=0.3];
+    '''
+    for v in self.vertices:
+      for n in v.neighbors:
+        ret += '"%s" -> "%s";\n' % (v,n);
+      ret += '"%s" [label="%s"];\n' % (v,v.value)
+    ret += "}"
+    return ret

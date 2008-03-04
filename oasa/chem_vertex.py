@@ -118,9 +118,7 @@ class chem_vertex( graph.vertex):
       if ord == 4:
         ord = 1
       i += ord
-
     return i
-
 
   occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
@@ -146,6 +144,18 @@ class chem_vertex( graph.vertex):
 
   weight = property( _get_weight, None, None, "atom weight")
 
+  # free_sites
+  def _set_free_sites( self, free_sites):
+    self._free_sites = free_sites
+
+  def _get_free_sites( self):
+    really_free = self._free_sites - self.occupied_valency
+    if really_free < 0:
+      return 0
+    else:
+      return really_free
+
+  free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
 
 
 

@@ -39,7 +39,7 @@ class atom( chem_vertex):
     self.symbol = symbol
     self.charge = charge
     self.isotope = None
-
+    self.explicit_hydrogens = 0
 
 
   def matches( self, other):
@@ -145,6 +145,8 @@ class atom( chem_vertex):
     self._free_sites = free_sites
 
   def _get_free_sites( self):
+    if self._free_sites > self.free_valency:
+      return self.free_valency
     return self._free_sites
 
   free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
@@ -208,8 +210,8 @@ class atom( chem_vertex):
     """returns formula as dictionary that can
     be passed to functions in periodic_table"""
     ret = PT.formula_dict( self.symbol)
-    if self.free_valency > 0:
-      ret['H'] = self.free_valency
+    if self.free_valency + self.explicit_hydrogens > 0:
+      ret['H'] = self.free_valency + self.explicit_hydrogens
     return ret
 
 

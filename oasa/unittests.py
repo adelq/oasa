@@ -68,6 +68,7 @@ class TestSubstructure(unittest.TestCase):
               ("C(=O)O","C(=O)OH",True),  # implicit hydrogens work
               ("C(=O)OH","C(=O)O",True),
               ("C(=O)OC","C(=O)OH",False),  # explicit hydrogens work
+              ("C(=O)OC","C(=O)[OH]",False),  # explicit hydrogens in atom specs work
               ("C(=O)OC","C(=O)O",True),
               #
               ("CC(=O)H","C(=O)H",True),

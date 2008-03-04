@@ -495,7 +495,18 @@ class molecule( graph.graph):
       added_hs = self.add_missing_hydrogens()
       for h in added_hs:
         h.properties_['implicit_hydrogen'] = True
-
+    # here we add explicit hydrogens to other, we call them implicit_hydrogen to make it
+    # work the same way as implicit_hydrogen
+    for v in other.vertices:
+      for i in range( v.explicit_hydrogens):
+        h = other.create_vertex()
+        other.add_vertex( h)
+        h.symbol = 'H'
+        e = other.create_edge()
+        e.order = 1
+        other.add_edge( v, h, e=e)
+        h.properties_['implicit_hydrogen'] = True
+      v.explicit_hydrogens = 0  # make it 0 and after search put it back
 
     # then we create the dicts for storing threads in each of the atoms
     i = 0 
@@ -539,11 +550,17 @@ class molecule( graph.graph):
     for v in hs:
       del v.properties_['implicit_hydrogen']
       self.remove_vertex( v)
-
+    # we also remove implicit_hydrogen (that represent atom.explicit_hydrogens) on other
+    # and also set the explicit_hydrogens count back to the original atoms
+    for v in other.vertices:
+      if 'implicit_hydrogen' not in v.properties_:
+        v.explicit_hydrogens = len( [h for h in v.neighbors if 'implicit_hydrogen' in h.properties_])
+    hs = [v for v in other.vertices if 'implicit_hydrogen' in v.properties_.keys()]
+    for v in hs:
+      del v.properties_['implicit_hydrogen']
+      other.remove_vertex( v)
     for v in self.vertices + other.vertices:
       del v.properties_['subsearch']
-
-
     
       
   def _mark_matching_threads( self, v, other):
@@ -623,7 +640,7 @@ class molecule( graph.graph):
       mirror = v.properties_['subsearch'][thread]
       unmatched_ns = [n for n in mirror.neighbors if thread not in n.properties_['subsearch'] and not n.symbol == 'H']
       # if there is more unmatched neighbors then free-site it does not match (Hs don't count)
-      if not len( unmatched_ns) <= v.free_sites:
+      if not len( unmatched_ns)+mirror.explicit_hydrogens <= v.free_sites:
         return False
     return True
         
@@ -679,7 +696,6 @@ class molecule( graph.graph):
         miny = v.y
       if not maxy or v.y > maxy:
         maxy = v.y
-
 
     scale = bond_length / self.get_mean_bond_length()
     movex = (maxx+minx)/2

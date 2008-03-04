@@ -126,15 +126,14 @@ class smiles( plugin):
 
     ## FINISH
     for a in mol.vertices:
-      if not 'explicit_hydrogens' in a.properties_:
+      if a.explicit_hydrogens == 0:
         a.raise_valency_to_senseful_value()
       else:
         # detect radicals (but not biradicals - problem of triplet vs. singlet)
-        if a.valency - a.properties_['explicit_hydrogens'] - a.occupied_valency == 1:
+        if a.valency - a.occupied_valency == 1:
           a.multiplicity += 1
         else:
-          a.valency = a.occupied_valency + a.properties_['explicit_hydrogens']
-          del a.properties_['explicit_hydrogens']
+          a.valency = a.occupied_valency
       try:
         del a.properties_['aromatic']
       except:
@@ -168,7 +167,7 @@ class smiles( plugin):
         h_count = int( _hydrogens.group(1))
       else:
         h_count = 1
-    a.properties_['explicit_hydrogens'] = h_count
+    a.explicit_hydrogens = h_count
     # charge
     charge = 0
     # one possible spec of charge
@@ -324,8 +323,11 @@ class smiles( plugin):
       else:
         charge = ""
       # explicit hydrogens
-      num_h = v.valency - v.occupied_valency
-      h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
+      if v.explicit_hydrogens or v.valency != PT.periodic_table[ v.symbol]['valency'][0]:
+        num_h = v.valency - v.occupied_valency
+        h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
+      else:
+        h_spec = ""
       # stereo
       stereo = v.properties_.get( "stereo", "")
       return "[%s%s%s%s%s]" % (isotope, symbol, stereo, h_spec, charge)
