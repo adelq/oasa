@@ -511,18 +511,19 @@ class molecule( graph.graph):
     # then we create the dicts for storing threads in each of the atoms
     i = 0 
     for a in other.vertices:
-      a.properties_[ 'subsearch'] = {}
+      a.properties_['subsearch'] = {}
+    for e in other.edges | self.edges:
+      e.properties_['subsearch'] = {}
     # here we select the vertex to start from
     vs = [v for v in other.vertices if isinstance( v, atom)]
     sym = common.least_common_item( [v.symbol for v in vs])
     v = [v for v in vs if v.symbol == sym][0]
-
     for a in self.vertices:
-      a.properties_[ 'subsearch'] = {}
+      a.properties_['subsearch'] = {}
       if v.matches( a):
         i += 1
-        a.properties_[ 'subsearch'][i] = v
-        v.properties_[ 'subsearch'][i] = a
+        a.properties_['subsearch'][i] = v
+        v.properties_['subsearch'][i] = a
 
     # now we can proceed with the search
     yielded = Set()
@@ -561,6 +562,8 @@ class molecule( graph.graph):
       other.remove_vertex( v)
     for v in self.vertices + other.vertices:
       del v.properties_['subsearch']
+    for e in self.edges | other.edges:
+      del e.properties_['subsearch']
     
       
   def _mark_matching_threads( self, v, other):
@@ -573,11 +576,11 @@ class molecule( graph.graph):
 
       mirror = v.properties_['subsearch'][thread]
       for e, n in v.get_neighbor_edge_pairs():
-        if thread not in n.properties_['subsearch'].keys():
+        if thread not in n.properties_['subsearch']:
           candidates = Set()
           for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread not in mn.properties_['subsearch'].keys() and n.matches( mn) and e.matches( me):
-              candidates.add( mn)
+            if thread not in mn.properties_['subsearch'] and n.matches( mn) and e.matches( me) and thread not in e.properties_['subsearch']:
+              candidates.add( (mn, me, e))
 
           if candidates:
             if len( candidates) > 1:
@@ -585,12 +588,14 @@ class molecule( graph.graph):
               ths = [thread] + new_threads
             else:
               ths = [thread]
-            for c in candidates:
+            for c, me, e in candidates:
               th = ths.pop()
               n.properties_['subsearch'][th] = c
               c.properties_['subsearch'][th] = n
+              e.properties_['subsearch'][th] = me
+              me.properties_['subsearch'][th] = e
             [x for x in self._mark_matching_threads( n, other)] # just make the generator run
-            if thread not in v.properties_['subsearch'].keys():
+            if thread not in v.properties_['subsearch']:
               # the thread already died
               break
             else:
@@ -599,15 +604,16 @@ class molecule( graph.graph):
             self._delete_thread( other, thread)
             break
         # for proper handling of rings we have to check also the ones that are in this thread already
-        else: 
-          found = False
-          for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread in mn.properties_['subsearch'].keys() and n.properties_['subsearch'][thread] == mn and e.matches( me):
-              found = True
-              break
-          if not found:
+        elif thread not in e.properties_['subsearch']:
+          me = self.get_edge_between( mirror, n.properties_['subsearch'][thread]) 
+          if me and e.matches( me):
+            e.properties_['subsearch'][thread] = me
+            me.properties_['subsearch'][thread] = e
+          else:
             self._delete_thread( other, thread)
             break
+        else:
+          pass
          
       threads = [i for i in v.properties_['subsearch'].keys() if i >= thread]
       if thread in threads:
@@ -617,11 +623,13 @@ class molecule( graph.graph):
 
 
   def _spawn_thread( self, other, thread, number):
-    my_vs = [v for v in self.vertices if thread in v.properties_['subsearch'].keys()]
-    other_vs = [v for v in other.vertices if thread in v.properties_['subsearch'].keys()]
-    max_thread = max( [max( v.properties_['subsearch'].keys()) for v in other.vertices if v.properties_['subsearch'].keys()])
+    my_vs = [v for v in self.vertices if thread in v.properties_['subsearch']]
+    my_es = [e for e in self.edges if thread in e.properties_['subsearch']]
+    other_vs = [v for v in other.vertices if thread in v.properties_['subsearch']]
+    other_es = [e for e in other.edges if thread in e.properties_['subsearch']]
+    max_thread = max( [max( v.properties_['subsearch'].keys()) for v in other.vertices if v.properties_['subsearch']])
     for i in range( max_thread +1, max_thread +number +1, 1):
-      for v in my_vs + other_vs:
+      for v in my_vs + my_es + other_vs + other_es:
         v.properties_['subsearch'][ i] = v.properties_['subsearch'][thread]
     return range( max_thread +1, max_thread +number +1, 1)
 

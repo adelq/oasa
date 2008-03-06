@@ -19,6 +19,7 @@
 
 import smiles
 from graph.digraph import digraph
+from sets import Set
 
 class substructure_search_manager( object):
 
@@ -86,27 +87,65 @@ class substructure_search_manager( object):
             break
     return [h.value for h in heads]
 
+  def which_substructure_is_more_specific( self, s1, s2):
+    """returns 1 if s1 is more specific,
+               2 if s2 is more specific,
+               3 if both are the same,
+               4 if the relationship cannot be established
+               (there is not connection between s1 and s2 in the
+               substructure interdependency graph - this signifies
+               a problem, probably in the matching algorithm
+               """
+    if s1 is s2:
+      return 3
+    # just find vertices corresponding to s1 and s2
+    v1 = None
+    v2 = None
+    for v in self.structures.vertices:
+      if v.value == s1:
+        v1 = v
+      elif v.value == s2:
+        v2 = v
+    assert v1
+    assert v2
+    p1 = self.structures.path_exists( v1, v2)
+    p2 = self.structures.path_exists( v2, v1)
+    print p1, p2, v1.value, v2.value
+    if (p1 and p2) or (not p1 and not p2):
+      # both paths exist or none does - this should not happen
+      return 4
+    if p1:
+      return 2
+    if p2:
+      return 1
+
   def find_substructures_in_mol( self, mol):
-    heads = self._find_head_structures()
-    structs = dict.fromkeys( self.structures.vertices, None)
-    for head in heads:
-      self._find_matching_substructure( head, mol, structs)
-    return [k.value for k,v in structs.iteritems() if v==True]
-
-      
-  def _find_matching_substructure( self, v, mol, structs):
-    if mol.contains_substructure( v.value.structure):
-      structs[v] = True
-      for n in v.neighbors:
-        if structs[n] == None:
-          self._find_matching_substructure( n, mol, structs)
-          # if the child matches we set v to false - we only want the most
-          # closely matching to be caught
-          if structs[n] == True:
-            structs[v] = False
-    else:
-      structs[v] = False
-
+    hits = []
+    for v in self.structures.vertices:
+      struct = v.value
+      ms = struct.find_matches( mol)
+      hits += ms
+    hit_num = len( hits)
+    to_delete = True
+    while to_delete:
+      to_delete = []
+      for hit1 in hits:
+        for hit2 in hits:
+          if hit1 is not hit2:
+            if Set(hit1.get_significant_atoms()) & Set(hit2.get_significant_atoms()):
+              winner = self.which_substructure_is_more_specific( hit1.substructure, hit2.substructure)
+              if winner == 1:
+                to_delete.append( hit2)
+              elif winner == 2:
+                to_delete.append( hit1)
+              elif winner == 3:
+                pass # we preserve both hits
+              else:
+                raise ValueError( "Relationship between competing fragments could not be established,\nthere is probaly and error in the substructure matching code.")
+        if to_delete:
+          break
+      hits = [hit for hit in hits if not hit in to_delete]
+    return hits
 
 
 class substructure( object):
@@ -123,10 +162,48 @@ class substructure( object):
     return self.smiles_string
 
   def read_smiles( self, smiles_string, atoms_to_ignore=None):
-    self.atoms_to_ignore = atoms_to_ignore
     self.smiles_string = smiles_string.strip()
     self.structure = smiles.text_to_mol( smiles_string)
+    if atoms_to_ignore:
+      self.atoms_to_ignore = [self.structure.vertices[x-1] for x in atoms_to_ignore]
+    else:
+      atoms_to_ignore = []
 
+  def find_matches( self, mol):
+    ret = []
+    ms = list( mol.select_matching_substructures( self.structure, implicit_freesites=True, auto_cleanup=False))
+    for atoms in ms:
+      num = min( atoms[0].properties_['subsearch'].keys())
+      atoms_in_fragment = [a.properties_['subsearch'][num] for a in atoms]
+      ret.append( substructure_match( atoms, atoms_in_fragment, self))
+    mol.clean_after_search( self.structure)
+    return ret
+  
+
+
+
+class substructure_match( object):
+
+  def __init__( self, atoms_found, atoms_searched, substruct):
+    """atoms_found are atoms in the molecule we searched in,
+    atoms_searched are atoms in the fragment we used for search,
+     (atoms_searched and atoms_found are guaranteed to have the same order, thus
+      allowing matching between the two structures),
+    substruct is the substructure instance"""
+    self.substructure = substruct
+    self.atoms_found = atoms_found
+    self.atoms_searched = atoms_searched
+
+  def __str__( self):
+    return "<Match of %s with %d atoms, %d significant atoms>" % (self.substructure, len( self.atoms_found), len( self.get_significant_atoms()))
+
+  def get_significant_atoms( self):
+    ret = []
+    for i,af in enumerate( self.atoms_found):
+      as = self.atoms_searched[i]
+      if as not in self.substructure.atoms_to_ignore:
+        ret.append( af)
+    return ret
 
   
 if __name__ == "__main__":
@@ -147,6 +224,6 @@ if __name__ == "__main__":
   #for tree in ssm._compute_search_trees():
   #  print_tree( tree, 0)
 
-  mol = smiles.text_to_mol( "COCCC(=O)OC")
+  mol = smiles.text_to_mol( "COCC(=O)OC")
   subs = ssm.find_substructures_in_mol( mol)
   print map( str, subs)

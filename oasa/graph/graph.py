@@ -862,7 +862,12 @@ class graph( object):
       i1, i2 = map( int, line.split())
       self.add_edge( self.vertices[i1], self.vertices[i2])
 
-
+  def path_exists( self, a1, a2):
+    self.mark_vertices_with_distance_from( a1)
+    if 'd' in a2.properties_:
+      return True
+    else:
+      return False
 
   ## STATIC METHODS
 
