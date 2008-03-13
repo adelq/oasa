@@ -197,11 +197,22 @@ class substructure_search_manager( object):
       hits = [hit for hit in hits if not hit in to_delete]
     return ring_hits + hits
 
-  def find_rings_in_mol( self, mol):
+  def find_rings_in_mol( self, mol, detect_aromatic=True):
     hits = []
+    if detect_aromatic:
+      # this is necessary to correctly process fused aromatic rings
+      # with improperly localized bonds
+      mol.mark_aromatic_bonds()
     for ering in mol.get_smallest_independent_cycles_e():
       vring = mol.edge_subgraph_to_vertex_subgraph( ering)
       ring_mol = mol.get_new_induced_subgraph( vring, ering)
+      # here we need to take care of aromatic bonds
+      # this is needed to properly match naphthalene, etc.
+      if detect_aromatic:
+        for e in ring_mol.edges:
+          if e.aromatic:
+            e.order = 4
+        #ring_mol.localize_aromatic_bonds()
       ring_hash = ring_mol.get_structure_hash()
       if ring_hash in self.rings:
         hit = ring_match( vring, self.rings[ ring_hash])
@@ -281,6 +292,7 @@ class ring( object):
 
   def __init__( self, name, smiles, ring_hash=None):
     self.name = name
+    self.compound_type = "ring"
     self.smiles_string = smiles.strip()
     if ring_hash:
       self.ring_hash = ring_hash
@@ -318,11 +330,11 @@ class substructure_match( object):
 class ring_match( object):
 
   def __init__( self, atoms_found, ring_obj):
-    self.ring = ring_obj
+    self.substructure = ring_obj
     self.atoms_found = atoms_found
 
   def __str__( self):
-    return "<RingMatch of %s>" % (self.ring)
+    return "<RingMatch of %s>" % (self.substructure)
 
   def get_significant_atoms( self):
     return self.atoms_found
@@ -359,7 +371,11 @@ if __name__ == "__main__":
   #for tree in ssm._compute_search_trees():
   #  print_tree( tree, 0)
 
-  mol = smiles.text_to_mol( "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
+  #"c1cccc2c1cccc2
+  mol = smiles.text_to_mol( "C1=CC=C2C=CC=CC2=C1") #COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
+  print [e.aromatic for e in mol.edges]
+  import structure_database
+  print structure_database.find_molecule_in_database( mol)
   subs = ssm.find_substructures_in_mol( mol)
   for sub in subs:
     print sub

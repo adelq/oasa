@@ -96,6 +96,9 @@ class TestEqualSMILES(unittest.TestCase):
               ("c1ccccc1","C:1:C:C:C:C:C:1", True),
               ("c1ccccc1","[CH]:1:[CH]:[CH]:[CH]:[CH]:[CH]:1", True),
               ("c1cscc1","C1=C-S-C=C1", True),
+              ("c1ccccc1","C1=CC=CC=C1", True),
+              ("c1ccccc1","C=1C=CC=CC=1", True),
+              ("C=1CC=1","C1C=C1", True),
               ]
     
   def _testformula(self, num):

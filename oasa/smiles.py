@@ -119,6 +119,7 @@ class smiles( plugin):
           del numbers[ c]
         else:
           numbers[c] = last_atom
+          last_bond = None
       elif c == '(':
         bracket_openings.append( last_atom)
       elif c == ')':
