@@ -264,7 +264,7 @@ class substructure( object):
     if atoms_to_ignore:
       self.atoms_to_ignore = [self.structure.vertices[x-1] for x in atoms_to_ignore]
     else:
-      atoms_to_ignore = []
+      self.atoms_to_ignore = []
 
   def find_matches( self, mol):
     ret = []
