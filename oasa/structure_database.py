@@ -21,9 +21,9 @@ import os, sys, re
 import oasa_exceptions
 try:
     from pysqlite2 import dbapi2 as sqlite
-except ImportError:
-    print >> sys.stderr, "pysqlite module could not be loaded - please install the required package"
-    raise
+except ImportError, e:
+    raise Exception( "The required pysqlite module could not be loaded. More info here: '%s'" % e)
+
 import inchi
 
 class Config:

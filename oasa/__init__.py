@@ -60,6 +60,7 @@ all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','g
 if not no_cairo:
   all.append( "cairo_out")
 
+# inchi_key
 try:
   import inchi_key
 except Exception, e:
@@ -67,6 +68,16 @@ except Exception, e:
   warnings.warn( "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n%s" % e)
 else:
   all.append( "inchi_key")
+
+# structure_database requires sqlite
+try:
+  import structure_database
+except Exception, e:
+  import warnings
+  warnings.warn( "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n%s" % e)
+else:
+  all.append( "structure_database")
+
 
 __all__ = all
 
