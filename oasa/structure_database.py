@@ -18,10 +18,11 @@
 #--------------------------------------------------------------------------
 
 import os, sys, re
+import oasa_exceptions
 try:
     from pysqlite2 import dbapi2 as sqlite
 except ImportError:
-    print "pysqlite module could not be loaded - please install the required package"
+    print >> sys.stderr, "pysqlite module could not be loaded - please install the required package"
     raise
 
 
@@ -95,7 +96,13 @@ def fill_database( infilename, name_cutoff=26, atom_count_cutoff=100):
     return added, ignored
 
 
-def get_compounds_from_database( **kw):
+def get_compounds_from_database( database_file=None, **kw):
+    for fname in (database_file, Config.database_file):
+        if fname and os.path.exists(fname):
+            break
+    else:
+        raise oasa_exceptions.oasa_error("Structure database not found. Try running 'python structure_database.py structures.txt' in oasa directory to create the database file from default source.")
+
     if 'inchi' in kw:
         if not 'inchikey' in kw:
             import inchi_key
@@ -109,7 +116,10 @@ def get_compounds_from_database( **kw):
         sql = "SELECT * FROM structures"
     connection = sqlite.connect( Config.database_file)
     c = connection.cursor()
-    c.execute( sql, values)
+    try:
+        c.execute( sql, values)
+    except sqlite.OperationalError, e:
+        raise oasa_exceptions.oasa_error( "Error reading from structure database: '%s'" % e)
     ret = []
     for row in c:
        ret.append( row)

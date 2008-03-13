@@ -21,8 +21,8 @@
 
 class oasa_error( Exception):
 
-  def __init__( self):
-    Exception.__init__( self)    
+  def __init__( self, *args, **kw):
+    Exception.__init__( self, *args, **kw)    
 
 
 
