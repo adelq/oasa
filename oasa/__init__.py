@@ -39,6 +39,7 @@ import query_atom
 import chem_vertex
 import oasa_exceptions
 import name_database
+import subsearch
 
 no_cairo = False
 try:

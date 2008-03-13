@@ -31,8 +31,27 @@ class substructure_search_manager( object):
     self.structures = digraph()  # graph describing the relations between individual structures
     self.search_trees = []  # list of substructure instances that for a tree
     self.rings = {}
+    self.fill_data()
 
-  def read_structure_file( self, name=""):
+  def fill_data( self):
+    import subsearch_data
+    for struct in subsearch_data.structures:
+      compound_type, name, smiles_string, to_ignore = struct
+      sub = substructure( name, compound_type, smiles=smiles_string, atoms_to_ignore=to_ignore)
+      v = self.structures.create_vertex()
+      v.value = sub
+      self.structures.add_vertex( v)
+    for ring_desc in subsearch_data.rings:
+      name, smiles_string, ring_hash = ring_desc
+      rng = ring( name, smiles_string, ring_hash=ring_hash)
+      self.rings[ ring_hash] = rng
+    # the following takes some time
+    self._analyze_structure_dependencies()
+    
+
+  def _read_structure_file( self, name=""):
+    """may be used to read data directly from source txt files.
+    is deprecated in favor of automatically build subsearch_data.py module"""
     f = file( name or self.substructure_def_file, "r")
     for line in f:
       l = line.strip()
@@ -54,7 +73,9 @@ class substructure_search_manager( object):
         self.structures.add_vertex( v)
     self._analyze_structure_dependencies()
 
-  def read_ring_file( self, name=""):
+  def _read_ring_file( self, name=""):
+    """may be used to read data directly from source txt files.
+    is deprecated in favor of automatically build subsearch_data.py module"""
     f = file( name or self.ring_def_file, "r")
     for line in f:
       l = line.strip()
@@ -191,6 +212,38 @@ class substructure_search_manager( object):
       hits.append( hit)
     return hits
 
+  @classmethod
+  def _data_files_to_python_module( self, structure_file=None, ring_file=None):
+    out = file( "subsearch_data.py", "w")
+    f = file( structure_file or self.substructure_def_file, "r")
+    print >> out, "## automatically generated file - may be overwritten at any time"
+    print >> out, "structures = ["
+    for line in f:
+      l = line.strip()
+      if l and not l.startswith( "#"):
+        parts = [x.strip() for x in l.split(";")]
+        if len( parts) < 3:
+          print >> sys.stderr, "Invalid line in src file:", line[:-1]
+        elif len( parts) == 3:
+          parts.append( "")
+        to_ignore = map( int, filter( None, parts[3].split(",")))
+        parts[3] = to_ignore
+        if not parts[1]:
+          parts[1] = parts[0]
+        print >> out, tuple(parts), ","
+    print >> out, "]"
+    f.close()
+    f = file( ring_file or self.ring_def_file, "r")
+    print >> out, "rings = ["
+    for line in f:
+      l = line.strip()
+      if l and not l.startswith( "#"):
+        parts = [x.strip() for x in l.split(";")]
+        print >> out, tuple(parts), ","
+    print >> out, "]"
+    f.close()
+    out.close()
+
 
 class substructure( object):
 
@@ -222,7 +275,7 @@ class substructure( object):
       ret.append( substructure_match( atoms, atoms_in_fragment, self))
     mol.clean_after_search( self.structure)
     return ret
-  
+
 
 class ring( object):
 
@@ -236,7 +289,6 @@ class ring( object):
 
   def __str__( self):
     return "<Ring: %s: %s>" % (self.name, self.smiles_string)
-
 
 
 class substructure_match( object):
@@ -275,13 +327,16 @@ class ring_match( object):
   def get_significant_atoms( self):
     return self.atoms_found
 
+
   
 if __name__ == "__main__":
+  # update the subsearch_data.py module
+  substructure_search_manager._data_files_to_python_module()
   import time
   t = time.time()
   ssm = substructure_search_manager()
-  ssm.read_structure_file()
-  ssm.read_ring_file()
+  #ssm._read_structure_file()
+  #ssm._read_ring_file()
   
   print "Read_structure_file: %.1fms" % (1000*(time.time() - t))
   t = time.time()
