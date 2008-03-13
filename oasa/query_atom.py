@@ -37,6 +37,9 @@ from oasa_exceptions import oasa_invalid_atom_symbol
 
 class query_atom( chem_vertex):
 
+  ## ("value","charge","x","y","z","multiplicity","valency","charge","free_sites")
+  attrs_to_copy = chem_vertex.attrs_to_copy + ("symbols",)
+
   def __init__( self, coords=None):
     chem_vertex.__init__( self, coords=coords)
     self.symbols = Set()

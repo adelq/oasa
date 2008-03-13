@@ -751,15 +751,17 @@ class graph( object):
     """returns a induced subgraph that is newly created and can be therefore freely
     changed without worry about the original."""
     sub = self.create_graph()
-    r1, r2 = [], []
+    vertex_map = {}
+    i = 0
     for v in vertices:
-      r1.append( v)
-      sub.add_vertex()
+      new_v = v.copy()
+      sub.add_vertex( new_v)
+      vertex_map[v] = i
+      i += 1
     for e in edges:
+      new_e = e.copy()
       v1, v2 = e.get_vertices()
-      i1 = r1.index( v1)
-      i2 = r1.index( v2)
-      sub.add_edge( i1, i2)
+      sub.add_edge( vertex_map[v1], vertex_map[v2], new_e)
     return sub
 
   def defines_connected_subgraph_e( self, edges):

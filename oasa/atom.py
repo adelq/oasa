@@ -33,6 +33,8 @@ from warnings import warn
 
 
 class atom( chem_vertex):
+  ## ("value","charge","x","y","z","multiplicity","valency","charge","free_sites")
+  attrs_to_copy = chem_vertex.attrs_to_copy + ("symbol", "isotope","explicit_hydrogens")
 
   def __init__( self, symbol='C', charge=0, coords=None):
     chem_vertex.__init__( self, coords=coords)
@@ -112,14 +114,14 @@ class atom( chem_vertex):
     else:
       charge = 0
 
-    x = bonds_alternating_aromatic+charge+self.multiplicity-1
+    x = bonds_alternating_aromatic+charge+self.multiplicity-1+self.explicit_hydrogens
     if x > self.valency:
       # we have computed occupied_valency using alternating single and double
       # bonds for aromatic bonds, however it led to occupied_valency being higher
       # than valency - lets replace it using single bonds for aromatic
       # (this fixed thiophene where occupied_valency of S would be computed to be 3
       #  and valency raise would be triggered)
-      x = bonds_single_aromatic+charge+self.multiplicity-1
+      x = bonds_single_aromatic+charge+self.multiplicity-1+self.explicit_hydrogens
     #self._cache['occupied_valency'] = x
     return x
 
@@ -235,6 +237,10 @@ class atom( chem_vertex):
         #self._clean_cache()
         return True
     return False
+
+
+  def get_hydrogen_count( self):
+    return self.explicit_hydrogens + self.free_valency
 
     
 

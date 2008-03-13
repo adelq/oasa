@@ -36,6 +36,8 @@ class bond( graph.edge, object):
   we need to preserve the order (for instance for wedge bonds).
   type is 'n'-normal, 'w'-wedge, 'h'-hatch, 'a'-adder, 'b'-bold, 'd'-dash"""
 
+  attrs_to_copy = graph.edge.attrs_to_copy + ("order","aromatic","type")
+
   def __init__( self, vs=[], order=1, type='n'):
     graph.edge.__init__( self, vs=vs)
     self.set_vertices( vs)

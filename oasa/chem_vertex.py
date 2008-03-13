@@ -35,6 +35,8 @@ class chem_vertex( graph.vertex):
   for vertices used in chemical context. It should not be instantiated directly, but
   rather inherited from."""
 
+  attrs_to_copy = graph.vertex.attrs_to_copy + ("charge","x","y","z","multiplicity","valency","charge","free_sites")
+
   def __init__( self, coords=None):
     graph.vertex.__init__( self)
     self.charge = 0
@@ -54,7 +56,6 @@ class chem_vertex( graph.vertex):
       return False
     return True
       
-
 
   ## PROPERTIES
 
@@ -158,8 +159,6 @@ class chem_vertex( graph.vertex):
   free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
 
 
-
-
   def get_x( self):
     return self.x or 0
 
@@ -169,16 +168,15 @@ class chem_vertex( graph.vertex):
   def get_z( self):
     return self.z or 0
 
-
-
   def has_aromatic_bonds( self):
     for b in self._neighbors.keys():
       if b.aromatic:
         return 1
     return 0
 
-
-
   def bond_order_changed( self):
     """called by a bond when its order was changed"""
     self._clean_cache()
+
+  def get_hydrogen_count( self):
+    return 0

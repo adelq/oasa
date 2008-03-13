@@ -129,7 +129,7 @@ class TestSMILESReading(unittest.TestCase):
     conv = smiles.converter()
     mols = conv.read_text( smile1)
     for i,mol in enumerate( mols):
-      assert i < len( sum_forms)
+      self.assert_( i < len( sum_forms))
       self.assertEqual( str( mol.get_formula_dict()), sum_forms[i]) 
 
   def test_empty_smiles( self):
@@ -195,6 +195,38 @@ class TestReactionComponent(unittest.TestCase):
     self.assertRaises( Exception, rc._set_stoichiometry, "x")
     self.assertRaises( Exception, reaction.reaction_component, 2, 2)
     self.assertRaises( Exception, rc._set_molecule, "x")    
+
+
+## Explicit hydrogens, occupied_valency and free_valency testing
+
+class TestValency(unittest.TestCase):
+
+  # (formula, (N explicit_hydrogens, N occupied_valency, N free_valency))
+
+  formulas = [("CN",(0,1,2)),
+              ("C[NH2]",(2,3,0)),
+              ("C[NH]C",(1,3,0)),
+              ("CN(C)C",(0,3,0)),
+              ]
+    
+  def _testformula(self, num):
+    smile1, (explicit_hs, occupied_v, free_v) = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    ns = [v for v in mol.vertices if v.symbol == 'N']
+    self.assertEqual( len( ns), 1)
+    n = ns[0]
+    self.assertEqual( n.explicit_hydrogens, explicit_hs)
+    self.assertEqual( n.free_valency, free_v)
+    self.assertEqual( n.occupied_valency, occupied_v)
+
+# this creates individual test
+for i in range( len( TestValency.formulas)):
+  setattr( TestValency, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+## // Explicit hydrogens, occupied_valency and free_valency testing
 
 
 

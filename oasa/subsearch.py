@@ -20,22 +20,27 @@
 import smiles
 from graph.digraph import digraph
 from sets import Set
+import os
 
 class substructure_search_manager( object):
+
+  substructure_def_file = os.path.join( os.path.dirname( __file__), "subsearch_data.txt")
+  ring_def_file = os.path.join( os.path.dirname( __file__), "subsearch_rings.txt")
 
   def __init__( self):
     self.structures = digraph()  # graph describing the relations between individual structures
     self.search_trees = []  # list of substructure instances that for a tree
+    self.rings = {}
 
-  def read_structure_file( self, name="subsearch_data.txt"):
-    f = file( name, "r")
+  def read_structure_file( self, name=""):
+    f = file( name or self.substructure_def_file, "r")
     for line in f:
       l = line.strip()
       if l and not l.startswith( "#"):
         parts = l.split(";")
         if len( parts) < 3:
           raise ValueError( "wrong line in data file: '%s'" % l)
-        compound_type, name, smiles_string = parts[:3]
+        compound_type, name, smiles_string = [x.strip() for x in parts[:3]]
         if len( parts) > 3:
           to_ignore = parts[3].strip()
         else:
@@ -48,6 +53,18 @@ class substructure_search_manager( object):
         v.value = sub
         self.structures.add_vertex( v)
     self._analyze_structure_dependencies()
+
+  def read_ring_file( self, name=""):
+    f = file( name or self.ring_def_file, "r")
+    for line in f:
+      l = line.strip()
+      if l and not l.startswith( "#"):
+        parts = [x.strip() for x in l.split(";")]
+        if len( parts) != 3:
+          raise ValueError( "wrong line in data file: '%s'" % l)
+        name, smiles_string, ring_hash = parts
+        rng = ring( name, smiles_string, ring_hash=ring_hash)
+        self.rings[ ring_hash] = rng
 
   def _analyze_structure_dependencies( self):
     for v1 in self.structures.vertices:
@@ -110,7 +127,6 @@ class substructure_search_manager( object):
     assert v2
     p1 = self.structures.path_exists( v1, v2)
     p2 = self.structures.path_exists( v2, v1)
-    print p1, p2, v1.value, v2.value
     if (p1 and p2) or (not p1 and not p2):
       # both paths exist or none does - this should not happen
       return 4
@@ -120,11 +136,24 @@ class substructure_search_manager( object):
       return 1
 
   def find_substructures_in_mol( self, mol):
-    hits = []
+    # get the hits
+    hits2 = []
     for v in self.structures.vertices:
       struct = v.value
       ms = struct.find_matches( mol)
-      hits += ms
+      hits2 += ms
+    # weed out the hits that match inside a ring
+    ring_hits = self.find_rings_in_mol( mol)
+    hits = []
+    for hit in hits2:
+      keep = True
+      for rhit in ring_hits:
+        if Set(rhit.get_significant_atoms()) & Set(hit.get_significant_atoms()):
+          keep = False
+          break
+      if keep:
+        hits.append( hit)
+    # weed out overlapping hits - leave only the most significant ones
     hit_num = len( hits)
     to_delete = True
     while to_delete:
@@ -145,6 +174,21 @@ class substructure_search_manager( object):
         if to_delete:
           break
       hits = [hit for hit in hits if not hit in to_delete]
+    return ring_hits + hits
+
+  def find_rings_in_mol( self, mol):
+    hits = []
+    for ering in mol.get_smallest_independent_cycles_e():
+      vring = mol.edge_subgraph_to_vertex_subgraph( ering)
+      ring_mol = mol.get_new_induced_subgraph( vring, ering)
+      ring_hash = ring_mol.get_structure_hash()
+      if ring_hash in self.rings:
+        hit = ring_match( vring, self.rings[ ring_hash])
+      else:
+        ring_obj = ring( None, smiles.mol_to_text( ring_mol), ring_hash=ring_hash)
+        self.rings[ ring_hash] = ring_obj
+        hit = ring_match( vring, ring_obj)
+      hits.append( hit)
     return hits
 
 
@@ -159,11 +203,11 @@ class substructure( object):
     self.children = []
 
   def __str__( self):
-    return self.smiles_string
+    return "<Substructure: %s: %s>" % (self.name, self.smiles_string)
 
   def read_smiles( self, smiles_string, atoms_to_ignore=None):
     self.smiles_string = smiles_string.strip()
-    self.structure = smiles.text_to_mol( smiles_string)
+    self.structure = smiles.text_to_mol( smiles_string, calc_coords=False)
     if atoms_to_ignore:
       self.atoms_to_ignore = [self.structure.vertices[x-1] for x in atoms_to_ignore]
     else:
@@ -180,6 +224,19 @@ class substructure( object):
     return ret
   
 
+class ring( object):
+
+  def __init__( self, name, smiles, ring_hash=None):
+    self.name = name
+    self.smiles_string = smiles.strip()
+    if ring_hash:
+      self.ring_hash = ring_hash
+    else:
+      self.ring_hash = None # read smiles and generate hash here?
+
+  def __str__( self):
+    return "<Ring: %s: %s>" % (self.name, self.smiles_string)
+
 
 
 class substructure_match( object):
@@ -195,7 +252,7 @@ class substructure_match( object):
     self.atoms_searched = atoms_searched
 
   def __str__( self):
-    return "<Match of %s with %d atoms, %d significant atoms>" % (self.substructure, len( self.atoms_found), len( self.get_significant_atoms()))
+    return "<Match of %s with %d atoms (%d significant)>" % (self.substructure, len( self.atoms_found), len( self.get_significant_atoms()))
 
   def get_significant_atoms( self):
     ret = []
@@ -205,16 +262,39 @@ class substructure_match( object):
         ret.append( af)
     return ret
 
+
+class ring_match( object):
+
+  def __init__( self, atoms_found, ring_obj):
+    self.ring = ring_obj
+    self.atoms_found = atoms_found
+
+  def __str__( self):
+    return "<RingMatch of %s>" % (self.ring)
+
+  def get_significant_atoms( self):
+    return self.atoms_found
+
   
 if __name__ == "__main__":
+  import time
+  t = time.time()
   ssm = substructure_search_manager()
   ssm.read_structure_file()
+  ssm.read_ring_file()
+  
+  print "Read_structure_file: %.1fms" % (1000*(time.time() - t))
+  t = time.time()
+  
   print ssm.structures
-  print ssm.structures.is_connected()
+  #print ssm.structures.is_connected()
   dump = ssm.structures.get_graphviz_text_dump()
   f = file( "dump.dot", "w")
   f.write( dump)
   f.close()
+
+  print "Graphviz dump: %.1fms" % (1000*(time.time() - t))
+  t = time.time()
 
   def print_tree( x, l):
     print l*" ", x #, x.children
@@ -224,6 +304,10 @@ if __name__ == "__main__":
   #for tree in ssm._compute_search_trees():
   #  print_tree( tree, 0)
 
-  mol = smiles.text_to_mol( "COCC(=O)OC")
+  mol = smiles.text_to_mol( "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
   subs = ssm.find_substructures_in_mol( mol)
-  print map( str, subs)
+  for sub in subs:
+    print sub
+
+  print "Substructure search: %.1fms" % (1000*(time.time() - t))
+  t = time.time()

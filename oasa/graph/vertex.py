@@ -21,12 +21,15 @@
 
 #import basic
 from sets import Set
+import copy
 
 
 class vertex( object):
   """simple vertex class, normaly would not be needed but it can speed up many analytical tasks
   to store data directly in vertex and not get them from the graph connectivity matrix.
   vertex has a value attribute used to store arbitrary object"""
+
+  attrs_to_copy = ("value",)
 
   def __init__( self):
     self.properties_ = {} # used to store intermediate properties such as distances etc.
@@ -41,7 +44,12 @@ class vertex( object):
   def _clean_cache( self):
     self._cache = {}
 
-
+  def copy( self):
+    other = self.__class__()
+    for attr in self.attrs_to_copy:
+      setattr( other, attr, copy.copy( getattr( self, attr)))
+    return other
+  
   def add_neighbor( self, v, e):
     """adds a neighbor connected via e"""
     self._clean_cache()

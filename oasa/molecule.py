@@ -373,6 +373,12 @@ class molecule( graph.graph):
     i = 0
     while 1:
       out = [a.symbol_number for a in self.vertices if a.properties_['d'] == i]
+      if i > 0:
+        out2 = []
+        for a in self.vertices:
+          if a.properties_['d'] == i-1:
+            out2 += a.get_hydrogen_count() * [1]
+        out += out2
       if out:
         out.sort()
         # out.reverse()
@@ -488,6 +494,7 @@ class molecule( graph.graph):
     add_implicit = False
     for v in other.vertices:
       if (isinstance( v, atom) and v.symbol == 'H') or \
+         (isinstance( v, atom) and v.explicit_hydrogens > 0) or \
          (isinstance( v, query_atom) and ('H' in v.symbols or 'R' in v.symbols)):
         add_implicit = True
         break
@@ -727,6 +734,17 @@ class molecule( graph.graph):
       bond_length += math.sqrt( (v1.x-v2.x)**2 + (v1.y-v2.y)**2)
     bl = bond_length / len( self.edges)
     return bl
+
+  def get_structure_hash( self):
+    vs = self.number_atoms_uniquely()
+    ret = []
+    for v in vs:
+      ret.append( str(v.properties_['distance_matrix']))
+    res = "*".join( ret)
+    import sha
+    ss = sha.new()
+    ss.update( res)
+    return ss.hexdigest()
 
 
 def the_right_sorting_function( t1, t2):

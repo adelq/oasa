@@ -20,9 +20,11 @@
 
 from sets import Set
 from warnings import warn
-
+import copy
 
 class edge:
+
+  attrs_to_copy = ("disconnected",)
 
   def __init__( self, vs=[]):
     self.vertices = Set([])
@@ -32,6 +34,12 @@ class edge:
 
   def __str__( self):
     return "edge between %s %s" % tuple( map( str, self.vertices))
+
+  def copy( self):
+    other = self.__class__()
+    for attr in self.attrs_to_copy:
+      setattr( other, attr, copy.copy( getattr( self, attr)))
+    return other
 
   def set_vertices( self, vs=[]):
     if vs and len( vs) == 2:
