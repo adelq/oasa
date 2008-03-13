@@ -768,7 +768,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
     elif line.startswith( "End of file detected"):
       pass
     elif line.startswith( "InChIKey="):
-      key = line.strip()
+      key = line.strip()[9:]
       break
     elif line.startswith( "InChI="):
       inchi = inchi + line.strip()
@@ -776,6 +776,10 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
       break
   if not inchi:
     raise oasa_inchi_error( "InChI program did not create any output InChI")
+  if not key:
+    # probably old version of the InChI software
+    import inchi_key
+    key = inchi_key.key_from_inchi( inchi)
   return inchi, key, warnings
 
 

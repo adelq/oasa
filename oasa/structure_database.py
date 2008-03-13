@@ -24,7 +24,7 @@ try:
 except ImportError:
     print >> sys.stderr, "pysqlite module could not be loaded - please install the required package"
     raise
-
+import inchi
 
 class Config:
     database_file = os.path.abspath( os.path.join( os.path.dirname( __file__), "structures.db"))
@@ -97,11 +97,17 @@ def fill_database( infilename, name_cutoff=26, atom_count_cutoff=100):
 
 
 def get_compounds_from_database( database_file=None, **kw):
+    """easy to use interface to the SQL - keyword arguments are converted to
+    corresponding SQL commands.
+    Examples:
+    get_compounds_from_database( smiles='C1CCCCC1')
+    get_compounds_from_database( inchi='1/C4H10/c1-3-4-2/h3-4H2,1-2H3')    
+    """
     for fname in (database_file, Config.database_file):
         if fname and os.path.exists(fname):
             break
     else:
-        raise oasa_exceptions.oasa_error("Structure database not found. Try running 'python structure_database.py structures.txt' in oasa directory to create the database file from default source.")
+        raise oasa_exceptions.oasa_error("Structure database not found. Try running 'python structure_database.py structures.txt.gz' in oasa directory to create the database file from default source.")
 
     if 'inchi' in kw:
         if not 'inchikey' in kw:
@@ -126,6 +132,12 @@ def get_compounds_from_database( database_file=None, **kw):
     c.close()
     connection.close()
     return ret
+
+def find_molecule_in_database( mol, database_file=None):
+    """tries to find oasa.molecule mol in the database by using its InChiKey"""
+    inchikey = inchi.generate_inchi_key( mol)[0]
+    res = get_compounds_from_database( inchikey=inchikey)
+    return res
 
 def _allow_molecule( name, smile):
     if smile.count("-]") > 2:
@@ -194,4 +206,5 @@ if __name__ == "__main__":
             print "you must supply a valid filename to update the database or no argument for a test to run"
     else:
         print get_compounds_from_database( inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
-
+        import smiles
+        print find_molecule_in_database( smiles.text_to_mol("C1CCC=CC1"))
