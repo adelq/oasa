@@ -56,7 +56,7 @@ chem_vertex = chem_vertex.chem_vertex
 
 all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
        "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
-       'query_atom','oasa_exceptions','name_database']
+       'query_atom','oasa_exceptions','name_database',"subsearch"]
 
 if not no_cairo:
   all.append( "cairo_out")
