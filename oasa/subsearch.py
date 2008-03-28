@@ -179,8 +179,8 @@ class substructure_search_manager( object):
     to_delete = True
     while to_delete:
       to_delete = []
-      for hit1 in hits:
-        for hit2 in hits:
+      for i,hit1 in enumerate( hits):
+        for hit2 in hits[i+1:]:
           if hit1 is not hit2:
             if Set(hit1.get_significant_atoms()) & Set(hit2.get_significant_atoms()):
               winner = self.which_substructure_is_more_specific( hit1.substructure, hit2.substructure)
@@ -212,7 +212,7 @@ class substructure_search_manager( object):
         for e in ring_mol.edges:
           if e.aromatic:
             e.order = 4
-        #ring_mol.localize_aromatic_bonds()
+        ring_mol.localize_aromatic_bonds()
       ring_hash = ring_mol.get_structure_hash()
       if ring_hash in self.rings:
         hit = ring_match( vring, self.rings[ ring_hash])
@@ -372,10 +372,7 @@ if __name__ == "__main__":
   #  print_tree( tree, 0)
 
   #"c1cccc2c1cccc2
-  mol = smiles.text_to_mol( "C1=CC=C2C=CC=CC2=C1") #COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
-  print [e.aromatic for e in mol.edges]
-  import structure_database
-  print structure_database.find_molecule_in_database( mol)
+  mol = smiles.text_to_mol( "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
   subs = ssm.find_substructures_in_mol( mol)
   for sub in subs:
     print sub
