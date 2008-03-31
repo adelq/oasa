@@ -33,20 +33,27 @@ class svg_out:
   margin = 15
   line_width = 2
   bond_width = 6
+  # should individual parts of an edge be grouped together
+  group_items = True
+  add_highlighters = True
+  # what is prepended to the id of a highlighter
+  highlighter_prefix = "high-"
 
   def __init__( self):
     pass
 
-  def mol_to_svg( self, mol):
+  def mol_to_svg( self, mol, before=None, after=None):
+    """before and after should be methods or functions that will take one
+    argument - svg_out instance and do whatever it wants with it - usually
+    adding something to the resulting DOM tree"""
     self.document = dom.Document()
-    self.top = dom_extensions.elementUnder( self.document,
-                                            "svg",
-                                            attributes=(("xmlns", "http://www.w3.org/2000/svg"),
-                                                        ("version", "1.0")))
-    self.top = dom_extensions.elementUnder( self.top, "g",
+    top = dom_extensions.elementUnder( self.document,
+                                       "svg",
+                                       attributes=(("xmlns", "http://www.w3.org/2000/svg"),
+                                                   ("version", "1.0")))
+    self.top = dom_extensions.elementUnder( top, "g",
                                             attributes=(("stroke", "#000"),
                                                         ("stroke-width", "1.0")))
-
 
     x1, y1, x2, y2 = None, None, None, None
     for v in mol.vertices:
@@ -67,10 +74,16 @@ class svg_out:
 
     self.molecule = mol
 
+    if before:
+      before( self)
+
     for e in copy.copy( mol.edges):
       self._draw_edge( e)
     for v in mol.vertices:
       self._draw_vertex( v)
+
+    if after:
+      after( self)
 
     return self.document
 
@@ -85,13 +98,24 @@ class svg_out:
     return tr
 
 
+  def _create_parent( self, item, top):
+    if self.group_items:
+      parent = dom_extensions.elementUnder( top, "g")
+      if 'svg_id' in item.properties_:
+        parent.setAttribute( "id", item.properties_['svg_id'])
+    else:
+      parent = self.top
+    return parent
+      
+
   def _draw_edge( self, e):
     v1, v2 = e.vertices
     start = self.transformer.transform_xy( v1.x, v1.y)
     end = self.transformer.transform_xy( v2.x, v2.y)
+    parent = self._create_parent( e, self.top)
 
     if e.order == 1:
-      self._draw_line( start, end, line_width=self.line_width)
+      self._draw_line( parent, start, end, line_width=self.line_width)
 
     if e.order == 2:
       side = 0
@@ -106,23 +130,25 @@ class svg_out:
           if v != v1 and v!= v2:
             side += geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( v.x, v.y)))
       if side:
-        self._draw_line( start, end, line_width=self.line_width)
+        self._draw_line( parent, start, end, line_width=self.line_width)
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
-        self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+        self._draw_line( parent, (x1, y1), (x2, y2), line_width=self.line_width)
       else:
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
-          self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+          self._draw_line( parent, (x1, y1), (x2, y2), line_width=self.line_width)
         
         
     elif e.order == 3:
-      self._draw_line( start, end, line_width=self.line_width)
+      self._draw_line( parent, start, end, line_width=self.line_width)
       for i in (1,-1):
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
-        self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+        self._draw_line( parent, (x1, y1), (x2, y2), line_width=self.line_width)
     
 
   def _draw_vertex( self, v):
+    parent = self._create_parent( v, self.top)
+
     if v.symbol != "C":
       x = v.x - 5
       y = v.y + 6
@@ -146,23 +172,29 @@ class svg_out:
       elif v.charge < -1:
         text += str( v.charge)
         
-      self._draw_rectangle( self.transformer.transform_4( (x1, y1, x2, y2)), fill_color="#fff")
-      self._draw_text( self.transformer.transform_xy(x,y), text)
+      self._draw_rectangle( parent, self.transformer.transform_4( (x1, y1, x2, y2)), fill_color="#fff")
+      self._draw_text( parent, self.transformer.transform_xy(x,y), text)
+    if self.add_highlighters:
+      if 'svg_id' in v.properties_:
+        id = self.highlighter_prefix + v.properties_['svg_id']
+      else:
+        id = ""
+      self._draw_circle( parent, self.transformer.transform_xy(v.x,v.y), radius=8, fill_color="#f00", stroke_color="#000", id=id)
 
 
-  def _draw_line( self, start, end, line_width=1, capstyle=""):
+  def _draw_line( self, parent, start, end, line_width=1, capstyle=""):
     x1, y1 = start
     x2, y2 = end
-    line = dom_extensions.elementUnder(self.top, 'line',
+    line = dom_extensions.elementUnder( parent, 'line',
                                         (( 'x1', str( x1)),
                                          ( 'y1', str( y1)),
                                          ( 'x2', str( x2)),
                                          ( 'y2', str( y2))))
 
 
-  def _draw_text( self, xy, text, font_name="Arial", font_size=16):
+  def _draw_text( self, parent, xy, text, font_name="Arial", font_size=16):
     x, y = xy
-    dom_extensions.textOnlyElementUnder( self.top, "text", text,
+    dom_extensions.textOnlyElementUnder( parent, "text", text,
                                          (( "x", str( x)),
                                           ( "y", str( y)),
                                           ( "font-family", font_name),
@@ -170,16 +202,32 @@ class svg_out:
                                           ( 'fill', "#000")))
 
 
-  def _draw_rectangle( self, coords, fill_color="#fff", stroke_color="#fff"):
+  def _draw_rectangle( self, parent, coords, fill_color="#fff", stroke_color="#fff"):
     x, y, x2, y2 = coords
-    dom_extensions.elementUnder( self.top, 'rect',
+    dom_extensions.elementUnder( parent, 'rect',
                                  (( 'x', str( x)),
                                   ( 'y', str( y)),
                                   ( 'width', str( x2-x)),
                                   ( 'height', str( y2-y)),
                                   ( 'fill', fill_color),
                                   ( 'stroke', stroke_color)))
-    
+
+  def _draw_circle( self, parent, xy, radius=5, fill_color="#fff", stroke_color="#fff", id=""):
+    x, y = xy
+    el = dom_extensions.elementUnder( parent, 'ellipse',
+                                      (( 'cx', str( x)),
+                                       ( 'cy', str( y)),
+                                       ( 'rx', str( radius)),
+                                       ( 'ry', str( radius)),
+                                       ( 'stroke-width', "1"),
+                                       ( 'fill', fill_color),
+                                       ( 'stroke', stroke_color),
+                                       ( 'fill-opacity', "0"),
+                                       ( 'stroke-opacity', "0"),
+                                      ))
+    if id:
+      el.setAttribute( "id", id)
+
 
 def mol_to_svg( mol, filename):
   c = svg_out()
