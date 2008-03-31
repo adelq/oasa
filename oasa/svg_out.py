@@ -35,9 +35,7 @@ class svg_out:
   bond_width = 6
   # should individual parts of an edge be grouped together
   group_items = True
-  add_highlighters = True
-  # what is prepended to the id of a highlighter
-  highlighter_prefix = "high-"
+
 
   def __init__( self):
     pass
@@ -174,12 +172,6 @@ class svg_out:
         
       self._draw_rectangle( parent, self.transformer.transform_4( (x1, y1, x2, y2)), fill_color="#fff")
       self._draw_text( parent, self.transformer.transform_xy(x,y), text)
-    if self.add_highlighters:
-      if 'svg_id' in v.properties_:
-        id = self.highlighter_prefix + v.properties_['svg_id']
-      else:
-        id = ""
-      self._draw_circle( parent, self.transformer.transform_xy(v.x,v.y), radius=8, fill_color="#f00", stroke_color="#000", id=id)
 
 
   def _draw_line( self, parent, start, end, line_width=1, capstyle=""):
