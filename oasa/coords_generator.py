@@ -121,6 +121,9 @@ class coords_generator:
           y += dy
     processed += backbone
     self._continue_with_the_coords( mol, processed=processed)
+    for v in mol.vertices:
+      if v.z == None:
+        v.z = 0
 
   def _continue_with_the_coords( self, mol, processed=[]):
     """processes the atoms in circles around the backbone (processed) until all is done"""
