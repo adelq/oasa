@@ -66,6 +66,8 @@ class svg_out:
 
     w = int( x2 - x1 + 2*self.margin)
     h = int( y2 - y1 + 2*self.margin)
+    top.setAttribute( "width", str( w))
+    top.setAttribute( "height", str( h))
 
     self.transformer = transform.transform()
     self.transformer.set_move( -x1+self.margin, -y1+self.margin)
