@@ -80,6 +80,11 @@ class molecule( graph.graph):
   weight = property( get_mol_weight, None, None, "molecular weight")
 
 
+  def get_charge( self):
+    return sum( [a.charge for a in self.vertices])
+
+  charge = property( get_charge, None, None, "Net charge of the molecule")
+
 
   def get_formula_dict( self):
     """returns a formula dict as defined in the periodic_table.py::formula_dict"""

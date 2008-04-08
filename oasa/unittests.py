@@ -146,7 +146,7 @@ class TestSMILESReading(unittest.TestCase):
 for i in range( len( TestSMILESReading.formulas)):
   setattr( TestSMILESReading, "testformula"+str(i+1), create_test(i,"_testformula"))
 
-## // SMILES equality testing
+## // SMILES reading testing
 
 
 ## SMILES Reaction support
@@ -230,6 +230,33 @@ for i in range( len( TestValency.formulas)):
   setattr( TestValency, "testformula"+str(i+1), create_test(i,"_testformula"))
 
 ## // Explicit hydrogens, occupied_valency and free_valency testing
+
+
+## Charge computation testing
+
+class TestCharge(unittest.TestCase):
+
+  formulas = [("",(0,)),
+              ("c1ccccc1",(0,)),
+              ("[Na+].[Cl-]", (1,-1)),
+              ("[O-]c1ccccc1.[Na+]",(-1,1)),
+              ("O=C[O-].[NH4+]",(-1,1)),
+              ("[O-]CC[O-].[K+].[K+]", (-2,1,1)),
+              ("[OH-].[OH-].[Ca+2]",(-1,-1,2)),
+              ]
+    
+  def _testformula(self, num):
+    smile1, charges = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    for i,mol in enumerate( mols):
+      self.assertEqual( mol.charge, charges[i]) 
+
+# this creates individual test for substructures
+for i in range( len( TestCharge.formulas)):
+  setattr( TestCharge, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+## // Charge computation testing
 
 
 
