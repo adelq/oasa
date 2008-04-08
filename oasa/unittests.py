@@ -72,6 +72,12 @@ class TestSubstructure(unittest.TestCase):
               ("C(=O)OC","C(=O)O",True),
               #
               ("CC(=O)H","C(=O)H",True),
+              # charges
+              ("C(=O)[O-]","C(=O)O",True),              
+              ("C(=O)O","C(=O)[O-]",True),
+              ("C(=O)[O-]","C(=O)[OH]",False),
+              ("C(=O)[OH]","C(=O)[O-]",True),
+              ("C(=O)[O-]","C(=O)OH",False),
               ]
     
   def _testformula(self, num):
@@ -236,7 +242,7 @@ for i in range( len( TestValency.formulas)):
 
 class TestCharge(unittest.TestCase):
 
-  formulas = [("",(0,)),
+  formulas = [("",()),
               ("c1ccccc1",(0,)),
               ("[Na+].[Cl-]", (1,-1)),
               ("[O-]c1ccccc1.[Na+]",(-1,1)),
@@ -249,8 +255,11 @@ class TestCharge(unittest.TestCase):
     smile1, charges = self.formulas[num]
     conv = smiles.converter()
     mols = conv.read_text( smile1)
-    for i,mol in enumerate( mols):
-      self.assertEqual( mol.charge, charges[i]) 
+    comp_charges = [mol.charge for mol in mols]
+    comp_charges.sort()
+    charges = list( charges)
+    charges.sort()
+    self.assertEqual( comp_charges, charges)
 
 # this creates individual test for substructures
 for i in range( len( TestCharge.formulas)):

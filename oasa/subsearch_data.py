@@ -3,6 +3,7 @@ structures = [
 ('aldehyde', 'carbonyl group', 'HC=O', []) ,
 ('ketone', 'carbonyl group', 'CC(=O)C', [1, 4]) ,
 ('carboxylic acid', 'carboxyl group', 'HOC=O', []) ,
+('carboxylate anion', 'carboxyl group', '[O-]C=O', []) ,
 ('ester', 'carboxyl group', 'COC=O', [1]) ,
 ('anhydride', 'anhydride', 'O=COC=O', []) ,
 ('acyl chloride', 'acyl chloride', 'O=CCl', []) ,
@@ -16,8 +17,10 @@ structures = [
 ('alkyl fluoride', 'alkyl fluoride', 'C-F', [1]) ,
 ('alkyl iodide', 'alkyl iodide', 'C-I', [1]) ,
 ('alcohol', 'hydroxy group', 'C-[OH]', [1]) ,
+('alcoxide anion', 'alkoxide', 'C-[O-]', [1]) ,
 ('ether', 'ether', 'C-O-C', [1, 3]) ,
 ('thiol', 'thiol', 'C-[SH]', [1]) ,
+('thiolate anion', 'thiolate', 'C-[S-]', [1]) ,
 ('thioether', 'thioether', 'C-S-C', [1, 3]) ,
 ('primary amine', 'amino group', 'C-[NH2]', [1]) ,
 ('secondary amine', 'amino group', 'C-[NH]-C', [1, 3]) ,
@@ -28,6 +31,7 @@ structures = [
 ('borane', 'borane', 'C-B(C)C', [1, 3, 4]) ,
 ('nitro compound', 'nitro group', 'C-N(=O)=O', [1]) ,
 ('sulfonic acid', 'sulfonyl group', 'C-S(=O)(=O)O', [1]) ,
+('sulfate anion', 'sulfate', 'C-S(=O)(=O)[O-]', [1]) ,
 ]
 rings = [
 ('benzene', 'C1=CC=CC=C1', '350796d8048c08e039528ff682c2886fb617caaf') ,
