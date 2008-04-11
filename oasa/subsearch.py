@@ -183,6 +183,7 @@ class substructure_search_manager( object):
         for hit2 in hits[i+1:]:
           if hit1 is not hit2:
             if Set(hit1.get_significant_atoms()) & Set(hit2.get_significant_atoms()):
+              print hit1, hit2
               winner = self.which_substructure_is_more_specific( hit1.substructure, hit2.substructure)
               if winner == 1:
                 to_delete.append( hit2)
@@ -372,7 +373,13 @@ if __name__ == "__main__":
   #  print_tree( tree, 0)
 
   #"c1cccc2c1cccc2
-  mol = smiles.text_to_mol( "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC", calc_coords=False) #"c1ccccc1OCCOCC(=O)OC")
+  #text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"
+  text = 'C(=O)OCC'
+  #text2 = 'C(=O)[O-]'
+  mol = smiles.text_to_mol( text, calc_coords=False)
+  #m2 = smiles.text_to_mol( text2, calc_coords=False)
+  #print "XXXX", mol.contains_substructure( m2)
+
   subs = ssm.find_substructures_in_mol( mol)
   for sub in subs:
     print sub

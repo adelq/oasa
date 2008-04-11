@@ -74,10 +74,11 @@ class TestSubstructure(unittest.TestCase):
               ("CC(=O)H","C(=O)H",True),
               # charges
               ("C(=O)[O-]","C(=O)O",True),              
-              ("C(=O)O","C(=O)[O-]",True),
+              ("C(=O)O","C(=O)[O-]",False),
               ("C(=O)[O-]","C(=O)[OH]",False),
-              ("C(=O)[OH]","C(=O)[O-]",True),
+              ("C(=O)[OH]","C(=O)[O-]",False),
               ("C(=O)[O-]","C(=O)OH",False),
+              ("C(=O)OCC","C(=O)[O-]",False),
               ]
     
   def _testformula(self, num):

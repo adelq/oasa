@@ -47,7 +47,10 @@ class atom( chem_vertex):
   def matches( self, other):
     if not isinstance( other, atom):
       return False
-    if self.symbol == other.symbol and self.valency == other.valency:
+    if self.symbol == other.symbol and self.valency == other.valency and self.multiplicity == other.multiplicity:
+      # check charge only if other has it set to something non-zero
+      if other.charge and self.charge != other.charge:
+        return False
       return True
     return False
 

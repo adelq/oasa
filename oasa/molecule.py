@@ -519,6 +519,11 @@ class molecule( graph.graph):
         other.add_edge( v, h, e=e)
         h.properties_['implicit_hydrogen'] = True
       v.explicit_hydrogens = 0  # make it 0 and after search put it back
+    # for implicit_freesites we add the free_sites here
+    if implicit_freesites:
+      for v in other.vertices:
+        v.properties_['old_free_sites'] = v.free_sites
+        v.free_sites = v.free_valency
 
     # then we create the dicts for storing threads in each of the atoms
     i = 0 
@@ -544,11 +549,7 @@ class molecule( graph.graph):
       # for symetrical fragments we have to get rid of copies (O1=N=O2 and O2=N=O1)
       vsset = ImmutableSet( vs)
       if vsset not in yielded:
-        # if we do not use implicit_freesites we have to check the non-implicit one here
-        if not implicit_freesites:
-          if self._freesites_match( other, thread):
-            yield [v for v in vs if not 'implicit_hydrogen' in v.properties_.keys()]
-        else:
+        if self._freesites_match( other, thread):
           yield [v for v in vs if not 'implicit_hydrogen' in v.properties_.keys()]
       yielded.add( vsset)
 
@@ -558,6 +559,11 @@ class molecule( graph.graph):
 
 
   def clean_after_search( self, other):
+    # for implicit_freesites we restore original free_sites here
+    for v in other.vertices:
+      if "old_free_sites" in v.properties_:
+        v.free_sites = v.properties_['old_free_sites']
+        del v.properties_['old_free_sites']
     # finally we remove the added implicit hydrogens
     hs = [v for v in self.vertices if 'implicit_hydrogen' in v.properties_.keys()]
     for v in hs:
@@ -591,7 +597,7 @@ class molecule( graph.graph):
         if thread not in n.properties_['subsearch']:
           candidates = Set()
           for me, mn in mirror.get_neighbor_edge_pairs():
-            if thread not in mn.properties_['subsearch'] and n.matches( mn) and e.matches( me) and thread not in e.properties_['subsearch']:
+            if thread not in mn.properties_['subsearch'] and mn.matches( n) and me.matches( e) and thread not in e.properties_['subsearch']:
               candidates.add( (mn, me, e))
 
           if candidates:
@@ -658,12 +664,12 @@ class molecule( graph.graph):
   def _freesites_match( self, other, thread):
     for v in other.vertices:
       mirror = v.properties_['subsearch'][thread]
-      unmatched_ns = [n for n in mirror.neighbors if thread not in n.properties_['subsearch'] and not n.symbol == 'H']
+      unmatched_ns = [n for n in mirror.neighbors if thread not in n.properties_['subsearch']] # and not n.symbol == 'H']
       # if there is more unmatched neighbors then free-site it does not match (Hs don't count)
       if not len( unmatched_ns)+mirror.explicit_hydrogens <= v.free_sites:
         return False
     return True
-        
+
 
   def contains_substructure( self, other, implicit_freesites=True):
     found = False
