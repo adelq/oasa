@@ -183,7 +183,6 @@ class substructure_search_manager( object):
         for hit2 in hits[i+1:]:
           if hit1 is not hit2:
             if Set(hit1.get_significant_atoms()) & Set(hit2.get_significant_atoms()):
-              print hit1, hit2
               winner = self.which_substructure_is_more_specific( hit1.substructure, hit2.substructure)
               if winner == 1:
                 to_delete.append( hit2)
