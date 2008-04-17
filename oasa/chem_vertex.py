@@ -63,6 +63,7 @@ class chem_vertex( graph.vertex):
   def _set_coords( self, coords):
     if len( coords) == 2:
       self.x, self.y = coords
+      self.z = 0
     elif len( coords) == 3:
       self.x, self.y, self.z = coords
     else:

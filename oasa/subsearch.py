@@ -191,7 +191,7 @@ class substructure_search_manager( object):
               elif winner == 3:
                 pass # we preserve both hits
               else:
-                raise ValueError( "Relationship between competing fragments could not be established,\nthere is probaly and error in the substructure matching code.")
+                raise ValueError( "Relationship between competing fragments could not be established,\nthere is probaly an error in the substructure matching code.")
         if to_delete:
           break
       hits = [hit for hit in hits if not hit in to_delete]
