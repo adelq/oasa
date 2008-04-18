@@ -112,7 +112,8 @@ class PybelConverter( object):
   ## // -------------------- OASA to Pybel --------------------
 
   ## -------------------- conversion support --------------------
-
+  ## not needed - pybel provides this functionality, I just overlooked it
+  
   @classmethod
   def get_supported_input_formats( self):
     conv = openbabel.OBConversion()

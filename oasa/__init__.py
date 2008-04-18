@@ -66,8 +66,7 @@ if not no_cairo:
 try:
   import inchi_key
 except Exception, e:
-  import warnings
-  warnings.warn( "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n%s" % e)
+  print >> sys.stderr, "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n  %s" % e
 else:
   all.append( "inchi_key")
 
@@ -75,10 +74,18 @@ else:
 try:
   import structure_database
 except Exception, e:
-  import warnings
-  warnings.warn( "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n%s" % e)
+  print >> sys.stderr, "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n  %s" % e
 else:
   all.append( "structure_database")
+
+# pybel
+try:
+  import pybel_bridge
+except Exception, e:
+  print >> sys.stderr, "The 'pybel_bridge' python module could not be loaded - oasa-pybel integration will be disabled\nSee the error message for more info:\n  %s" % e
+else:
+  all.append( "pybel_bridge")
+  
 
 
 __all__ = all
