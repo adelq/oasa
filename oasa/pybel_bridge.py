@@ -24,9 +24,9 @@ import pybel, openbabel
 from molecule import molecule
 from atom import atom
 from bond import bond
-
 from periodic_table import periodic_table as PT
 num2symbol = dict( [(v['ord'],k) for k,v in PT.iteritems()])
+
 
 class PybelConverter( object):
 
@@ -37,6 +37,7 @@ class PybelConverter( object):
     oatom = atom()
     psymbol = num2symbol[patom.atomicnum]
     oatom.symbol = psymbol
+    oatom.x, oatom.y, oatom.z = patom.coords
     return oatom
 
   @classmethod
@@ -110,6 +111,25 @@ class PybelConverter( object):
     return omol
 
   ## // -------------------- OASA to Pybel --------------------
+
+  ## -------------------- conversion --------------------
+
+  @classmethod
+  def read_text( self, format, text):
+    """returns a list of OASA molecules from a string"""
+    obc = openbabel.OBConversion()
+    if not obc.SetInFormat( format):
+        raise ValueError, "invalid format %s" % format
+    obmol = openbabel.OBMol()
+    ok = obc.ReadString( obmol, text)
+    mols = []
+    while ok:
+      mols.append( self.pybel_to_oasa_molecule( pybel.Molecule( obmol)))
+      obmol = openbabel.OBMol()
+      ok = obc.Read( obmol)
+    return mols
+
+  ## // -------------------- conversion --------------------
 
   ## -------------------- conversion support --------------------
   ## not needed - pybel provides this functionality, I just overlooked it
@@ -196,4 +216,8 @@ if __name__ == "__main__":
       print [a.coords for a in mol.atoms]
     print time.time() - t
 
+  a = pybel.readstring( "smi", "CCCC\nCCC")
 
+  for mol in PybelConverter.read_text( "smi", "CCCC\nCCC"):
+    print mol
+  
