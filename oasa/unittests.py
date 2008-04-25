@@ -269,6 +269,34 @@ for i in range( len( TestCharge.formulas)):
 ## // Charge computation testing
 
 
+## Stereochemistry testing
+
+class TestStereo(unittest.TestCase):
+
+  formulas = [("c1ccccc1",()),
+              ("C\C=C/C", (1,)),
+              ("C\C=C/C=C/C=C\C", (-1,1,1)),
+              ("C\C(\O)=C/C=C/C=C\C", (-1,-1,1,1)),
+              ]
+    
+  def _testformula(self, num):
+    smile1, directions = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    sts = [st.value==st.SAME_SIDE and 1 or -1 for st in mol.stereochemistry]
+    sts.sort()
+    sts = tuple( sts)
+    self.assertEqual( sts, directions)
+
+# this creates individual test for substructures
+for i in range( len( TestStereo.formulas)):
+  setattr( TestStereo, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+## // Charge computation testing
+
+
 
 if __name__ == '__main__':
   unittest.main()

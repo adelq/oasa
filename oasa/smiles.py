@@ -22,6 +22,7 @@ from molecule import molecule, equals
 import periodic_table as PT
 import oasa_exceptions
 import reaction
+import stereochemistry
 
 
 from config import Config
@@ -37,7 +38,7 @@ class smiles( plugin):
   read = 1
   write = 1
 
-  smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0}
+  smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0, "\\": 1, "/": 1}
   oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
 
   def __init__( self, structure=None):
@@ -100,11 +101,13 @@ class smiles( plugin):
         last_atom = a
         last_bond = None
       # bond
-      elif c in '-=#:.':
+      elif c in r'-=#:.\/':
         order = self.smiles_to_oasa_bond_recode[ c]
         last_bond = mol.create_edge()
         last_bond.order = order
         last_bond.type = 'n'
+        if c in r'\/':
+          last_bond.properties_['stereo'] = c
       # ring closure
       elif c.isdigit():
         if c in numbers:
@@ -139,7 +142,10 @@ class smiles( plugin):
         del a.properties_['aromatic']
       except:
         pass
-        
+
+    # stereochemistry
+    self._process_stereochemistry( mol)
+
     if len(mol.vertices) == 0:
       mol = None
     self.structure = mol 
@@ -207,6 +213,41 @@ class smiles( plugin):
           chunks.insert( i, a)
           i += 1
       i += 1
+
+  def _process_stereochemistry( self, mol):
+    ## process stereochemistry
+    ## double bonds
+    def get_stereobond_direction( atom, bond, init):
+      a1, a2 = bond.vertices
+      neighbor = a1 is atom and a2 or a1
+      position = mol.vertices.index( neighbor) - mol.vertices.index( atom)
+      char = bond.properties_['stereo'] == "\\" and 1 or -1
+      direction = (position * char * init) < 0 and "up" or "down"
+      return direction, neighbor
+    
+    for e in mol.edges:
+      if e.order == 2:
+        atom1, atom2 = e.vertices
+        if mol.vertices.index( atom1) > mol.vertices.index( atom2):
+          atom1, atom2 = atom2, atom1
+        stereo_bonds1 = [e for e in atom1.neighbor_edges if 'stereo' in e.properties_]
+        stereo_bonds2 = [e for e in atom2.neighbor_edges if 'stereo' in e.properties_]
+        if stereo_bonds1 and stereo_bonds2:
+          # there are bonds with stereochemistry on both sides of the double bond
+          for bond1 in stereo_bonds1:
+            d1, n1 = get_stereobond_direction( atom1, bond1, -1)
+            for bond2 in stereo_bonds2:
+              d2, n2 = get_stereobond_direction( atom2, bond2, -1)
+              if d1 == d2:
+                value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
+              else:
+                value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
+              st = stereochemistry.cis_trans_stereochemistry( center=e, value=value, references=[n1,n2])
+              mol.add_stereochemistry( st)
+        else:
+          continue
+        
+
 
   def get_smiles( self, mol):
     if not mol.is_connected():

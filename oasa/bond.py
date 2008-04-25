@@ -45,6 +45,7 @@ class bond( graph.edge, object):
     self.set_order( order)
     self.type = type
     self.properties_ = {}
+    self.stereochemistry = None
 
 
   def __str__( self):

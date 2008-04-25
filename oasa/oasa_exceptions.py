@@ -110,4 +110,14 @@ class oasa_smiles_error( oasa_error):
     return "SMILES Error: %s" % self.value
 
 
+class oasa_stereochemistry_error( oasa_error):
+  
+  def __init__( self, value):
+    oasa_error.__init__(self)
+    self.value = value
+
+  def __str__( self):
+    return "Stereochemistry Error: %s" % self.value
+
+
 

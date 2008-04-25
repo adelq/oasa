@@ -36,6 +36,12 @@ class coords_generator:
     force says if we should recalc all coords"""
     processed = []
     self.mol = mol
+    # stereochemistry info
+    self.stereo = {}
+    for st in self.mol.stereochemistry:
+      if st.__class__.__name__ == "cis_trans_stereochemistry":
+        for a in st.references:
+          self.stereo[a] = self.stereo.get( a, []) + [st]
     # at first we have a look if there is already something with coords
     as = Set( [a for a in mol.vertices if a.x != None and a.y != None])
     # then we check if they are in a continuos block but not the whole molecule
@@ -106,19 +112,18 @@ class coords_generator:
           v.x, v.y = gcoords.next()
         processed += backbone
         processed += self.process_all_anelated_rings( backbone)
+      elif len( mol.vertices) == 1:
+        a = mol.vertices[0]
+        a.x, a.y, a.z = 0, 0, 0
+        backbone = [a]
       else:
-        # chain
+        # chain - we process 2 atoms as backbone and leave the rest for the code
+        a1 = self.mol.vertices[0]
+        a2 = a1.neighbors[0]
+        a1.x, a1.y = 0, 0
+        a2.x, a2.y = self.bond_length, 0
+        backbone = [a1,a2]
         self.rings = []
-        backbone = mol.find_longest_mostly_carbon_chain()
-        angles = gen_angle_stream( -30, start_from=30, alternate=1)
-        dcoords = gen_coords_from_deg_stream( angles, length=self.bond_length)
-        x, y = 0, 0
-        for v in backbone:
-          v.x = x
-          v.y = y
-          dx, dy = dcoords.next()
-          x += dx
-          y += dy
     processed += backbone
     self._continue_with_the_coords( mol, processed=processed)
     for v in mol.vertices:
@@ -198,6 +203,16 @@ class coords_generator:
 
 
   def process_atom_neigbors( self, v):
+    def get_angle_at_side( v, d, d2, relation):
+      side = geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
+      an = angle + deg_to_rad( 120)
+      x = v.x + self.bond_length*cos( an)
+      y = v.y + self.bond_length*sin( an)
+      if relation*side == geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (x,y)):
+        return 120
+      else:
+        return -120
+      
     to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
     done = [a for a in v.get_neighbors() if a not in to_go]
     angle_to_add = 120
@@ -207,17 +222,23 @@ class coords_generator:
       t = to_go[0]
       angle = geometry.clockwise_angle_from_east( d.x-v.x, d.y-v.y)
       dns = d.get_neighbors()
-      if len( dns) == 2:
+      placed = False
+      # stereochemistry (E/Z)
+      if t in self.stereo:
+        ss = [st for st in self.stereo[t] if not None in st.get_other( t).coords]
+        if ss:
+          st = ss[0] # we choose the first one if more are present
+          d2 = st.get_other( t)
+          # other is processed, we need to adapt
+          relation = st.value == st.OPPOSITE_SIDE and -1 or 1
+          angle_to_add = get_angle_at_side( v, d, d2, relation)
+          placed = True
+
+      if not placed and len( dns) == 2:
+        # to support the all trans of simple chains without stereochemistry
         d2 = (dns[0] == v) and dns[1] or dns[0]
-        # to support the all trans of simple chains
-        side = geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
-        an = angle + deg_to_rad( 120)
-        x = v.x + self.bond_length*cos( an)
-        y = v.y + self.bond_length*sin( an)
-        if side == geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (x,y)):
-          angle_to_add = -120
-        else:
-          angle_to_add = 120
+        if d2.x != None and d2.y != None:
+          angle_to_add = get_angle_at_side( v, d, d2, -1)
       an = angle + deg_to_rad( angle_to_add)
       t.x = v.x + self.bond_length*cos( an)
       t.y = v.y + self.bond_length*sin( an)
@@ -464,7 +485,9 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = "C25C1C3C5C4C2C1C34"
+  sm = "O(CCC)\C(\N)=C/C=C\C=C\Cl"
+  #sm = "C1CCC1C/C=C\CCCCC"
+  #sm = "C25C1C3C5C4C2C1C34"
   #sm = 'C1CC2CCC1CC2'
   #sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
   #sm = 'CCCC(C)(CCC)CCC(Cl)C(CCCCC)CCC(C)CCC'

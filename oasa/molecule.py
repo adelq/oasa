@@ -40,14 +40,10 @@ class molecule( graph.graph):
     # aliases
     self.atoms = self.vertices
     self.bonds = self.edges
-
-
+    self.stereochemistry = []
 
   def __str__( self):
     return "molecule, %d atoms, %d bonds" % (len( self.vertices), len( self.edges))
-
-
-
 
   def create_vertex( self, vertex_class=None):
     if not vertex_class:
@@ -55,19 +51,32 @@ class molecule( graph.graph):
     else:
       return vertex_class()
 
-
-
   def create_edge( self):
     return bond()
-
-
 
   def create_graph( self):
     import config
     return config.Config.molecule_class()
 
+  def add_stereochemistry( self, stereo):
+    self.stereochemistry.append( stereo)
+    if stereo.center:
+      stereo.center.stereochemistry = stereo
 
   # analytics
+
+  # override of graphs method to add stereochemistry support
+  def get_disconnected_subgraphs( self):
+    out = graph.graph.get_disconnected_subgraphs( self)
+    for part in out:
+      for st in self.stereochemistry:
+        if (st.center and (st.center in part.vertices or st.center in part.edges)):
+          part.add_stereochemistry( st)
+        else:
+          refs = Set( st.references)
+          if refs in Set( part.vertices):
+            part.add_stereochemistry( st)
+    return out
 
   def get_mol_weight( self):
     w = 0
