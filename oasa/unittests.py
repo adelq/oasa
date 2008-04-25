@@ -294,6 +294,43 @@ class TestStereo(unittest.TestCase):
 for i in range( len( TestStereo.formulas)):
   setattr( TestStereo, "testformula"+str(i+1), create_test(i,"_testformula"))
 
+
+class TestStereo2(unittest.TestCase):
+  """tests if stereochemistry of structure read from smiles
+  remains the same when recoded back to smiles and read again."""
+
+  formulas = ["C\C=C/C",
+              "N\C=C/C=C/Cl",
+              "O\C(\N)=C/C=C\C=C\Cl",
+              ]
+    
+  def _testformula(self, num):
+    def create_st_sum( st):
+      symbols = [a.symbol for a in st.references]
+      symbols.sort()
+      return tuple( symbols + [st.value==st.SAME_SIDE and 1 or -1])
+      
+    # round 1
+    smile1 = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    sts1 = [create_st_sum( st) for st in mol.stereochemistry]
+    # round 2
+    smile2 = conv.mols_to_text( [mol])
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    sts2 = [create_st_sum( st) for st in mol.stereochemistry]
+    for stsum in sts2:
+      self.assertEqual( (stsum in sts1), True)
+
+# this creates individual test for substructures
+for i in range( len( TestStereo2.formulas)):
+  setattr( TestStereo2, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+
 ## // Charge computation testing
 
 

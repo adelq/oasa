@@ -47,6 +47,36 @@ class smiles( plugin):
   def recode_oasa_to_smiles_bond( self, b):
     if b.aromatic:
       return ''
+    elif b in self._stereo_bonds_to_others:
+      a1, a2 = b.vertices
+      if a2 in self._processed_atoms:
+        a1, a2 = a2, a1
+      assert a1 in self._processed_atoms
+      assert a2 not in self._processed_atoms
+      others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
+      if not others:
+        code = "\\"
+      else:
+        # other bonds enforce encoding of this one, we select the first one,
+        # bacause there is nothing we can do if there are clashing constrains anyway
+        other, st = others[0]
+        aA, aB = other.vertices
+        a1, a2 = st.center.vertices
+        if aA in (a1,a2):
+          v2, v3 = aA, aB
+        else:
+          v3, v2 = aA, aB          
+        v1 = v2 == a1 and a2 or a1
+        #assert v2 in v3.neighbors
+        last_order = self._processed_atoms.index( v2) - self._processed_atoms.index( v1)
+        last_code = self._stereo_bonds_to_code[ other] == "\\" and 1 or -1
+        relation = st.value == st.OPPOSITE_SIDE and -1 or 1
+        if relation*last_code*last_order < 0:
+          code = "/"
+        else:
+          code = "\\"
+      self._stereo_bonds_to_code[ b] = code
+      return code
     else:
       if b.order == 1:
         a1, a2 = b.vertices
@@ -225,9 +255,9 @@ class smiles( plugin):
       direction = (position * char * init) < 0 and "up" or "down"
       return direction, neighbor
     
-    for e in mol.edges:
-      if e.order == 2:
-        atom1, atom2 = e.vertices
+    for edge in mol.edges:
+      if edge.order == 2:
+        atom1, atom2 = edge.vertices
         if mol.vertices.index( atom1) > mol.vertices.index( atom2):
           atom1, atom2 = atom2, atom1
         stereo_bonds1 = [e for e in atom1.neighbor_edges if 'stereo' in e.properties_]
@@ -242,11 +272,13 @@ class smiles( plugin):
                 value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
               else:
                 value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
-              st = stereochemistry.cis_trans_stereochemistry( center=e, value=value, references=[n1,n2])
+              st = stereochemistry.cis_trans_stereochemistry( center=edge, value=value, references=[n1,n2])
               mol.add_stereochemistry( st)
         else:
           continue
-        
+    for e in mol.edges:
+      if 'stereo' in e.properties_:
+        del e.properties_['stereo']
 
 
   def get_smiles( self, mol):
@@ -254,7 +286,10 @@ class smiles( plugin):
       raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc.")
     #mol = molec.copy()
     self.ring_joins = []
+    self._processed_atoms = []
     self.branches = {}
+    self._stereo_bonds_to_code = {} # for bond it will contain character it uses
+    self._stereo_bonds_to_others = {} # for bond it will contain the other bonds
     # at first we mark all the atoms with aromatic bonds
     # it is much simple to do it now when all the edges are present
     # we can make use of the properties attribute of the vertex
@@ -262,13 +297,21 @@ class smiles( plugin):
       if e.aromatic:
         for v in e.vertices:
           v.properties_[ 'aromatic'] = 1
+      if e.order == 2 and e.stereochemistry:
+        v1, v2 = e.vertices
+        ref1, ref2 = e.stereochemistry.references
+        if not ref1 in v1.neighbors:
+          v1, v2 = v2, v1
+        e1 = v1.get_edge_leading_to( ref1)
+        e2 = v2.get_edge_leading_to( ref2)
+        self._stereo_bonds_to_others[ e1] = self._stereo_bonds_to_others.get( e1, []) + [(e2, e.stereochemistry)]
+        self._stereo_bonds_to_others[ e2] = self._stereo_bonds_to_others.get( e2, []) + [(e1, e.stereochemistry)]
     ret = ''.join( [i for i in self._get_smiles( mol)])
     mol.reconnect_temporarily_disconnected_edges()
     # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
-    # generation failed - it splits the molecule while reusing the same atoms and bonds and thus disconnected bonds accounting fails
+    # generation works - it splits the molecule while reusing the same atoms and bonds and thus disconnected bonds accounting fails
     for e in mol.edges:
       e.disconnected = False
-
     return ret
 
 
@@ -350,6 +393,7 @@ class smiles( plugin):
 
 
   def _create_atom_smiles( self, v):
+    self._processed_atoms.append( v)
     if 'aromatic' in v.properties_.keys():
       symbol = v.symbol.lower()
     else:
