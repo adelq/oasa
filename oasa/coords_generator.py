@@ -225,7 +225,7 @@ class coords_generator:
       placed = False
       # stereochemistry (E/Z)
       if t in self.stereo:
-        ss = [st for st in self.stereo[t] if not None in st.get_other( t).coords]
+        ss = [st for st in self.stereo[t] if not None in st.get_other( t).coords[:2]]
         if ss:
           st = ss[0] # we choose the first one if more are present
           d2 = st.get_other( t)
@@ -485,7 +485,7 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = "O(CCC)\C(\N)=C/C=C\C=C\Cl"
+  sm = "C\C=C/C"
   #sm = "C1CCC1C/C=C\CCCCC"
   #sm = "C25C1C3C5C4C2C1C34"
   #sm = 'C1CC2CCC1CC2'
@@ -496,12 +496,12 @@ if __name__ == '__main__':
   print "generating coords for following smiles"
   print "  %s" % sm
  
-  mol = smiles.text_to_mol( sm)
+  mol = smiles.text_to_mol( sm, calc_coords=False)
 
   import time
-  cg = coords_generator()
+  #cg = coords_generator()
   t = time.time()
-  cg.calculate_coords( mol, force=1)
+  calculate_coords( mol, force=1)
   print "generation time: %.3f ms" % ((time.time()-t)*1000)
 
   show_mol( mol)

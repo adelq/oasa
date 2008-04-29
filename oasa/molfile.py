@@ -171,7 +171,6 @@ class molfile( plugin):
     radicals = {}
     i = 1
     for v in self.structure.vertices:
-      print v.multiplicity
       if v.multiplicity != 1:
         radicals[i] = v.multiplicity
       i += 1
