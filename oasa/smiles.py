@@ -95,9 +95,8 @@ class smiles( plugin):
     mol = Config.create_molecule()
     text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
-    chunks = re.split( "(\[.*?\]|[A-Z][a-z]?|[^A-Z]|[a-z])", text)
-    chunks = filter( None, chunks)
-    self._check_the_chunks( chunks)
+    chunks = re.split( "(\[.*?\]|[A-Z][a-z]?|%[0-9]{1,2}|[^A-Z]|[a-z])", text)
+    chunks = self._check_the_chunks( chunks)
     last_atom = None
     last_bond = None
     numbers = {}
@@ -230,19 +229,28 @@ class smiles( plugin):
       stereo = _stereo.group(0)
       a.properties_['stereo'] = stereo
 
+
   def _check_the_chunks( self, chunks):
     is_text = re.compile("^[A-Z][a-z]?$")
-    i = 0
-    while i < len( chunks):
-      c = chunks[i]
+    is_long_num = re.compile( "^%[0-9]{1,2}$")
+    ret = []
+    for c in chunks:
+      if not c:
+        continue
       if is_text.match( c):
         if not c in PT.periodic_table or c == "Sc": # Sc is S-c not scandium
           a,b = c
-          del chunks[i]
-          chunks.insert( i, b)
-          chunks.insert( i, a)
-          i += 1
-      i += 1
+          ret.append( a)
+          ret.append( b)
+        else:
+          ret.append( c)
+      elif is_long_num.match( c):
+        ret.append( str( int( c[1:])))
+      else:
+        ret.append( c)
+    return ret
+
+
 
   def _process_stereochemistry( self, mol):
     ## process stereochemistry
