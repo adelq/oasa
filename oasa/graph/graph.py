@@ -405,6 +405,8 @@ class graph( object):
     """returns all cycles found in the graph as sets of edges;
     this version of the algorithm strips all non-cyclic (bridge) edges
     and then searches for cycles in the rest"""
+    if not self.contains_cycle():
+      return Set()
     self.temporarily_strip_bridge_edges()
 
     to_go = Set( [v for v in self.vertices if v.degree])
@@ -474,10 +476,14 @@ class graph( object):
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
 
+    # trivial case of linear molecule
+    if ncycles == 0:
+      return Set()
+
     # the code itself
     self.temporarily_strip_bridge_edges()
-
     cycles = Set()
+
     vs = [v for v in self.vertices if v.degree]
     while vs and len( cycles) < ncycles:
       new_cycles = Set()
