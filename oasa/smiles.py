@@ -238,7 +238,7 @@ class smiles( plugin):
       if not c:
         continue
       if is_text.match( c):
-        if not c in PT.periodic_table or c == "Sc": # Sc is S-c not scandium
+        if (not c in PT.periodic_table and len(c)==2) or c == "Sc": # Sc is S-c not scandium
           a,b = c
           ret.append( a)
           ret.append( b)
