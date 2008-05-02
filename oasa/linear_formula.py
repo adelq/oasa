@@ -65,8 +65,7 @@ class linear_formula( object):
         return None
 
       # remove hydrogens, but only if the molecule is not completely made of them :)
-      if [v for v in mol.vertices if v.symbol != 'H']:
-        mol.remove_all_hydrogens()
+      mol.remove_unimportant_hydrogens()
 
       # set some objects attributes for later reading
       self.molecule = mol

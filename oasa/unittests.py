@@ -108,6 +108,9 @@ class TestEqualSMILES(unittest.TestCase):
               ("C=1CC=1","C1C=C1", True),
               ("C12CC%01CC2","C12CC1CC2", True),
               ("C%01%02CC%01CC2","C12CC1CC2", True),
+              ("H","[H]", False),
+              ("C","[2H]C", False),
+              ("[C]","[CH0]", True),
               ]
     
   def _testformula(self, num):
@@ -338,4 +341,12 @@ for i in range( len( TestStereo2.formulas)):
 
 
 if __name__ == '__main__':
-  unittest.main()
+  import sys
+  if len( sys.argv) > 1 and sys.argv[1] == "-v":
+    tests = [globals()[k] for k in dir() if type(globals()[k])==type and issubclass( globals()[k], unittest.TestCase)]
+    ss = []
+    for test in tests:
+      s1 = unittest.makeSuite( test)
+      unittest.TextTestRunner(verbosity=2).run(s1)
+  else:
+    unittest.main()

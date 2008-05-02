@@ -808,7 +808,7 @@ def text_to_mol( text, include_hydrogens=True, mark_aromatic_bonds=False, calc_c
     mol = inc.structure
     #mol.add_missing_bond_orders()
     if not include_hydrogens:
-      mol.remove_all_hydrogens()
+      mol.remove_unimportant_hydrogens()
     if calc_coords:
       coords_generator.calculate_coords( mol, bond_length=calc_coords)
     if mark_aromatic_bonds:

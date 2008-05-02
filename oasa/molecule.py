@@ -370,6 +370,18 @@ class molecule( graph.graph):
       to_go = [b for b in self.bonds if b.order == 4]
 
 
+  def remove_unimportant_hydrogens( self):
+    """removes all H atoms that don't have any special properties
+    or are not part of a hydrogen only molecule."""
+    only_hydrogens = True
+    for v in self.vertices:
+      if v.symbol != "H":
+        only_hydrogens = False
+        break
+    if not only_hydrogens:
+      for v in copy.copy( self.vertices):
+        if v.symbol == 'H' and v.degree <= 1 and not v.isotope:
+          self.remove_vertex( v)
 
 
 

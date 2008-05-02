@@ -159,10 +159,11 @@ class smiles( plugin):
 
     ## FINISH
     for a in mol.vertices:
-      if a.explicit_hydrogens == 0:
+      if not "explicit_valency" in a.properties_:
         a.raise_valency_to_senseful_value()
       else:
         # detect radicals (but not biradicals - problem of triplet vs. singlet)
+        del a.properties_['explicit_valency']
         if a.valency - a.occupied_valency == 1:
           a.multiplicity += 1
         else:
@@ -228,7 +229,8 @@ class smiles( plugin):
     if _stereo:
       stereo = _stereo.group(0)
       a.properties_['stereo'] = stereo
-
+    # using [] means valency is explicit
+    a.properties_['explicit_valency'] = True
 
   def _check_the_chunks( self, chunks):
     is_text = re.compile("^[A-Z][a-z]?$")
@@ -720,7 +722,7 @@ if __name__ == '__main__':
     for j in range( cycles):
       mols = conv.read_text( text)
       for mol in mols:
-        mol.remove_all_hydrogens()
+        mol.remove_unimportant_hydrogens()
         print "  summary formula:   ", mol.get_formula_dict()        
       text = conv.mols_to_text( mols)
       print "  generated SMILES:   %s" % text
