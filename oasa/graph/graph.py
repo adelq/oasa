@@ -701,7 +701,6 @@ class graph( object):
     #best_path.reverse()
 
 
-
   def _get_width_from_vertex( self, v):
     """returns width of the graph as calculated from vertex v"""
     d = 0
@@ -710,15 +709,10 @@ class graph( object):
     while to_mark:
       marked_before = marked
       marked = to_mark
-
       to_mark_next = Set( reduce( operator.add, [i.get_neighbors() for i in to_mark], []))
-
       to_mark = to_mark_next - marked - marked_before
       d += 1
-
     return d-1
-
-
 
 
   def get_diameter( self):

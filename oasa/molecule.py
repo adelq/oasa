@@ -699,6 +699,52 @@ class molecule( graph.graph):
 
   # // --- end of the fragment matching routines ---
 
+  def detect_stereochemistry_from_coords( self):
+    import stereochemistry,geometry
+    def add_neighbor_double_bonds( bond, path):
+      for _e in bond.get_neighbor_edges():
+        if _e.order == 2 and _e not in path:
+          path.append( _e)
+          add_neighbor_double_bonds( _e, path)
+    # double bonds
+    # detect clusters of double bonds
+    double_paths = []
+    processed = Set()
+    for e in self.edges:
+      if e.order == 2 and e not in processed:
+        path = [e]
+        add_neighbor_double_bonds( e, path)
+        if len( path) % 2:
+          double_paths.append( path)
+          processed |= Set( path)
+    # detect config on these paths
+    for path in double_paths:
+        vertices = []
+        for bond in path:
+          vertices.extend( bond.vertices)
+        ends = [v for v in vertices if vertices.count(v) == 1]
+        if len( ends) != 2: # two ends is the only thing we are prepared to handle
+          continue
+        end1, end2 = ends
+        line = (end1.x, end1.y, end2.x, end2.y)
+        for e1,n1 in end1.get_neighbor_edge_pairs():
+          s1 = geometry.on_which_side_is_point( line, (n1.x,n1.y))
+          if not e1 in path:
+            for e2,n2 in end2.get_neighbor_edge_pairs():
+              if not e2 in path:
+                s2 = geometry.on_which_side_is_point( line, (n2.x,n2.y))
+                if s1 != s2:
+                  value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
+                else:
+                  value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
+                if len( path) == 1:
+                  center = path[0]
+                else:
+                  center = None
+                refs = [n1,end1,end2,n2]
+                st = stereochemistry.cis_trans_stereochemistry( center=center, value=value, references=refs)
+                self.add_stereochemistry( st)
+
 
   def mark_morgan( self):
     old_morgs = 0
