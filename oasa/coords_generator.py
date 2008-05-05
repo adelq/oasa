@@ -40,7 +40,7 @@ class coords_generator:
     self.stereo = {}
     for st in self.mol.stereochemistry:
       if st.__class__.__name__ == "cis_trans_stereochemistry":
-        for a in st.references:
+        for a in (st.references[0],st.references[-1]):
           self.stereo[a] = self.stereo.get( a, []) + [st]
     # at first we have a look if there is already something with coords
     as = Set( [a for a in mol.vertices if a.x != None and a.y != None])
@@ -219,21 +219,20 @@ class coords_generator:
     to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
     done = [a for a in v.get_neighbors() if a not in to_go]
     if len( done) == 1 and len( to_go) == 1:
+      # only simple non-branched chain
+      d = done[0]
+      t = to_go[0]
       # decide angle
       angle_to_add = 120
-      bond = v.get_edge_leading_to( to_go[0])
+      bond = v.get_edge_leading_to( t)
       # triple bonds
       if 3 in [_e.order for _e in v.get_neighbor_edges()]:
         angle_to_add = 180
       # cumulated double bonds
       if bond.order == 2:
-        _b = v.get_edge_leading_to( done[0])
+        _b = v.get_edge_leading_to( d)
         if _b.order == 2:
           angle_to_add = 180
-
-      # only simple non-branched chain
-      d = done[0]
-      t = to_go[0]
       angle = geometry.clockwise_angle_from_east( d.x-v.x, d.y-v.y)
       dns = d.get_neighbors()
       placed = False
@@ -482,8 +481,8 @@ def show_mol( mol):
   for v in mol.vertices: 
     x = xtrans( v.x)
     y = ytrans( v.y)
-    paper.create_oval( x-5, y-5, x+5, y+5, fill="#0F0")
-
+    #paper.create_oval( x-5, y-5, x+5, y+5, fill="#0F0")
+    paper.create_text( x, y, text=v.symbol, fill="#0F0")
   app.mainloop()
 
 
@@ -503,7 +502,7 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = "C\C=C/CC#CCCCC\C=C=C=C/CC"
+  #sm = "C\C=C/CC#CCCCC\C=C=C=C/CC"
   #sm = "C1CCC1C/C=C\CCCCC"
   #sm = "C25C1C3C5C4C2C1C34"
   #sm = 'C1CC2CCC1CC2'

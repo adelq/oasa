@@ -60,8 +60,11 @@ class molecule( graph.graph):
 
   def add_stereochemistry( self, stereo):
     self.stereochemistry.append( stereo)
-    if stereo.center:
-      stereo.center.stereochemistry = stereo
+
+  def remove_stereochemistry( self, stereo):
+    if not stereo in self.stereochemistry:
+      raise ValueError, "cannot remove non-existent stereochemistry information"
+    self.stereochemistry.remove( stereo)
 
   # analytics
 
@@ -727,13 +730,17 @@ class molecule( graph.graph):
           continue
         end1, end2 = ends
         line = (end1.x, end1.y, end2.x, end2.y)
+        # set stereochemistry for all neighbors of both ends
         for e1,n1 in end1.get_neighbor_edge_pairs():
-          s1 = geometry.on_which_side_is_point( line, (n1.x,n1.y))
+          #s1 = geometry.on_which_side_is_point( line, (n1.x,n1.y))
+          plane1 = geometry.plane_normal_from_3_points( (n1.x,n1.y,n1.z),(end1.x,end1.y,end1.z),(end2.x,end2.y,end2.z))
           if not e1 in path:
             for e2,n2 in end2.get_neighbor_edge_pairs():
               if not e2 in path:
-                s2 = geometry.on_which_side_is_point( line, (n2.x,n2.y))
-                if s1 != s2:
+                plane2 = geometry.plane_normal_from_3_points( (end1.x,end1.y,end1.z),(end2.x,end2.y,end2.z),(n2.x,n2.y,n2.z))
+                #cos_angle = geometry.same_or_oposite_side( plane1, plane2)
+                cos_angle = geometry.angle_between_planes( plane1, plane2)
+                if cos_angle < 0:
                   value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
                 else:
                   value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
@@ -743,7 +750,19 @@ class molecule( graph.graph):
                   center = None
                 refs = [n1,end1,end2,n2]
                 st = stereochemistry.cis_trans_stereochemistry( center=center, value=value, references=refs)
-                self.add_stereochemistry( st)
+                to_remove = None
+                to_add = None
+                for st1 in self.stereochemistry:
+                  if Set( st1.references) == Set( st.references):
+                    if st.value == st1.value:
+                      break
+                    else:
+                      to_remove = st1
+                      break
+                else:
+                  self.add_stereochemistry( st)
+                if to_remove:
+                  self.remove_stereochemistry( to_remove)
 
 
   def mark_morgan( self):

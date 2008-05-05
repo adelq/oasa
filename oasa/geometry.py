@@ -456,4 +456,39 @@ def is_point_beween_points_of_line( line, point):
   if point_distance( x1,y1,x,y) + point_distance( x2,y2,x,y) > 1.02 * point_distance( x1,y1,x2,y2):
     return False
   return True
-  
+
+
+def plane_normal_from_3_points( point1, point2, point3):
+  import transform
+  x1,y1,z1 = point1
+  x2,y2,z2 = point2
+  x3,y3,z3 = point3
+  m0 = transform.matrix( [[x1,y1,z1],[x2,y2,z2],[x3,y3,z3]])
+  m1 = transform.matrix( [[1,y1,z1],[1,y2,z2],[1,y3,z3]])
+  m2 = transform.matrix( [[x1,1,z1],[x2,1,z2],[x3,1,z3]])
+  m3 = transform.matrix( [[x1,y1,1],[x2,y2,1],[x3,y3,1]])
+  #d0 = 1.0*m0.get_determinant()
+  d1 = 1.0*m1.get_determinant()
+  d2 = 1.0*m2.get_determinant()
+  d3 = 1.0*m3.get_determinant()
+  a = d1 #/d0
+  b = d2 #/d0
+  c = d3 #/d0
+  return a,b,c
+
+def angle_between_planes( plane1, plane2):
+  a1,b1,c1 = plane1
+  a2,b2,c2 = plane2
+  cos = (a1*a2 + b1*b2 + c1*c2) / sqrt( a1**2+b1**2+c1**2) / sqrt( a2**2+b2**2+c2**2)
+  return cos
+
+def same_or_oposite_side( plane1,plane2):
+  a1,b1,c1 = plane1
+  a2,b2,c2 = plane2
+  a = a1+a2
+  b = b1+b2
+  c = c1+c2
+  if (a**2 + b**2 + c**2) > (a1**2 + b1**2 + c1**2):
+    return 1
+  else:
+    return -1

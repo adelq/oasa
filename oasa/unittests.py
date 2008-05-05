@@ -283,6 +283,7 @@ class TestStereo(unittest.TestCase):
               ("C\C=C/C=C/C=C\C", (-1,1,1)),
               ("C\C(\O)=C/C=C/C=C\C", (-1,-1,1,1)),
               ("O\C=C=C=C/N=C/Br", (-1,1)),
+              ("O\C(\N)=C/C=C\C=C\Cl", (-1,-1,1,1))
               ]
     
   def _testformula(self, num):
@@ -313,7 +314,7 @@ class TestStereo2(unittest.TestCase):
     
   def _testformula(self, num):
     def create_st_sum( st):
-      symbols = [a.symbol for a in st.references]
+      symbols = [a.symbol for a in (st.references[0],st.references[-1])]
       symbols.sort()
       return tuple( symbols + [st.value==st.SAME_SIDE and 1 or -1])
       
@@ -338,7 +339,45 @@ for i in range( len( TestStereo2.formulas)):
   setattr( TestStereo2, "testformula"+str(i+1), create_test(i,"_testformula"))
 
 
-## // Charge computation testing
+class TestStereo3(unittest.TestCase):
+  """tests if stereochemistry of structure read from smiles
+  remains the same when coordinates are calculates, stereo information
+  thrown away and recalculated from the coords."""
+
+  formulas = ["C\C=C/C",
+              "N\C=C/C=C/Cl",
+              "O\C(\N)=C/C=C\C=C\Cl",
+              "O\C=C=C=C/N=C/Br",
+              ]
+    
+  def _testformula(self, num):
+    def create_st_sum( st):
+      symbols = [a.symbol for a in (st.references[0],st.references[-1])]
+      symbols.sort()
+      return tuple( symbols + [st.value==st.SAME_SIDE and 1 or -1])
+      
+    # round 1
+    smile1 = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    sts1 = [create_st_sum( st) for st in mol.stereochemistry]
+    # round 2
+    mol.stereochemistry = []
+    mol.detect_stereochemistry_from_coords()
+    sts2 = [create_st_sum( st) for st in mol.stereochemistry]
+    for stsum in sts2:
+      if not stsum in sts1:
+        print stsum, sts1
+      self.assertEqual( (stsum in sts1), True)
+
+# this creates individual test for substructures
+for i in range( len( TestStereo3.formulas)):
+  setattr( TestStereo3, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+
+## // Stereo testing
 
 
 

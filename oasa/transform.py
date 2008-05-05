@@ -128,4 +128,8 @@ class matrix:
           m[i].append( multi[i][0]*self.mat[0][j] + multi[i][1]*self.mat[1][j] + multi[i][2]*self.mat[2][j])
     return  m
 
-
+  def get_determinant( self):
+    m = self.mat
+    return (((m[0][0] * m[1][1] * m[2][2]) + (m[0][1] * m[1][2] * m[2][0]) + (m[0][2] * m[1][0] * m[2][1])) -
+            ((m[2][1] * m[1][2] * m[0][0]) + (m[2][2] * m[1][0] * m[0][1]) + (m[2][0] * m[1][1] * m[0][2])))
+                                                                                         
