@@ -203,20 +203,34 @@ class coords_generator:
 
 
   def process_atom_neigbors( self, v):
-    def get_angle_at_side( v, d, d2, relation):
+    def get_angle_at_side( v, d, d2, relation, attach_angle):
+      if attach_angle == 180:
+        # shortcut
+        return attach_angle
       side = geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (d2.x,d2.y))
-      an = angle + deg_to_rad( 120)
+      an = angle + deg_to_rad( attach_angle)
       x = v.x + self.bond_length*cos( an)
       y = v.y + self.bond_length*sin( an)
       if relation*side == geometry.on_which_side_is_point( (d.x,d.y,v.x,v.y), (x,y)):
-        return 120
+        return attach_angle
       else:
-        return -120
+        return -attach_angle
       
     to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
     done = [a for a in v.get_neighbors() if a not in to_go]
-    angle_to_add = 120
     if len( done) == 1 and len( to_go) == 1:
+      # decide angle
+      angle_to_add = 120
+      bond = v.get_edge_leading_to( to_go[0])
+      # triple bonds
+      if 3 in [_e.order for _e in v.get_neighbor_edges()]:
+        angle_to_add = 180
+      # cumulated double bonds
+      if bond.order == 2:
+        _b = v.get_edge_leading_to( done[0])
+        if _b.order == 2:
+          angle_to_add = 180
+
       # only simple non-branched chain
       d = done[0]
       t = to_go[0]
@@ -231,14 +245,13 @@ class coords_generator:
           d2 = st.get_other_end( t)
           # other is processed, we need to adapt
           relation = st.value == st.OPPOSITE_SIDE and -1 or 1
-          angle_to_add = get_angle_at_side( v, d, d2, relation)
+          angle_to_add = get_angle_at_side( v, d, d2, relation, angle_to_add)
           placed = True
-
       if not placed and len( dns) == 2:
         # to support the all trans of simple chains without stereochemistry
         d2 = (dns[0] == v) and dns[1] or dns[0]
         if d2.x != None and d2.y != None:
-          angle_to_add = get_angle_at_side( v, d, d2, -1)
+          angle_to_add = get_angle_at_side( v, d, d2, -1, angle_to_add)
       an = angle + deg_to_rad( angle_to_add)
       t.x = v.x + self.bond_length*cos( an)
       t.y = v.y + self.bond_length*sin( an)
@@ -465,6 +478,11 @@ def show_mol( mol):
     y1 = ytrans( a1.y)
     y2 = ytrans( a2.y)
     paper.create_line( x1, y1, x2, y2, fill='black')
+    paper.create_text( (x1+x2)/2, (y1+y2)/2, text=str( b.order), fill="#F00")
+  for v in mol.vertices: 
+    x = xtrans( v.x)
+    y = ytrans( v.y)
+    paper.create_oval( x-5, y-5, x+5, y+5, fill="#0F0")
 
   app.mainloop()
 
@@ -485,7 +503,7 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = "C\C=C/C"
+  sm = "C\C=C/CC#CCCCC\C=C=C=C/CC"
   #sm = "C1CCC1C/C=C\CCCCC"
   #sm = "C25C1C3C5C4C2C1C34"
   #sm = 'C1CC2CCC1CC2'
