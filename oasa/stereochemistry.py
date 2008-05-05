@@ -58,18 +58,22 @@ class cis_trans_stereochemistry( stereochemistry):
   SAME_SIDE = 0
   OPPOSITE_SIDE = 1
 
+  # override of value
   def _set_value( self, value):
     if value not in (self.SAME_SIDE, self.OPPOSITE_SIDE):
       raise oasa_exceptions.oasa_stereochemistry_error( "invalid stereochemistry identifier '%s'" % value)
-    super( self.__class__)._set_value( value)
+    super( self.__class__, self)._set_value( value)
+  value = property( stereochemistry._get_value, _set_value)
 
+  # references overriden
   def _set_references( self, references):
-    if len( references) != 2:
+    if len( references) != 4:
       raise oasa_exceptions.oasa_stereochemistry_error( "wrong number of references in stereochemistry specification '%s'" % len( references))
-    super( self.__class__)._set_references( references)    
+    super( self.__class__, self)._set_references( references)
+  references = property( stereochemistry._get_references, _set_references)
 
-  def get_other( self, ref):
+  def get_other_end( self, ref):
     if not ref in self.references:
       raise ValueError, "submitted object is not referenced in this stereochemistry object."
-    ref1, ref2 = self.references
+    ref1, _r1, _r2, ref2 = self.references
     return ref is ref1 and ref2 or ref1

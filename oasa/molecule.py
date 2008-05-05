@@ -70,12 +70,8 @@ class molecule( graph.graph):
     out = graph.graph.get_disconnected_subgraphs( self)
     for part in out:
       for st in self.stereochemistry:
-        if (st.center and (st.center in part.vertices or st.center in part.edges)):
+        if Set( st.references) <= Set( part.vertices):
           part.add_stereochemistry( st)
-        else:
-          refs = Set( st.references)
-          if refs in Set( part.vertices):
-            part.add_stereochemistry( st)
     return out
 
   def get_mol_weight( self):

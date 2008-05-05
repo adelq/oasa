@@ -282,6 +282,7 @@ class TestStereo(unittest.TestCase):
               ("C\C=C/C", (1,)),
               ("C\C=C/C=C/C=C\C", (-1,1,1)),
               ("C\C(\O)=C/C=C/C=C\C", (-1,-1,1,1)),
+              ("O\C=C=C=C/N=C/Br", (-1,1)),
               ]
     
   def _testformula(self, num):
@@ -307,6 +308,7 @@ class TestStereo2(unittest.TestCase):
   formulas = ["C\C=C/C",
               "N\C=C/C=C/Cl",
               "O\C(\N)=C/C=C\C=C\Cl",
+              "O\C=C=C=C/N=C/Br",
               ]
     
   def _testformula(self, num):

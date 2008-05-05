@@ -647,6 +647,39 @@ class graph( object):
       except KeyError:
         pass
 
+  def mark_edges_with_distance_from( self, e1):
+    for e in self.edges:
+      try:
+        del e.properties_['d']
+      except KeyError:
+        pass
+    marked = Set( [e1])
+    new = Set( [e1])
+    dist = 0
+    e1.properties_['dist'] = dist
+    while new:
+      new_new = Set()
+      dist += 1
+      for e in new:
+        for ne in e.get_neighbor_edges():
+          if not ne in marked:
+            ne.properties_['dist'] = dist
+            new_new.add( ne)
+      new = new_new
+      marked |= new
+
+  def get_path_between_edges( self, e1, e2):
+    self.mark_edges_with_distance_from( e1)
+    if not "dist" in e2.properties_:
+      return None
+    else:
+      path = [e2]
+      _e = e2
+      for i in range( e2.properties_['dist']-1, -1, -1):
+        _e = [ee for ee in _e.get_neighbor_edges() if ee.properties_['dist'] == i][0]
+        path.append( _e)
+      return path
+  
 
   def _gen_diameter_progress( self):
     """this generator iteratively generates graph diameter during its computation,

@@ -60,14 +60,13 @@ class smiles( plugin):
         # other bonds enforce encoding of this one, we select the first one,
         # bacause there is nothing we can do if there are clashing constrains anyway
         other, st = others[0]
-        aA, aB = other.vertices
-        a1, a2 = st.center.vertices
-        if aA in (a1,a2):
-          v2, v3 = aA, aB
+        end1,inside1,inside2,end2 = st.references
+        if Set( other.vertices) == Set( [end1,inside1]):
+          v1 = inside1
+          v2 = end1
         else:
-          v3, v2 = aA, aB          
-        v1 = v2 == a1 and a2 or a1
-        #assert v2 in v3.neighbors
+          v1 = inside2
+          v2 = end2
         last_order = self._processed_atoms.index( v2) - self._processed_atoms.index( v1)
         last_code = self._stereo_bonds_to_code[ other] == "\\" and 1 or -1
         relation = st.value == st.OPPOSITE_SIDE and -1 or 1
@@ -257,35 +256,46 @@ class smiles( plugin):
   def _process_stereochemistry( self, mol):
     ## process stereochemistry
     ## double bonds
-    def get_stereobond_direction( atom, bond, init):
-      a1, a2 = bond.vertices
-      neighbor = a1 is atom and a2 or a1
-      position = mol.vertices.index( neighbor) - mol.vertices.index( atom)
+    def get_stereobond_direction( end_atom, inside_atom, bond, init):
+      position = mol.vertices.index( end_atom) - mol.vertices.index( inside_atom)
       char = bond.properties_['stereo'] == "\\" and 1 or -1
       direction = (position * char * init) < 0 and "up" or "down"
-      return direction, neighbor
+      return direction
+    def get_end_and_inside_vertex_from_edge_path( edge, path):
+      a1,a2 = edge.vertices
+      if len( [e for e in a1.neighbor_edges if e in path]) == 1:
+        return a1, a2
+      return a2, a1
     
-    for edge in mol.edges:
-      if edge.order == 2:
-        atom1, atom2 = edge.vertices
-        if mol.vertices.index( atom1) > mol.vertices.index( atom2):
-          atom1, atom2 = atom2, atom1
-        stereo_bonds1 = [e for e in atom1.neighbor_edges if 'stereo' in e.properties_]
-        stereo_bonds2 = [e for e in atom2.neighbor_edges if 'stereo' in e.properties_]
-        if stereo_bonds1 and stereo_bonds2:
-          # there are bonds with stereochemistry on both sides of the double bond
-          for bond1 in stereo_bonds1:
-            d1, n1 = get_stereobond_direction( atom1, bond1, -1)
-            for bond2 in stereo_bonds2:
-              d2, n2 = get_stereobond_direction( atom2, bond2, -1)
-              if d1 == d2:
-                value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
-              else:
-                value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
-              st = stereochemistry.cis_trans_stereochemistry( center=edge, value=value, references=[n1,n2])
-              mol.add_stereochemistry( st)
-        else:
-          continue
+    stereo_edges = [e for e in mol.edges if "stereo" in e.properties_]
+    paths = []
+    for i,e1 in enumerate( stereo_edges):
+      for e2 in stereo_edges[i+1:]:
+        path = mol.get_path_between_edges( e1, e2)
+        path2 = path[1:-1]
+        if len( path2)%2 and not [_e for _e in path2 if _e.order != 2]:
+          # only odd number of double bonds, double bonds only
+          paths.append( path)
+    
+    for path in paths:
+      bond1 = path[0]
+      end_atom1,inside_atom1 = get_end_and_inside_vertex_from_edge_path( bond1, path)
+      bond2 = path[-1]
+      end_atom2,inside_atom2 = get_end_and_inside_vertex_from_edge_path( bond2, path)
+      d1 = get_stereobond_direction( end_atom1, inside_atom1, bond1, -1)
+      d2 = get_stereobond_direction( end_atom2, inside_atom2, bond2, -1)
+      if d1 == d2:
+        value = stereochemistry.cis_trans_stereochemistry.SAME_SIDE
+      else:
+        value = stereochemistry.cis_trans_stereochemistry.OPPOSITE_SIDE
+      if len( path) == 3:
+        center = path[1]
+      else:
+        center = None
+      refs = [end_atom1,inside_atom1,inside_atom2,end_atom2]
+      st = stereochemistry.cis_trans_stereochemistry( center=center, value=value, references=refs)
+      mol.add_stereochemistry( st)
+
     for e in mol.edges:
       if 'stereo' in e.properties_:
         del e.properties_['stereo']
@@ -307,15 +317,14 @@ class smiles( plugin):
       if e.aromatic:
         for v in e.vertices:
           v.properties_[ 'aromatic'] = 1
-      if e.order == 2 and e.stereochemistry:
-        v1, v2 = e.vertices
-        ref1, ref2 = e.stereochemistry.references
-        if not ref1 in v1.neighbors:
-          v1, v2 = v2, v1
-        e1 = v1.get_edge_leading_to( ref1)
-        e2 = v2.get_edge_leading_to( ref2)
-        self._stereo_bonds_to_others[ e1] = self._stereo_bonds_to_others.get( e1, []) + [(e2, e.stereochemistry)]
-        self._stereo_bonds_to_others[ e2] = self._stereo_bonds_to_others.get( e2, []) + [(e1, e.stereochemistry)]
+    # stereochemistry information preparation
+    for st in mol.stereochemistry:
+      end1, inside1, inside2, end2 = st.references
+      e1 = end1.get_edge_leading_to( inside1)
+      e2 = end2.get_edge_leading_to( inside2)
+      self._stereo_bonds_to_others[ e1] = self._stereo_bonds_to_others.get( e1, []) + [(e2, st)]
+      self._stereo_bonds_to_others[ e2] = self._stereo_bonds_to_others.get( e2, []) + [(e1, st)]
+
     ret = ''.join( [i for i in self._get_smiles( mol)])
     mol.reconnect_temporarily_disconnected_edges()
     # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
