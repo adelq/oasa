@@ -68,6 +68,8 @@ class cairo_out:
     'color_atoms': True,
     'color_bonds': True,
     'space_around_atom': 2,
+    # how much to shorten second line of double and triple bonds (0-0.5)
+    'bond_second_line_shortening': 0.15,
     # the following two are just for playing
     # - without antialiasing the output is ugly
     'antialias_text': True,
@@ -181,10 +183,13 @@ class cairo_out:
 
 
   def _draw_edge( self, e):
-    def draw_plain_or_colored_line( _start, _end):
+    def draw_plain_or_colored_line( _start, _end, second=False):
+      """second means if this is not the main line, drawing might be different"""
       if not has_shown_vertex:
-        # round ends for bonds between atoms that are not shown
-        self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_ROUND)
+        if not second:
+          self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_ROUND)
+        else:
+          self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_BUTT)
       else:
         self._draw_colored_line( _start, _end, line_width=self.line_width, start_color=color1, end_color=color2)
       
@@ -226,10 +231,10 @@ class cairo_out:
         # shorten the second line
         length = geometry.point_distance( x1,y1,x2,y2)
         if v2 not in self._vertex_to_bbox:
-          x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -0.15*length)
+          x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -self.bond_second_line_shortening*length)
         if v1 not in self._vertex_to_bbox:
-          x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -0.15*length)
-        draw_plain_or_colored_line( (x1, y1), (x2, y2))
+          x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -self.bond_second_line_shortening*length)
+        draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
       else:
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
@@ -239,7 +244,7 @@ class cairo_out:
       self._draw_line( start, end, line_width=self.line_width)
       for i in (1,-1):
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
-        draw_plain_or_colored_line( (x1, y1), (x2, y2))
+        draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
     
 
   def _where_to_draw_from_and_to( self, b):
