@@ -66,6 +66,7 @@ class cairo_out:
     'font_size': 20,
     'background_color': (1,1,1),
     'color_atoms': True,
+    'color_bonds': True,
     'space_around_atom': 2,
     # the following two are just for playing
     # - without antialiasing the output is ugly
@@ -180,51 +181,65 @@ class cairo_out:
 
 
   def _draw_edge( self, e):
+    def draw_plain_or_colored_line( _start, _end):
+      if not has_shown_vertex:
+        # round ends for bonds between atoms that are not shown
+        self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_ROUND)
+      else:
+        self._draw_colored_line( _start, _end, line_width=self.line_width, start_color=color1, end_color=color2)
+      
     coords = self._where_to_draw_from_and_to( e)
     if not coords:
       return 
     start = coords[:2]
     end = coords[2:]
     v1, v2 = e.vertices
+    color1 = self.atom_colors.get( v1.symbol, (0,0,0))
+    color2 = self.atom_colors.get( v2.symbol, (0,0,0))
+    has_shown_vertex = bool( [1 for _v in e.vertices if _v in self._vertex_to_bbox])
 
     if e.order == 1:
-      if not [1 for _v in e.vertices if _v in self._vertex_to_bbox]:
-        # round ends for bonds between atoms that are not shown
-        self._draw_line( start, end, line_width=self.line_width, capstyle=cairo.LINE_CAP_ROUND)
-      else:
-        self._draw_line( start, end, line_width=self.line_width)
-
+      draw_plain_or_colored_line( start, end)
+      
     if e.order == 2:
       side = 0
       # find how to center the bonds
       # rings have higher priority in setting the positioning
+      in_ring = False
       for ring in self.molecule.get_smallest_independent_cycles():
         double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
         if v1 in ring and v2 in ring:
+          in_ring = True
           side += double_bonds * reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y)) for a in ring if a!=v1 and a!=v2])
       # if rings did not decide, use the other neigbors
       if not side:
         for v in v1.neighbors + v2.neighbors:
           if v != v1 and v!= v2:
             side += geometry.on_which_side_is_point( start+end, (v.x, v.y))
+      # if neighbors did not decide either
+      if not side and in_ring:
+        # we don't want centered bonds inside rings
+        side = 1 # select arbitrary value
       if side:
-        self._draw_line( start, end, line_width=self.line_width)
+        draw_plain_or_colored_line( start, end)
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
         # shorten the second line
         length = geometry.point_distance( x1,y1,x2,y2)
-        x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -0.15*length)
-        x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -0.15*length)
-        self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+        if v2 not in self._vertex_to_bbox:
+          x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -0.15*length)
+        if v1 not in self._vertex_to_bbox:
+          x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -0.15*length)
+        draw_plain_or_colored_line( (x1, y1), (x2, y2))
       else:
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
-          self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
-        
+          draw_plain_or_colored_line( (x1, y1), (x2, y2))
+
     elif e.order == 3:
       self._draw_line( start, end, line_width=self.line_width)
       for i in (1,-1):
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
-        self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
+        draw_plain_or_colored_line( (x1, y1), (x2, y2))
     
 
   def _where_to_draw_from_and_to( self, b):
@@ -277,6 +292,23 @@ class cairo_out:
 
 
   ## ------------------------------ lowlevel drawing methods ------------------------------
+
+  def _draw_colored_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT,
+                          start_color=(0,0,0), end_color=(0,0,0)):
+    x1,y1 = start
+    x2,y2 = end
+    length = geometry.point_distance( x1,y1,x2,y2)
+    xn2,yn2 = geometry.elongate_line( x1,y1,x2,y2, -0.5*length)
+    line1 = [(x1,y1),(xn2,yn2)]
+    xn1,yn1 = geometry.elongate_line( x2,y2,x1,y1, -0.5*length)
+    line2 = [(xn1,yn1),(x2,y2)]
+    self.context.set_line_cap( cairo.LINE_CAP_BUTT) # this is forced here
+    self.context.set_line_width( line_width)
+    for line,color in zip( [line1,line2], [start_color,end_color]):
+      self.context.set_source_rgb( *color)
+      self._create_cairo_path( line, closed=False)
+      self.context.stroke()
+    
 
   def _draw_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT, color=(0,0,0)):
     self.context.set_source_rgb( *color)
