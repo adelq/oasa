@@ -492,3 +492,8 @@ def same_or_oposite_side( plane1,plane2):
     return 1
   else:
     return -1
+
+
+def expand_rectangle( coords, d):
+  x1,y1,x2,y2 = coords
+  return x1-d,y1-d,x2+d,y2+d
