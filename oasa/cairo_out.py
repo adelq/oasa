@@ -19,7 +19,6 @@
 
 
 import cairo
-import transform
 import geometry
 import math
 import misc
@@ -30,6 +29,17 @@ import sys
 
 class cairo_out:
 
+  """
+  This object is used to draw OASA molecules using cairo. Cairo supports different
+  'surfaces' which represent different file formats.
+  This object implements PNG file drawing, but should be general enough to work with other
+  formats, provided modified version of create_surface and write_surface methods are provided
+  when this class is subclassed.
+  Because it is not possible to calculate the bounding box of a drawing before its drawn (mainly
+  because we don't know the size of text items), this object internally draws to a surface with
+  large margins and the saves a cropped version into a file (this is done by drawing to a new
+  surface and using the old one as source.
+  """
 
   _caps = {'butt': cairo.LINE_CAP_BUTT,
            'round': cairo.LINE_CAP_ROUND,
@@ -43,14 +53,70 @@ class cairo_out:
             'miter': cairo.LINE_JOIN_MITER,
             'bevel': cairo.LINE_JOIN_BEVEL}
 
-  show_hydrogens_on_hetero = False
-  margin = 15
-  line_width = 2
-  bond_width = 6
+  _temp_margin = 200
+
+  default_options = {'show_hydrogens_on_hetero': False,
+                     'margin': 15,
+                     'line_width': 2,
+                     'bond_width': 6,
+                     'font_name': "Arial",
+                     'font_size': 20,
+                     'background_color': (1,1,1),
+                     'color_atoms': True,
+                     }
+
+  atom_colors = {'O': (1,0,0),
+                 'N': (0,0,1),
+                 'S': (.5,.5,0),
+                 'Cl': (0,0.8,0),
+                 'Br': (.5,0,0),
+                 }
 
 
-  def __init__( self):
-    pass
+  def __init__( self, scaling=1):
+    for k,v in self.__class__.default_options.iteritems():
+      setattr( self, k, v)
+    # list of paths that contribute to the bounding box (probably no edges)
+    self._paths = []
+    self.scaling = scaling
+
+  def draw_mol( self, mol):
+    if not self.surface:
+      raise Exception( "You must initialize cairo surface before drawing, use 'create_surface' to do it.")
+    self.molecule = mol
+    for e in copy.copy( mol.edges):
+      self._draw_edge( e)
+    for v in mol.vertices:
+      self._draw_vertex( v)
+
+  def create_surface( self, w, h):
+    """currently implements PNG writting, but might be overriden to write other types;
+    w and h are minimal estimated width and height"""
+    # trick - we use bigger surface and then copy from it to a new surface and crop
+    self.surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, w, h)
+
+
+  def write_surface( self):
+    """currently implements PNG writting, but might be overriden to write other types"""
+    #self.surface.write_to_png( self.filename)
+    # real width and height
+    x1, y1, x2, y2 = self._get_bbox()
+    x1, y1 = self.context.user_to_device( x1, y1)
+    x2, y2 = self.context.user_to_device( x2, y2)
+    width = int( x2 - x1 + 2*self.margin)
+    height = int( y2 - y1 + 2*self.margin)
+    surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, width, height)
+    context = cairo.Context( surface)
+    context.set_source_rgb( *self.background_color)
+    context.rectangle( 0, 0, width, height)
+    context.fill()
+    context.set_source_surface( self.surface, -x1+self.margin, -y1+self.margin)
+    context.rectangle( 0, 0, width, height)
+    context.fill()
+    context.show_page()
+    surface.write_to_png( self.filename)
+    surface.finish()
+
 
   def mol_to_cairo( self, mol, filename):
     x1, y1, x2, y2 = None, None, None, None
@@ -63,51 +129,35 @@ class cairo_out:
         y1 = v.y
       if y2 == None or y2 < v.y:
         y2 = v.y
+    w = int( x2 - x1)
+    h = int( y2 - y1)
 
-    w = int( x2 - x1 + 2*self.margin)
-    h = int( y2 - y1 + 2*self.margin)
+    self.filename = filename
 
-    self.transformer = transform.transform()
-    self.transformer.set_move( -x1+self.margin, -y1+self.margin)
-
-    self.surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, w, h)
+    # create cairo surface for drawing
+    _w = int( w+2*self.scaling*self._temp_margin)
+    _h = int( h+2*self.scaling*self._temp_margin)
+    self.create_surface( _w, _h)
 
     self.context = cairo.Context( self.surface)
-    self.context.set_source_rgb( 1, 1, 1)
-    self.context.rectangle( 0, 0, w, h)
-    self.context.fill()
-
+    self.context.translate( -x1+self.scaling*self._temp_margin, -y1+self.scaling*self._temp_margin)
+    self.context.scale( self.scaling, self.scaling)
+    self.context.rectangle( x1, y1, w, h)
+    self._paths.append( self.context.copy_path_flat()) # basic rectangle path
+    self.context.new_path()
     self.context.set_source_rgb( 0, 0, 0)
 
-    self.molecule = mol
-
-    for e in copy.copy( mol.edges):
-      self._draw_edge( e)
-    for v in mol.vertices:
-      self._draw_vertex( v)
-
+    self.draw_mol( mol)
     self.context.show_page()
-    self.surface.write_to_png( filename)
+    # write the content to the file
+    self.write_surface()
     self.surface.finish()
-
-
-
-  def paper_to_canvas_coord( self, x):
-    return x
-    #dpi = self.paper.winfo_fpixels( '254m')/10.0
-    #return dpi*x/72
-
-
-  def prepare_dumb_transformer( self):
-    tr = transform.transform()
-    tr.set_scaling( self.paper_to_canvas_coord( 1))
-    return tr
 
 
   def _draw_edge( self, e):
     v1, v2 = e.vertices
-    start = self.transformer.transform_xy( v1.x, v1.y)
-    end = self.transformer.transform_xy( v2.x, v2.y)
+    start = (v1.x, v1.y)
+    end = (v2.x, v2.y)
 
     if e.order == 1:
       self._draw_line( start, end, line_width=self.line_width)
@@ -117,22 +167,26 @@ class cairo_out:
       # find how to center the bonds
       # rings have higher priority in setting the positioning
       for ring in self.molecule.get_smallest_independent_cycles():
+        double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
         if v1 in ring and v2 in ring:
-          side += reduce( operator.add, [geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( a.x,a.y))) for a in ring if a!=v1 and a!=v2])
+          side += double_bonds * reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y)) for a in ring if a!=v1 and a!=v2])
       # if rings did not decide, use the other neigbors
       if not side:
         for v in v1.neighbors + v2.neighbors:
           if v != v1 and v!= v2:
-            side += geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( v.x, v.y)))
+            side += geometry.on_which_side_is_point( start+end, (v.x, v.y))
       if side:
         self._draw_line( start, end, line_width=self.line_width)
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
+        # shorten the second line
+        length = geometry.point_distance( x1,y1,x2,y2)
+        x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -0.15*length)
+        x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -0.15*length)
         self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
       else:
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
           self._draw_line( (x1, y1), (x2, y2), line_width=self.line_width)
-        
         
     elif e.order == 3:
       self._draw_line( start, end, line_width=self.line_width)
@@ -143,8 +197,8 @@ class cairo_out:
 
   def _draw_vertex( self, v):
     if v.symbol != "C":
-      x = v.x - 5
-      y = v.y + 6
+      x = v.x
+      y = v.y
       x1 = x
       x2 = x + 12
       y1 = y - 12
@@ -154,25 +208,29 @@ class cairo_out:
         if v.free_valency == 1:
           text += "H"
         elif v.free_valency > 1:
-          text += "H%d" % v.free_valency
+          text += "H<sub>%d</sub>" % v.free_valency
 
       if v.charge == 1:
-        text += "+"
+        text += "<sup>+</sup>"
       elif v.charge == -1:
-        text += "-"
+        text += "<sup>&#x2212;</sup>"
       elif v.charge > 1:
-        text += str( v.charge) + "+"
+        text += "<sup>%d+</sup>" % v.charge
       elif v.charge < -1:
-        text += str( v.charge)
-        
-      self._draw_rectangle( self.transformer.transform_4( (x1, y1, x2, y2)), fill_color=(1,1,1))
-      self._draw_text( self.transformer.transform_xy(x,y), text)
+        text += "<sup>%d&#x2212;</sup>" % abs( v.charge)
+
+      if self.color_atoms:
+        color = self.atom_colors.get( v.symbol, (0,0,0))
+      else:
+        color = (0,0,0)
+      self._draw_text( (x,y), text, center_first_letter=True, color=color)
 
 
-  def _draw_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT):
-    #self.context.set_line_join( self._joins[ join])
-    # color
-    #self.set_cairo_color( self.paper.itemcget( item, 'fill'))
+  ## ------------------------------ lowlevel drawing methods ------------------------------
+
+  def _draw_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_ROUND):
+    # cap style
+    self.context.set_line_cap( capstyle)
     # line width
     self.context.set_line_width( line_width)
     # the path itself 
@@ -182,26 +240,83 @@ class cairo_out:
     self.context.stroke()
 
 
+  def _draw_text( self, xy, text, font_name=None, font_size=None, center_first_letter=False, color=(0,0,0)):
+    import xml.sax
+    from sets import Set
+    class text_chunk:
+      def __init__( self, text, attrs=None):
+        self.text = text
+        self.attrs = attrs or Set()
 
-  def _draw_text( self, xy, text, font_name="Arial", font_size=16):
+    class FtextHandler ( xml.sax.ContentHandler):
+      def __init__( self):
+        xml.sax.ContentHandler.__init__( self)
+        self._above = []
+        self.chunks = []
+        self._text = ""
+      def startElement( self, name, attrs):
+        self._closeCurrentText()
+        self._above.append( name)
+      def endElement( self, name):
+        self._closeCurrentText()
+        self._above.pop( -1)
+      def _closeCurrentText( self):
+        if self._text:
+          self.chunks.append( text_chunk( self._text, attrs = Set( self._above)))
+          self._text = ""
+      def characters( self, data):
+        self._text += data
+
+    # parse the text for markup
+    handler = FtextHandler()
+    try:
+      xml.sax.parseString( "<x>%s</x>" % text, handler)
+    except:
+      chunks = [text_chunk( text)]
+    else:
+      chunks = handler.chunks
+
+    if not font_name:
+      font_name = self.font_name
+    if not font_size:
+      font_size = self.font_size
+
     # color
-    #self.set_cairo_color( self.paper.itemcget( item, 'fill'))
-    # helvetica which is often used does not work for me - therefor I use remap
-    self.context.set_source_rgb( 0,0,0)
-
     self.context.select_font_face( font_name)
-
     self.context.set_font_size( font_size)
-    #asc, desc, height, _a, _b = self.context.font_extents()
-    #xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( text)
-
+    asc, desc, letter_height, _a, _b = self.context.font_extents()
     x, y = xy
-
+    if center_first_letter:
+      xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunks[0].text[0])
+      x -= x_advance / 2.0
+      y += height / 2.0
+    
     self.context.new_path()
-    self.context.move_to( x, y)
-    #self.context.move_to( x1 - (width - x2 + x1)/2 - xbearing, y)
-    self.context.text_path( text)
-    self.context.fill()
+    x1 = round( x)
+    for chunk in chunks:
+      y1 = y
+      if "sup" in chunk.attrs:
+        y1 -= asc / 2
+        self.context.set_font_size( int( font_size * 0.8))
+      elif "sub" in chunk.attrs:
+        y1 += asc / 2
+        self.context.set_font_size( int( font_size * 0.8))
+      else:
+        self.context.set_font_size( font_size)
+      xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text)
+      # background
+      self.context.rectangle( x1+xbearing, y1+ybearing, width, height)
+      self.context.set_source_rgb( *self.background_color)
+      self.context.fill_preserve()
+      self.context.set_line_width( 3)
+      self.context.stroke()
+      # text itself
+      self.context.set_source_rgb( *color)
+      self.context.move_to( x1, y1)
+      self.context.text_path( chunk.text)
+      self._paths.append( self.context.copy_path_flat()) # save path for bounding box calculation
+      self.context.fill()
+      x1 += x_advance
 
 
 
@@ -226,6 +341,13 @@ class cairo_out:
     if closed:
       self.context.close_path()
 
+  def _get_bbox( self):
+    cr = self.context
+    cr.new_path()
+    for path in self._paths:
+      cr.append_path( path)
+    bbox = cr.fill_extents()
+    return bbox
 
 
 def mol_to_png( mol, filename):

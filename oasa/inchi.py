@@ -723,10 +723,9 @@ class inchi( plugin):
 
 def _run_command( command, input):
   if os.name == "nt":
-    out, inp = popen2.popen4( command)
-  else:
-    p = popen2.Popen4( command)
-    out, inp = p.fromchild, p.tochild
+    return _run_command_nt( command, input)
+  p = popen2.Popen4( command)
+  out, inp = p.fromchild, p.tochild
   inp.write( input)
   inp.close()
   outf = out.fileno()
@@ -742,13 +741,21 @@ def _run_command( command, input):
       time.sleep(0.01)
   finally:
     out.close()
-    if os.name != "nt":
-      p.poll()
-      del p
+    p.poll()
+    del p
   return result
 
+def _run_command_nt( command, input):
+  out, inp = popen2.popen4( command)
+  inp.write( input)
+  inp.close()
+  text = out.read()
+  return text
 
-def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
+
+def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_error=False):
+  """ignore the case when InChIKey cannot be generated to some reason
+  (no mhash library and old InChI program)"""
   if not program:
     import config
     program = config.Config.inchi_binary_path
@@ -778,13 +785,20 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True):
     raise oasa_inchi_error( "InChI program did not create any output InChI")
   if not key:
     # probably old version of the InChI software
-    import inchi_key
-    key = inchi_key.key_from_inchi( inchi)
+    try:
+      import inchi_key
+    except ImportError:
+      if ignore_key_error:
+        key = None
+      else:
+        raise oasa_inchi_error( "InChIKey could not be generated - inchi_key module failed to load properly.")
+    else:
+      key = inchi_key.key_from_inchi( inchi)
   return inchi, key, warnings
 
 
 def generate_inchi( m, program=None, fixed_hs=True):
-  inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs)
+  inchi, key, warnings = generate_inchi_and_inchikey( m, program=program, fixed_hs=fixed_hs, ignore_key_error=True)
   return inchi, warnings
 
 def generate_inchi_key( m, program=None, fixed_hs=True):

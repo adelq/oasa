@@ -242,6 +242,8 @@ class molecule( graph.graph):
       out.add( 2)
     if at.symbol in ('B','Al'):
       out.add( 0)
+    #if at.multiplicity == 2:
+    #  out.add( 1)
     for b, a in at.get_neighbor_edge_pairs():
       if b.order > 1 and (a in ring or b.aromatic):
         out.add( 1)
@@ -702,7 +704,7 @@ class molecule( graph.graph):
 
   # // --- end of the fragment matching routines ---
 
-  def detect_stereochemistry_from_coords( self):
+  def detect_stereochemistry_from_coords( self, omit_rings=True):
     import stereochemistry,geometry
     def add_neighbor_double_bonds( bond, path):
       for _e in bond.get_neighbor_edges():
@@ -715,6 +717,8 @@ class molecule( graph.graph):
     processed = Set()
     for e in self.edges:
       if e.order == 2 and e not in processed:
+        if omit_rings and not self.is_edge_a_bridge( e):
+          continue
         path = [e]
         add_neighbor_double_bonds( e, path)
         if len( path) % 2:

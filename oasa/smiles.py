@@ -48,11 +48,6 @@ class smiles( plugin):
     if b.aromatic:
       return ''
     elif b in self._stereo_bonds_to_others:
-      a1, a2 = b.vertices
-      if a2 in self._processed_atoms:
-        a1, a2 = a2, a1
-      assert a1 in self._processed_atoms
-      assert a2 not in self._processed_atoms
       others = [(e,st) for e,st in self._stereo_bonds_to_others[b] if e in self._stereo_bonds_to_code]
       if not others:
         code = "\\"
@@ -94,6 +89,9 @@ class smiles( plugin):
     mol = Config.create_molecule()
     text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
+    # internally revert \/ bonds before numbers, this makes further processing much easier
+    text = re.sub( r"([\\/])([0-9])", lambda m: (m.group(1)=="/" and "\\" or "/")+m.group(2), text)
+    # // end
     chunks = re.split( "(\[.*?\]|[A-Z][a-z]?|%[0-9]{1,2}|[^A-Z]|[a-z])", text)
     chunks = self._check_the_chunks( chunks)
     last_atom = None
@@ -275,7 +273,12 @@ class smiles( plugin):
         path2 = path[1:-1]
         if len( path2)%2 and not [_e for _e in path2 if _e.order != 2]:
           # only odd number of double bonds, double bonds only
-          paths.append( path)
+          for _e in path[1:-1]:
+            if not mol.is_edge_a_bridge_fast_and_dangerous( _e):
+              break
+          else:
+            # only stereo related to non-cyclic bonds
+            paths.append( path)
     
     for path in paths:
       bond1 = path[0]
@@ -369,12 +372,15 @@ class smiles( plugin):
       start, end = end, start
     v = start
     last = None
-    while v != end:
+    was_end = False
+    while True:
       yield self._create_atom_smiles( v)
       # the atom
       for e in self.ring_joins:
         if v in e.get_vertices():
-          yield self.recode_oasa_to_smiles_bond( e)
+          _b = self.recode_oasa_to_smiles_bond( e)
+          if _b not in "/\\":
+            yield _b
           yield str( self.ring_joins.index( e) +1)
       # branches
       if v in self.branches:
@@ -393,22 +399,10 @@ class smiles( plugin):
           last = v
           v = neighbor
           break
-    # the last atom - should make it somehow not to need this piece of code
-    yield self._create_atom_smiles( v)
-    for e in self.ring_joins:
-      if v in e.get_vertices():
-        yield self.recode_oasa_to_smiles_bond( e)
-        yield str( self.ring_joins.index( e) +1)
-      if v in self.branches:
-        for edg, branch in self.branches[ v]:
-          yield '('
-          yield self.recode_oasa_to_smiles_bond( edg)
-          v1, v2 = edg.vertices
-          vv = (v1 != v) and v1 or v2
-          for i in self._get_smiles( branch, start_from=vv):
-            yield i
-          yield ')'
-
+      if was_end:
+        break
+      if v == end:
+        was_end = True
 
 
   def _create_atom_smiles( self, v):
@@ -597,6 +591,7 @@ class smiles_converter( converter_base):
                            
                            "W_AROMATIC_BOND_AUTODETECT": True,
                            "W_INDIVIDUAL_MOLECULE_SEPARATOR": ".",
+                           "W_DETECT_STEREO_FROM_COORDS": True,
                            }
 
   def __init__( self):
@@ -609,6 +604,8 @@ class smiles_converter( converter_base):
     for mol in structures:
       if self.configuration["W_AROMATIC_BOND_AUTODETECT"]:
         mol.mark_aromatic_bonds()
+      if self.configuration["W_DETECT_STEREO_FROM_COORDS"]:
+        mol.detect_stereochemistry_from_coords()
       ret.append( sm.get_smiles( mol))
     self.last_status = self.STATUS_OK
     return self.configuration["W_INDIVIDUAL_MOLECULE_SEPARATOR"].join( ret)
@@ -743,6 +740,7 @@ if __name__ == '__main__':
 
   if not len( sys.argv) > 1:
     text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
+    text = "C1CC=CC1"
   else:
     text = sys.argv[1]
 
@@ -772,3 +770,5 @@ if __name__ == '__main__':
 ## the transformation can be destructive!!!  - check
 
 ## THIS IS A PROBLEM : C=1ccC=2C=1C=CC=CC=2  (should be azulene)
+
+# E/Z stereo is ignored in rings
