@@ -42,12 +42,6 @@ import name_database
 import subsearch
 import svg_out
 
-no_cairo = False
-try:
-  import cairo_out
-except:
-  no_cairo = True
-
 atom = atom.atom
 molecule = molecule.molecule
 bond = bond.bond
@@ -59,33 +53,43 @@ all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','g
        "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
        'query_atom','oasa_exceptions','name_database',"subsearch", "svg_out"]
 
-if not no_cairo:
+try:
+  import cairo_out
+except:
+  CAIRO_AVAILABLE = False
+else:
   all.append( "cairo_out")
+  CAIRO_AVAILABLE = True
 
 # inchi_key
 try:
   import inchi_key
 except Exception, e:
-  print >> sys.stderr, "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n  %s" % e
+  #print >> sys.stderr, "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n  %s" % e
+  INCHI_KEY_AVAILABLE = False
 else:
   all.append( "inchi_key")
+  INCHI_KEY_AVAILABLE = True
 
 # structure_database requires sqlite
 try:
   import structure_database
 except Exception, e:
-  print >> sys.stderr, "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n  %s" % e
+  #print >> sys.stderr, "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n  %s" % e
+  STRUCTURE_DATABASE_AVAILABLE = False
 else:
   all.append( "structure_database")
+  STRUCTURE_DATABASE_AVAILABLE = True
 
 # pybel
 try:
   import pybel_bridge
 except Exception, e:
-  print >> sys.stderr, "The 'pybel_bridge' python module could not be loaded - oasa-pybel integration will be disabled\nSee the error message for more info:\n  %s" % e
+  #print >> sys.stderr, "The 'pybel_bridge' python module could not be loaded - oasa-pybel integration will be disabled\nSee the error message for more info:\n  %s" % e
+  PYBEL_AVAILABLE = False
 else:
   all.append( "pybel_bridge")
-  
+  PYBEL_AVAILABLE = True  
 
 
 __all__ = all

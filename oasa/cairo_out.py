@@ -35,19 +35,16 @@ class cairo_out:
   This object implements PNG file drawing, but should be general enough to work with other
   formats, provided modified version of create_surface and write_surface methods are provided
   when this class is subclassed.
+
+  Usage:
+
+  # attributes can be set in constructor or afterwards as normal attributes
+  # default options are set ans commented in the default_options dictionary below
+  c = cairo_out( scaling=2.0, margin=10, font_size=20, bond_width=6)
+  c.show_hydrogens_on_hetero = True
+  c.mol_to_cairo( mol, 'outfile.png') # mol is oasa molecule
+  
   """
-
-  _caps = {'butt': cairo.LINE_CAP_BUTT,
-           'round': cairo.LINE_CAP_ROUND,
-           'projecting': cairo.LINE_CAP_SQUARE}
-
-
-  _font_remap = {'helvetica': 'Arial',
-                 'times': 'Times New Roman'}
-
-  _joins = {'round': cairo.LINE_JOIN_ROUND,
-            'miter': cairo.LINE_JOIN_MITER,
-            'bevel': cairo.LINE_JOIN_BEVEL}
 
   _temp_margin = 200
 
