@@ -56,7 +56,7 @@ class cairo_out:
     'scaling': 1.0,
     # should atom coordinates be rounded to whole pixels before rendering?
     # This improves image sharpness but might slightly change the geometry
-    'align_coords': True
+    'align_coords': True,
     'show_hydrogens_on_hetero': False,
     'margin': 15,
     'line_width': 2.0,
@@ -194,7 +194,7 @@ class cairo_out:
   def _draw_edge( self, e):
     def draw_plain_or_colored_line( _start, _end, second=False):
       """second means if this is not the main line, drawing might be different"""
-      if not has_shown_vertex:
+      if not has_shown_vertex or not self.color_bonds:
         if not second:
           self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_ROUND)
         else:
@@ -208,7 +208,7 @@ class cairo_out:
       x, y, x0, y0 = geometry.find_parallel( x1, y1, x2, y2, self.wedge_width/2.0)
       xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0) 
       # no coloring now
-      if not has_shown_vertex:
+      if not has_shown_vertex or not self.color_bonds:
         self._create_cairo_path( [(xa, ya), (x0, y0), (2*x2-x0, 2*y2-y0), (2*x1-xa, 2*y1-ya)], closed=True)
         self.context.set_source_rgb( 0,0,0)
         self.context.fill()
@@ -276,8 +276,11 @@ class cairo_out:
     start = coords[:2]
     end = coords[2:]
     v1, v2 = e.vertices
-    color1 = self.atom_colors.get( v1.symbol, (0,0,0))
-    color2 = self.atom_colors.get( v2.symbol, (0,0,0))
+    if self.color_bonds:
+      color1 = self.atom_colors.get( v1.symbol, (0,0,0))
+      color2 = self.atom_colors.get( v2.symbol, (0,0,0))
+    else:
+      color1 = color2 = (0,0,0)
     has_shown_vertex = bool( [1 for _v in e.vertices if _v in self._vertex_to_bbox])
 
     if e.order == 1:
