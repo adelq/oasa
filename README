@@ -1,12 +1,16 @@
 OASA is a free python library for manipulating and analyzing chemical structures.
-
+More info can be found on http://bkchem.zirael.org/oasa_en.html
 
 INSTALL
 --------------------------------------------------
 OASA needs python 2.3 or higher to run properly.
-You just have to extract the sources somewhere and its ready.
-To use the command line conversion program, cd to the toplevel oasa directory and run 
-"python convert.py" to get the information about how to use the program.
+To use it, you can either copy the oasa directory inside your projects directory
+or you may use
+
+python setup.py install
+
+to make a system-wide install
+
 To use OASA from a python program use "import oasa"
 
 
@@ -17,10 +21,11 @@ are no other limitations, however, for these it has no sense to write bugreports
 
 
 OVERALL:
-- as for now, no effort was made to implement any stereochemistry related concepts
-- no isotope support yet
-- therefor none of the export/import plugins does handle these
+- no documentation beyond the source code is available
+- stereochemistry support is limited to cis/trans stereochemistry on double bonds
+  and only in some formats
 - not much effort was invested into optimalization of the code, it may be pretty slow sometimes
+- the API might be unstable
 
 
 SMILES:
@@ -28,16 +33,21 @@ SMILES:
   the result is unpredictable
 
 
-I(N)CHI:
-- reading only
-- both plain-text (in form: "1.0Beta/C16H22NP/1(2-4-8-15-9-6-7-10-15)3-5-11-16-12-17-14-18-13-16/1-5H2,6-7H,8H2,9-10H,11H2,12-15H")
-  and xml format is supported
+InChI:
+- reading is done natively by OASA
+- for writing the original InChI program is needed (cInChI, cInChI.exe)
 
 
 MOLFILE
-- data after the bond block are not read
-  (this means that molfiles containing a properties block are not read properly)
+- not all data in the properties block (after the bond block) are supported
+  (this means that molfiles containing a properties block might not be read properly)
  
 
 COORDS GENERATOR:
 - coords for molecules like calix[4]arene and similar do not give a very nice picture
+
+
+CAIRO_OUT:
+- pycairo is required to make use of cairo_out functionality
+- only PNG export is supported now
+
