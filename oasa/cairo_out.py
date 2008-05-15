@@ -59,6 +59,7 @@ class cairo_out:
     'line_width': 2.0,
     # how far second bond is drawn
     'bond_width': 6.0,
+    'wedge_width': 6.0,
     'font_name': "Arial",
     'font_size': 20,
     'background_color': (1,1,1),
@@ -118,7 +119,8 @@ class cairo_out:
     # because we don't know the size of text items), this object internally draws to a surface with
     # large margins and the saves a cropped version into a file (this is done by drawing to a new
     # surface and using the old one as source.
-
+    #self.surface.write_to_png( self.filename)
+    #return 
     # real width and height
     x1, y1, x2, y2 = self._get_bbox()
     x1, y1 = self.context.user_to_device( x1, y1)
@@ -141,6 +143,7 @@ class cairo_out:
   def mol_to_cairo( self, mol, filename):
     x1, y1, x2, y2 = None, None, None, None
     for v in mol.vertices:
+      v.y = -v.y # flip coords - molfiles have them the other way around
       if x1 == None or x1 > v.x:
         x1 = v.x
       if x2 == None or x2 < v.x:
@@ -167,7 +170,7 @@ class cairo_out:
       options = self.context.get_font_options()
       options.set_antialias( cairo.ANTIALIAS_NONE)
       self.context.set_font_options( options)
-    self.context.translate( -x1+self.scaling*self._temp_margin, -y1+self.scaling*self._temp_margin)
+    self.context.translate( -x1*self.scaling+self.scaling*self._temp_margin, -y1*self.scaling+self.scaling*self._temp_margin)
     self.context.scale( self.scaling, self.scaling)
     self.context.rectangle( x1, y1, w, h)
     self.context.new_path()
@@ -177,6 +180,9 @@ class cairo_out:
     # write the content to the file
     self.write_surface()
     self.surface.finish()
+    # flip y coordinates back
+    for v in mol.vertices:
+      v.y = -v.y
 
 
   def _draw_edge( self, e):
@@ -189,7 +195,75 @@ class cairo_out:
           self._draw_line( _start, _end, line_width=self.line_width, capstyle=cairo.LINE_CAP_BUTT)
       else:
         self._draw_colored_line( _start, _end, line_width=self.line_width, start_color=color1, end_color=color2)
-      
+
+    def draw_plain_or_colored_wedge( _start, _end):
+      x1, y1 = _start
+      x2, y2 = _end
+      x, y, x0, y0 = geometry.find_parallel( x1, y1, x2, y2, self.wedge_width/2.0)
+      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0) 
+      # no coloring now
+      if not has_shown_vertex:
+        self._create_cairo_path( [(xa, ya), (x0, y0), (2*x2-x0, 2*y2-y0), (2*x1-xa, 2*y1-ya)], closed=True)
+        self.context.set_source_rgb( 0,0,0)
+        self.context.fill()
+      else:
+        # ratio 0.4 looks better than 0.5 because the area difference
+        # is percieved more than length difference
+        ratio = 0.4
+        xm1 = ratio*xa + (1-ratio)*x0 
+        ym1 = ratio*ya + (1-ratio)*y0
+        xm2 = (1-ratio)*(2*x2-x0) + ratio*(2*x1-xa)
+        ym2 = (1-ratio)*(2*y2-y0) + ratio*(2*y1-ya)
+        self.context.set_source_rgb( *color1)
+        self._create_cairo_path( [(xa,ya), (xm1,ym1), (xm2,ym2), (2*x1-xa, 2*y1-ya)], closed=True)
+        self.context.fill()
+        self.context.set_source_rgb( *color2)
+        self._create_cairo_path( [(xm1,ym1), (x0, y0), (2*x2-x0, 2*y2-y0), (xm2,ym2)], closed=True)
+        self.context.fill()
+
+    def draw_plain_or_colored_hatch( _start, _end):
+      x1, y1 = _start
+      x2, y2 = _end
+      # no coloring now
+      x, y, x0, y0 = geometry.find_parallel( x1, y1, x2, y2, self.wedge_width/2.0)
+      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0) 
+      d = math.sqrt( (x1-x2)**2 + (y1-y2)**2) # length of the bond
+      if d == 0:  
+        return  # to prevent division by zero
+      dx1 = (x0 - xa)/d 
+      dy1 = (y0 - ya)/d 
+      dx2 = (2*x2 -x0 -2*x1 +xa)/d 
+      dy2 = (2*y2 -y0 -2*y1 +ya)/d 
+      # we have to decide if the first line should be at the position of the first atom
+      draw_start = 1  # is index not boolean
+      if not v1 in self._vertex_to_bbox and v1.occupied_valency > 1:
+        draw_start = 1
+      draw_end = 1    # is added to index not boolean
+      if not v2 in self._vertex_to_bbox and v2.occupied_valency > 1:
+        draw_end = 0
+      # adjust the step length
+      step_size = 2*(self.line_width)
+      ns = round( d / step_size) or 1
+      step_size = d / ns
+      # now we finally draw
+      self.context.set_line_cap( cairo.LINE_CAP_BUTT)
+      self.context.set_source_rgb( *color1)
+      middle = 0.5 * (draw_start + int( round( d/ step_size)) + draw_end - 2)
+      for i in range( draw_start, int( round( d/ step_size)) +draw_end):
+        coords = [xa+dx1*i*step_size, ya+dy1*i*step_size, 2*x1-xa+dx2*i*step_size, 2*y1-ya+dy2*i*step_size] 
+        if coords[0] == coords[2] and coords[1] == coords[3]:
+          if (dx1+dx2) > (dy1+dy2): 
+            coords[0] += 1
+          else:
+            coords[1] += 1
+        self._create_cairo_path( [coords[:2],coords[2:]])
+        if i >= middle:
+          self.context.stroke()
+          self.context.set_source_rgb( *color2)
+      self.context.stroke()
+
+    # code itself
+
     coords = self._where_to_draw_from_and_to( e)
     if not coords:
       return 
@@ -201,7 +275,12 @@ class cairo_out:
     has_shown_vertex = bool( [1 for _v in e.vertices if _v in self._vertex_to_bbox])
 
     if e.order == 1:
-      draw_plain_or_colored_line( start, end)
+      if e.type == 'w':
+        draw_plain_or_colored_wedge( start, end)
+      elif e.type == 'h':
+        draw_plain_or_colored_hatch( start, end)
+      else:
+        draw_plain_or_colored_line( start, end)
       
     if e.order == 2:
       side = 0
