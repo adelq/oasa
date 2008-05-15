@@ -54,6 +54,9 @@ class cairo_out:
   # when scaling is 1.0
   default_options = {
     'scaling': 1.0,
+    # should atom coordinates be rounded to whole pixels before rendering?
+    # This improves image sharpness but might slightly change the geometry
+    'align_coords': True
     'show_hydrogens_on_hetero': False,
     'margin': 15,
     'line_width': 2.0,
@@ -144,6 +147,9 @@ class cairo_out:
     x1, y1, x2, y2 = None, None, None, None
     for v in mol.vertices:
       v.y = -v.y # flip coords - molfiles have them the other way around
+      if self.align_coords:
+        v.x = round( v.x)
+        v.y = round( v.y)
       if x1 == None or x1 > v.x:
         x1 = v.x
       if x2 == None or x2 < v.x:
@@ -460,7 +466,7 @@ class cairo_out:
     x1 = round( x)
     bbox = None
     for chunk in chunks:
-      y1 = y
+      y1 = round( y)
       if "sup" in chunk.attrs:
         y1 -= asc / 2
         self.context.set_font_size( int( font_size * 0.8))
