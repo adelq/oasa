@@ -69,6 +69,8 @@ class cairo_out:
     'color_atoms': True,
     'color_bonds': True,
     'space_around_atom': 2,
+    # proportion between subscript and normal letters size
+    'subscript_size_ratio': 0.8,
     # how much to shorten second line of double and triple bonds (0-0.5)
     'bond_second_line_shortening': 0.15,
     # the following two are just for playing
@@ -353,30 +355,44 @@ class cairo_out:
 
 
   def _draw_vertex( self, v):
+    pos = sum( [(a.x < v.x) and -1 or 1 for a in v.neighbors if abs(a.x-v.x)>0.2])
+
     if v.symbol != "C":
       x = v.x
       y = v.y
       text = v.symbol
+      hs = ""
       if self.show_hydrogens_on_hetero:
         if v.free_valency == 1:
-          text += "H"
+          hs = "H"
         elif v.free_valency > 1:
-          text += "H<sub>%d</sub>" % v.free_valency
-
+          hs = "H<sub>%d</sub>" % v.free_valency
+      if pos <= 0:
+        text += hs
+      else:
+        text = hs + text
+          
+      charge = ""
       if v.charge == 1:
-        text += "<sup>+</sup>"
+        charge = "<sup>+</sup>"
       elif v.charge == -1:
-        text += "<sup>&#x2212;</sup>"
+        charge = "<sup>&#x2212;</sup>"
       elif v.charge > 1:
-        text += "<sup>%d+</sup>" % v.charge
+        charge = "<sup>%d+</sup>" % v.charge
       elif v.charge < -1:
-        text += "<sup>%d&#x2212;</sup>" % abs( v.charge)
+        charge = "<sup>%d&#x2212;</sup>" % abs( v.charge)
+      print pos
+      if pos <= 0:
+        text += charge
+      else:
+        text = charge + text
 
       if self.color_atoms:
         color = self.atom_colors.get( v.symbol, (0,0,0))
       else:
         color = (0,0,0)
-      bbox = self._draw_text( (x,y), text, center_first_letter=True, color=color)
+      center_letter = pos <= 0 and 'first' or 'last'
+      bbox = self._draw_text( (x,y), text, center_letter=center_letter, color=color)
       bbox = geometry.expand_rectangle( bbox, self.space_around_atom)
       self._vertex_to_bbox[v] = bbox
 
@@ -413,7 +429,8 @@ class cairo_out:
     self.context.stroke()
 
 
-  def _draw_text( self, xy, text, font_name=None, font_size=None, center_first_letter=False, color=(0,0,0)):
+  def _draw_text( self, xy, text, font_name=None, font_size=None, center_letter=None,
+                  color=(0,0,0)):
     import xml.sax
     from sets import Set
     class text_chunk:
@@ -460,11 +477,25 @@ class cairo_out:
     self.context.set_line_width( 1.0)
     asc, desc, letter_height, _a, _b = self.context.font_extents()
     x, y = xy
-    if center_first_letter:
+    if center_letter == 'first':
       xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunks[0].text[0])
-      x -= x_advance / 2.0
-      y += height / 2.0
-    
+      x -= 0.5*x_advance
+      y += 0.5*height
+    elif center_letter == 'last':
+      # this is more complicated - we must do a dry run of the text layout
+      _dx = 0
+      for i,chunk in enumerate( chunks):
+        if "sup" in chunk.attrs or 'sub' in chunk.attrs:
+          self.context.set_font_size( int( font_size * self.subscript_size_ratio))
+        else:
+          self.context.set_font_size( font_size)
+        xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text)
+        _dx += x_advance
+      # last letter
+      xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text[-1])      
+      x -= _dx - 0.5*x_advance
+      y += 0.5*height
+      
     self.context.new_path()
     x1 = round( x)
     bbox = None
@@ -472,10 +503,10 @@ class cairo_out:
       y1 = round( y)
       if "sup" in chunk.attrs:
         y1 -= asc / 2
-        self.context.set_font_size( int( font_size * 0.8))
+        self.context.set_font_size( int( font_size * self.subscript_size_ratio))
       elif "sub" in chunk.attrs:
         y1 += asc / 2
-        self.context.set_font_size( int( font_size * 0.8))
+        self.context.set_font_size( int( font_size * self.subscript_size_ratio))
       else:
         self.context.set_font_size( font_size)
       xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text)
