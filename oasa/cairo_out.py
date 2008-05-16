@@ -59,7 +59,7 @@ class cairo_out:
     'align_coords': True,
     'show_hydrogens_on_hetero': False,
     'margin': 15,
-    'line_width': 2.0,
+    'line_width': 1.0,
     # how far second bond is drawn
     'bond_width': 6.0,
     'wedge_width': 6.0,
@@ -137,7 +137,7 @@ class cairo_out:
     context.set_source_rgb( *self.background_color)
     context.rectangle( 0, 0, width, height)
     context.fill()
-    context.set_source_surface( self.surface, -x1+self.margin*self.scaling, -y1+self.margin*self.scaling)
+    context.set_source_surface( self.surface, round( -x1+self.margin*self.scaling), round( -y1+self.margin*self.scaling))
     context.rectangle( 0, 0, width, height)
     context.fill()
     context.show_page()
@@ -150,8 +150,8 @@ class cairo_out:
     for v in mol.vertices:
       v.y = -v.y # flip coords - molfiles have them the other way around
       if self.align_coords:
-        v.x = round( v.x)
-        v.y = round( v.y)
+        v.x = self._round( v.x)
+        v.y = self._round( v.y)
       if x1 == None or x1 > v.x:
         x1 = v.x
       if x2 == None or x2 < v.x:
@@ -178,7 +178,7 @@ class cairo_out:
       options = self.context.get_font_options()
       options.set_antialias( cairo.ANTIALIAS_NONE)
       self.context.set_font_options( options)
-    self.context.translate( -x1*self.scaling+self.scaling*self._temp_margin, -y1*self.scaling+self.scaling*self._temp_margin)
+    self.context.translate( round( -x1*self.scaling+self.scaling*self._temp_margin), round( -y1*self.scaling+self.scaling*self._temp_margin))
     self.context.scale( self.scaling, self.scaling)
     self.context.rectangle( x1, y1, w, h)
     self.context.new_path()
@@ -192,6 +192,10 @@ class cairo_out:
     for v in mol.vertices:
       v.y = -v.y
 
+  def _round( self, x):
+    if self.line_width % 2:
+      return round( x) + 0.5
+    return round( x)
 
   def _draw_edge( self, e):
     def draw_plain_or_colored_line( _start, _end, second=False):
@@ -353,10 +357,31 @@ class cairo_out:
     else:
       return (x1, y1, x2, y2)
 
+  def _is_there_place( self, atom, x, y):
+    x1, y1 = atom.x, atom.y
+    angle1 = geometry.clockwise_angle_from_east( x-x1, y-y1)
+    for n in atom.neighbors:
+      angle = geometry.clockwise_angle_from_east( n.x-x1, n.y-y1)
+      if abs( angle - angle1) < 0.3:
+        return False
+    return True
+
+
+  def _find_place_around_atom( self, atom):
+    x, y = atom.x, atom.y
+    coords = [(a.x,a.y) for a in atom.neighbors]
+    # now we can compare the angles
+    angles = [geometry.clockwise_angle_from_east( x1-x, y1-y) for x1,y1 in coords]
+    angles.append( 2*math.pi + min( angles))
+    angles.sort()
+    angles.reverse()
+    diffs = misc.list_difference( angles)
+    i = diffs.index( max( diffs))
+    angle = (angles[i] +angles[i+1]) / 2
+    return angle
 
   def _draw_vertex( self, v):
     pos = sum( [(a.x < v.x) and -1 or 1 for a in v.neighbors if abs(a.x-v.x)>0.2])
-
     if v.symbol != "C":
       x = v.x
       y = v.y
@@ -371,7 +396,7 @@ class cairo_out:
         text += hs
       else:
         text = hs + text
-          
+      # charge
       charge = ""
       if v.charge == 1:
         charge = "<sup>+</sup>"
@@ -381,19 +406,49 @@ class cairo_out:
         charge = "<sup>%d+</sup>" % v.charge
       elif v.charge < -1:
         charge = "<sup>%d&#x2212;</sup>" % abs( v.charge)
-      if pos <= 0:
-        text += charge
-      else:
-        text = charge + text
-
+      if charge:
+        if self._is_there_place( v, v.x+3, v.y-2) or v.charge < 0:
+          # we place negative charge regardless of available place
+          # otherwise minus might be mistaken for a bond
+          text += charge
+          charge = ""
+      
+      # coloring
       if self.color_atoms:
         color = self.atom_colors.get( v.symbol, (0,0,0))
       else:
         color = (0,0,0)
       center_letter = pos <= 0 and 'first' or 'last'
       bbox = self._draw_text( (x,y), text, center_letter=center_letter, color=color)
-      bbox = geometry.expand_rectangle( bbox, self.space_around_atom)
-      self._vertex_to_bbox[v] = bbox
+      self._vertex_to_bbox[v] = geometry.expand_rectangle( bbox, self.space_around_atom)
+
+      # sometimes charge is done here, if it wasn't done before
+      if charge:
+        assert v.charge > 0
+        # if charge was not dealt with we change its appearance from 2+ to ++
+        charge = v.charge * "+"
+        if self._is_there_place( v, v.x, v.y-10):
+          angle = 1.5*math.pi
+        elif self._is_there_place( v, v.x, v.y+10):
+          angle = 0.5*math.pi
+        else:
+          angle = self._find_place_around_atom( v)
+        self.context.set_font_size( self.subscript_size_ratio * self.font_size)
+        xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( charge)
+        x0 = v.x + 40*math.cos( angle)
+        y0 = v.y + 40*math.sin( angle)
+        line = (v.x,v.y,x0,y0)
+        charge_bbox = [x0-0.5*width,y0-0.5*height,x0+0.5*width,y0+0.5*height]
+        x1, y1 = geometry.intersection_of_line_and_rect( line, bbox, round_edges=0)
+        x2, y2 = geometry.intersection_of_line_and_rect( line, charge_bbox, round_edges=0)
+        x2, y2 = geometry.elongate_line( x1,y1,x2,y2, -self.space_around_atom)
+        x = x0 + x1 - x2
+        y = y0 + y1 - y2
+        # draw
+        self.context.set_source_rgb( *color)
+        self.context.move_to( round( x-xbearing-0.5*width), round( y+0.5*height))
+        self.context.show_text( charge)
+
 
 
   ## ------------------------------ lowlevel drawing methods ------------------------------
@@ -473,10 +528,13 @@ class cairo_out:
     # font properties
     self.context.select_font_face( font_name)
     self.context.set_font_size( font_size)
-    self.context.set_line_width( 1.0)
     asc, desc, letter_height, _a, _b = self.context.font_extents()
     x, y = xy
     if center_letter == 'first':
+      if "sup" in chunks[0].attrs or 'sub' in chunks[0].attrs:
+        self.context.set_font_size( int( font_size * self.subscript_size_ratio))
+      else:
+        self.context.set_font_size( font_size)
       xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunks[0].text[0])
       x -= 0.5*x_advance
       y += 0.5*height
@@ -545,9 +603,9 @@ class cairo_out:
     
     
   def _create_cairo_path( self, points, closed=False):
-    x, y = points.pop( 0)
+    x, y = points[0]
     self.context.move_to( x, y)
-    for (x,y) in points:
+    for (x,y) in points[1:]:
       self.context.line_to( x, y)
     if closed:
       self.context.close_path()
