@@ -381,7 +381,6 @@ class cairo_out:
         charge = "<sup>%d+</sup>" % v.charge
       elif v.charge < -1:
         charge = "<sup>%d&#x2212;</sup>" % abs( v.charge)
-      print pos
       if pos <= 0:
         text += charge
       else:
