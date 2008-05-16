@@ -38,12 +38,12 @@ class cairo_out:
 
   Usage:
 
-  # attributes can be set in constructor or afterwards as normal attributes
-  # default options are set ans commented in the default_options dictionary below
   c = cairo_out( scaling=2.0, margin=10, font_size=20, bond_width=6)
   c.show_hydrogens_on_hetero = True
   c.mol_to_cairo( mol, 'outfile.png') # mol is oasa molecule
-  
+
+  # attributes can be set in constructor or afterwards as normal attributes
+  # default options are set and described in the cairo_out.default_options dictionary
   """
 
   _temp_margin = 200
@@ -64,7 +64,7 @@ class cairo_out:
     'bond_width': 6.0,
     'wedge_width': 6.0,
     'font_name': "Arial",
-    'font_size': 20,
+    'font_size': 16,
     'background_color': (1,1,1),
     'color_atoms': True,
     'color_bonds': True,
