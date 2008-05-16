@@ -578,7 +578,7 @@ class cairo_out:
       _bbox = [x1+xbearing, y1+ybearing, x1+xbearing+width, y1+ybearing+height]
       self._bboxes.append( _bbox)
       # store bbox for the first chunk only
-      if not bbox:
+      if not bbox or center_letter=='last':
         bbox = _bbox
       self.context.set_source_rgb( *color)
       self.context.move_to( x1, y1)

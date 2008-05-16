@@ -159,7 +159,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
     xy = k*xx + q
     # the result must be in the rectangle boundaries
     # but sometimes is not because rounding problems
-    if not ry0 < xy < ry1:
+    if not ry0 <= xy <= ry1:
       xx = lx0
       xy = ly0
   else:
@@ -177,7 +177,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
     yx = k*yy + q
     # the result must be in the rectangle boundaries
     # but sometimes is not because rounding problems
-    if not rx0 < yx < rx1:
+    if not rx0 <= yx <= rx1:
       yy = ly0
       yx = lx0
   else:
