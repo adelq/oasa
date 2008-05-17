@@ -148,7 +148,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
   ldx = lx1 - lx0
   ldy = ly1 - ly0
 
-  if abs( ldx) > 0:
+  if abs( ldx) > 0.0001:
     # we calculate using y = f(x)
     k = ldy/ldx
     q = ly0 - k*lx0
@@ -166,7 +166,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
     xx = lx0
     xy = ly0
     
-  if abs( ldy) > 0:
+  if abs( ldy) > 0.0001:
     # we calculate using x = f(y)
     k = ldx/ldy
     q = lx0 - k*ly0
