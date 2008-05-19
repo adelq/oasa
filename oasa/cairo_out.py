@@ -313,9 +313,18 @@ class cairo_out:
           if v != v1 and v!= v2:
             side += geometry.on_which_side_is_point( start+end, (v.x, v.y))
       # if neighbors did not decide either
-      if not side and in_ring:
-        # we don't want centered bonds inside rings
-        side = 1 # select arbitrary value
+      if not side and (in_ring or not has_shown_vertex):
+        if in_ring:
+          # we don't want centered bonds inside rings
+          side = 1 # select arbitrary value
+        else:
+          # bond between two unshown atoms - we want to center them only in some cases
+          if len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
+            # try to figure out which side is more towards the center of the molecule
+            side = reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y))
+                                          for a in self.molecule.vertices if a!=v1 and a!=v2])
+            if not side:
+              side = 1 # we choose arbitrary value, we don't want centering
       if side:
         draw_plain_or_colored_line( start, end)
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
