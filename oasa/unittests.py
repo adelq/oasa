@@ -310,6 +310,7 @@ class TestStereo2(unittest.TestCase):
               "N\C=C/C=C/Cl",
               "O\C(\N)=C/C=C\C=C\Cl",
               "O\C=C=C=C/N=C/Br",
+              "C/C(Cl)=C(\O)C",
               ]
     
   def _testformula(self, num):
@@ -348,6 +349,7 @@ class TestStereo3(unittest.TestCase):
               "N\C=C/C=C/Cl",
               "O\C(\N)=C/C=C\C=C\Cl",
               "O\C=C=C=C/N=C/Br",
+              "C/C(Cl)=C(\O)N",
               ]
     
   def _testformula(self, num):
@@ -369,8 +371,14 @@ class TestStereo3(unittest.TestCase):
     sts2 = [create_st_sum( st) for st in mol.stereochemistry]
     for stsum in sts2:
       if not stsum in sts1:
-        print stsum, sts1
-      self.assertEqual( (stsum in sts1), True)
+        # not necessarily an error, we must count changes
+        changes = 0
+        for (v1,v2) in zip( stsum, sts1[0]):
+          if v1 != v2:
+            changes += 1
+        self.assertEqual( changes % 2, 0)
+      else:
+        self.assertEqual( (stsum in sts1), True)
 
 # this creates individual test for substructures
 for i in range( len( TestStereo3.formulas)):

@@ -218,10 +218,13 @@ class coords_generator:
       
     to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
     done = [a for a in v.get_neighbors() if a not in to_go]
-    if len( done) == 1 and len( to_go) == 1:
-      # only simple non-branched chain
+    if len( done) == 1 and (len( to_go) == 1 or len( to_go) == 2 and [1 for _t in to_go if _t in self.stereo]):
+      # only simple non-branched chain or branched with stereo
       d = done[0]
-      t = to_go[0]
+      if len( to_go) == 1:
+        t = to_go[0]
+      else:
+        t = [_t for _t in to_go if _t in self.stereo][0]
       # decide angle
       angle_to_add = 120
       bond = v.get_edge_leading_to( t)
@@ -254,6 +257,8 @@ class coords_generator:
       an = angle + deg_to_rad( angle_to_add)
       t.x = v.x + self.bond_length*cos( an)
       t.y = v.y + self.bond_length*sin( an)
+      if len( to_go) > 1:
+        self.process_atom_neigbors( v)
     else:
       # branched chain
       angles = [geometry.clockwise_angle_from_east( at.x-v.x, at.y-v.y) for at in done]
@@ -502,7 +507,8 @@ if __name__ == '__main__':
 
   #sm = "CP(c1ccccc1)(c2ccccc2)c3ccccc3"
   #sm = 'C1CC2C1CCCC3C2CC(CCC4)C4C3'
-  sm = "C\C=C/CC#CCCCC\C=C=C=C/CC"
+  #sm = "C\C=C/CC#CCCCC\C=C=C=C/CC"
+  sm = "C/C(Cl)=C(\O)C"
   #sm = "C1CCC1C/C=C\CCCCC"
   #sm = "C25C1C3C5C4C2C1C34"
   #sm = 'C1CC2CCC1CC2'
