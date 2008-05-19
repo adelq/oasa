@@ -392,6 +392,8 @@ class cairo_out:
           hs = "H"
         elif v.free_valency > 1:
           hs = "H<sub>%d</sub>" % v.free_valency
+      if not hs:
+        pos = -1
       if pos <= 0:
         text += hs
       else:
