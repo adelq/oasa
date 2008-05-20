@@ -1,0 +1,19 @@
+RELEASE - OASA 0.12.1
+----------------------------------------
+
+ * bugfixes - coords_generator - coordinate generation obeys E/Z stereochemistry
+   	      		       	 even for branched structures
+   	    - cairo_out - charges should no longer shift placement of atom symbols
+	      		- H2N (hydrogen before atom symbol) should be placed properly
+			- bonds that have exactly 45 degree angle should no longer disappear
+
+ * enhancements - cairo_out - more elaborate algorithm is used to decide
+   		  	      about centering of a double bond
+
+ * acknowledgments - Noel O'Boyle - for merciless bug hunting
+ 
+
+RELEASE - OASA 0.12.0
+----------------------------------------
+
+ * first public release
