@@ -733,11 +733,11 @@ class molecule( graph.graph):
         if len( ends) != 2: # two ends is the only thing we are prepared to handle
           continue
         end1, end2 = ends
-        line = (end1.x, end1.y, end2.x, end2.y)
         # set stereochemistry for all neighbors of both ends
         for e1,n1 in end1.get_neighbor_edge_pairs():
-          #s1 = geometry.on_which_side_is_point( line, (n1.x,n1.y))
           plane1 = geometry.plane_normal_from_3_points( (n1.x,n1.y,n1.z),(end1.x,end1.y,end1.z),(end2.x,end2.y,end2.z))
+          if plane1 == None:
+            continue # some coords were missing
           if not e1 in path:
             for e2,n2 in end2.get_neighbor_edge_pairs():
               if not e2 in path:

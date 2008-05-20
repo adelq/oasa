@@ -459,6 +459,9 @@ def is_point_beween_points_of_line( line, point):
 
 
 def plane_normal_from_3_points( point1, point2, point3):
+  for point in (point1,point2,point3):
+    if None in point:
+      return None  # some coords are missing
   import transform
   x1,y1,z1 = point1
   x2,y2,z2 = point2
