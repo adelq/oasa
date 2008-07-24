@@ -85,7 +85,7 @@ class molfile( plugin):
     order = read_molfile_value( file, 3, conversion=int)
     type = read_molfile_value( file, 3, conversion=int)
     type_remap = { 0: 'n', 1: 'w', 6: 'h', 4: 'a'}
-    type = type_remap[ type]
+    type = type_remap.get( type, 'n')
     file.readline() # next line please
     b = self.structure.create_edge()
     b.order = order
@@ -156,7 +156,7 @@ class molfile( plugin):
     a2 = self.structure.vertices.index( v2) +1
     order = b.order
     type_remap = { 'n': 0, 'w': 1, 'h': 6, 'a': 4, 'b': 0, 'd': 0}
-    type = type_remap[ b.type]
+    type = type_remap.get( b.type, 0)
     rest = "  0  0  0"
     #         1  2  3  4 5
     return "%3d%3d%3d%3d%s" % (a1,a2,order,type,rest)

@@ -36,7 +36,7 @@ import coords_generator
 from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
 import select
 import sys
-
+from stereochemistry import cis_trans_stereochemistry
 
 class inchi( plugin):
 
@@ -48,7 +48,13 @@ class inchi( plugin):
   proton_acceptors = ['P','N','S','O']
   electron_donors = ['O','N','S','P']
   electron_acceptors = ['B']
-  
+
+  stereo_remap = {"+": cis_trans_stereochemistry.OPPOSITE_SIDE,
+                  "-": cis_trans_stereochemistry.SAME_SIDE,
+                  "?": cis_trans_stereochemistry.UNDEFINED,
+                  "u": cis_trans_stereochemistry.UNDEFINED,
+                  }
+
 
   def __init__( self, structure=None):
     self.structure = structure
@@ -103,12 +109,16 @@ class inchi( plugin):
 
 
 
-
   def get_layer( self, prefix):
     for l in self.layers:
       if l.startswith( prefix):
         return l[1:]
 
+  def get_atom_with_inchi_number( self, number):
+    assert type( number) == int
+    for v in self.structure.vertices:
+      if v.properties_['inchi_number'] == number:
+        return v
 
   def read_inchi( self, text):
     try:
@@ -161,6 +171,7 @@ class inchi( plugin):
       #self._deal_with_valencies()
       self.compensate_for_forced_charges()
       self.structure.add_missing_bond_orders()
+      #self.read_double_bond_stereo_layer()
 
       # here we check out if the molecule seems ok
       fvs = [v for v in self.structure.vertices if v.free_valency]
@@ -451,6 +462,38 @@ class inchi( plugin):
               break
       assert p < old_p
 
+
+  def read_double_bond_stereo_layer( self):
+    def get_lowest_numbered_neighbor( atom, verbotten_atom):
+      neighs = [(n.properties_.get('inchi_number',1000000), n)
+                for n in atom.neighbors
+                if n is not verbotten_atom and "inchi_number" in n.properties_]
+      if neighs:
+        neighs.sort( reverse=True)
+        return neighs[0][1]
+      else:
+        # we take the only one that is there (if any)
+        neighs = [n for n in atom.neighbors if n is not verbotten_atom]
+        if neighs:
+          return neighs[0]
+        else:
+          raise oasa_inchi_error( "No neigbors on atom with stereo information!")
+        
+
+    
+    layer = self.get_layer( "b")
+    if not layer:
+      return
+    for a1,a2,sign in re.findall( "(\d+)-(\d+)([-+?u])", layer):
+      atom1 = self.get_atom_with_inchi_number( int( a1))
+      atom2 = self.get_atom_with_inchi_number( int( a2))
+      bond = self.structure.get_edge_between( atom1, atom2)
+      # we need neighbors with lowest inchi_number
+      neigh1 = get_lowest_numbered_neighbor( atom1, atom2)
+      neigh2 = get_lowest_numbered_neighbor( atom2, atom1)
+      st = cis_trans_stereochemistry( references=[neigh1,atom1,atom2,neigh2],
+                                      value=self.stereo_remap[sign])
+      self.structure.add_stereochemistry( st)
 
 
 
@@ -864,7 +907,7 @@ if __name__ == '__main__':
   def main( text, cycles):
     t1 = time.time()
     for jj in range( cycles):
-      mol = text_to_mol( text, calc_coords=False, include_hydrogens=False)
+      mol = text_to_mol( text, calc_coords=True, include_hydrogens=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
       print "  inchi:  ", mol_to_text( mol, fixed_hs=True)
@@ -874,7 +917,7 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "1/C6H6/c1-2-3-4-5-6-1/h1-6H"
+  inch = "InChI=1/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3-,6-4+" #1/C6H6/c1-2-3-4-5-6-1/h1-6H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

@@ -55,8 +55,9 @@ class stereochemistry( object):
 
 class cis_trans_stereochemistry( stereochemistry):
 
-  SAME_SIDE = 0
+  UNDEFINED = 0
   OPPOSITE_SIDE = 1
+  SAME_SIDE = 2
 
   # override of value
   def _set_value( self, value):
