@@ -109,6 +109,7 @@ class cairo_out:
     'align_coords': True,
     # the following also draws hydrogens on shown carbons
     'show_hydrogens_on_hetero': False,
+    'show_carbon_symbol': False, 
     'margin': 15,
     'line_width': 1.0,
     # how far second bond is drawn
@@ -441,7 +442,7 @@ class cairo_out:
     if 'show_symbol' in v.properties_:
       show_symbol = v.properties_['show_symbol']
     else:
-      show_symbol = (v.symbol != "C" or v.degree == 0)
+      show_symbol = (v.symbol != "C" or v.degree == 0 or self.show_carbon_symbol)
     if show_symbol:
       x = v.x
       y = v.y
@@ -700,7 +701,7 @@ if __name__ == "__main__":
   mol.vertices[0].properties_['show_hydrogens'] = False
   mol.vertices[1].properties_['show_symbol'] = False
   mol.vertices[2].properties_['show_symbol'] = True
-  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True)
+  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, show_carbon_symbol=True)
 
 ##   import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
