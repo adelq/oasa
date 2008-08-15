@@ -56,10 +56,11 @@ class cairo_out:
                          }
 
   ## taken from: http://bodr.svn.sourceforge.net/viewvc/*checkout*/bodr/trunk/bodr/elements/elements.xml?revision=34&content-type=text%2Fplain
+  ## C anh H modified to be black
   atom_colors_full = {
-    'H': (1.00,1.00,1.00), 'He': (0.85,1.00,1.00),
+    'H': (0.00,0.00,0.00), 'He': (0.85,1.00,1.00),
     'Li': (0.80,0.50,1.00), 'Be': (0.76,1.00,0.00), 'B': (1.00,0.71,0.71),
-    'C': (0.50,0.50,0.50), 'N': (0.05,0.05,1.00), 'O': (1.00,0.05,0.05),
+    'C': (0.0,0.0,0.0), 'N': (0.05,0.05,1.00), 'O': (1.00,0.05,0.05),
     'F': (0.70,1.00,1.00), 'Ne': (0.70,0.89,0.96), 'Na': (0.67,0.36,0.95),
     'Mg': (0.54,1.00,0.00), 'Al': (0.75,0.65,0.65), 'Si': (0.50,0.60,0.60),
     'P': (1.00,0.50,0.00), 'S': (1.00,1.00,0.19), 'Cl': (0.12,0.94,0.12),
@@ -106,6 +107,7 @@ class cairo_out:
     # should atom coordinates be rounded to whole pixels before rendering?
     # This improves image sharpness but might slightly change the geometry
     'align_coords': True,
+    # the following also draws hydrogens on shown carbons
     'show_hydrogens_on_hetero': False,
     'margin': 15,
     'line_width': 1.0,
@@ -436,12 +438,16 @@ class cairo_out:
 
   def _draw_vertex( self, v):
     pos = sum( [(a.x < v.x) and -1 or 1 for a in v.neighbors if abs(a.x-v.x)>0.2])
-    if v.symbol != "C":
+    if 'show_symbol' in v.properties_:
+      show_symbol = v.properties_['show_symbol']
+    else:
+      show_symbol = (v.symbol != "C" or v.degree == 0)
+    if show_symbol:
       x = v.x
       y = v.y
       text = v.symbol
       hs = ""
-      if self.show_hydrogens_on_hetero:
+      if self.show_hydrogens_on_hetero or v.properties_.get( 'show_hydrogens', False):
         if v.free_valency == 1:
           hs = "H"
         elif v.free_valency > 1:
@@ -681,20 +687,23 @@ class cairo_out:
     return bbox
 
 
-def mol_to_png( mol, filename):
-  c = cairo_out()
+def mol_to_png( mol, filename, **kw):
+  c = cairo_out( **kw)
   c.mol_to_cairo( mol, filename)
 
 
 if __name__ == "__main__":
 
-##   import smiles
+  import smiles
 
-##   mol = smiles.text_to_mol( "c1cc(C#N)ccc1N", calc_coords=30)
+  mol = smiles.text_to_mol( "SC=CC", calc_coords=30)
+  mol.vertices[0].properties_['show_hydrogens'] = False
+  mol.vertices[1].properties_['show_symbol'] = False
+  mol.vertices[2].properties_['show_symbol'] = True
+  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True)
+
+##   import inchi
+##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
 ##   mol_to_png( mol, "output.png")
-
-  import inchi
-  mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
-  mol_to_png( mol, "output.png")
 
 
