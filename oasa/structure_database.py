@@ -40,6 +40,10 @@ def create_database():
   inchikey TEXT,
   smiles TEXT);""")
   connection.commit()
+  c.execute( """CREATE TABLE synonyms (
+  id INTEGER,
+  synonym TEXT);""")
+  connection.commit()
   c.close()
   connection.close()
 
@@ -116,10 +120,14 @@ def get_compounds_from_database( database_file=None, **kw):
         del kw['inchi']
     search = ["%s=?" % k for k in kw.keys()]
     values = kw.values()
+    tables = "structures"
+    if "synonym" in kw:
+        tables = "structures, synonyms"
+        search.append( "structures.id=synonyms.id")
     if search:
-        sql = "SELECT * FROM structures WHERE %s" % (" AND ".join( search))
+        sql = "SELECT structures.* FROM %s WHERE %s" % (tables, " AND ".join( search))
     else:
-        sql = "SELECT * FROM structures"
+        sql = "SELECT structures.* FROM %s" % (tables)
     connection = sqlite.connect( Config.database_file)
     c = connection.cursor()
     try:
@@ -127,9 +135,13 @@ def get_compounds_from_database( database_file=None, **kw):
     except sqlite.OperationalError, e:
         raise oasa_exceptions.oasa_error( "Error reading from structure database: '%s'" % e)
     ret = []
+    c2 = connection.cursor()
     for row in c:
-       ret.append( row)
+        c2.execute( "SELECT synonym FROM synonyms WHERE id=%d" % row[0])
+        synonyms = list( c2)
+        ret.append( row+([x[0] for x in synonyms],))
     c.close()
+    c2.close()
     connection.close()
     return ret
 
@@ -184,6 +196,86 @@ def filter_src_file( infilename, name_cutoff=26, atom_count_cutoff=1000):
     f.close()
     return added, ignored
 
+def _is_cid_in_db( cid, cursor):
+    cursor.execute( "SELECT id FROM structures WHERE id=%s" % cid)
+    if list( cursor):
+        return True
+    else:
+        return False
+
+def add_synonyms_old( fname, only_first=3):
+    """this version checks each cid against databse, one by one,
+    this is slow, but requires less memory"""
+    f = _open_infile( fname)
+    connection = sqlite.connect( Config.database_file)
+    c = connection.cursor()
+    c2 = connection.cursor()
+    i = 0
+    last_cid = None
+    line_count = 0
+    for line in f:
+        line_count += 1
+        parts = line.split()
+        cid = parts[0]
+        if last_cid != cid:
+            last_cid == cid
+            count = 1
+            exists = _is_cid_in_db( cid, c2)
+        else:
+            count += 1
+        if exists and count <= only_first:
+            name = " ".join( parts[1:])
+            c.execute( "INSERT INTO synonyms (id,name) VALUES (?,?);", (cid, name))
+            i += 1
+            if i % 500 == 0:
+                connection.commit()
+            if i % 10000 == 0:
+                print "Added %d" % i
+        if line_count % 100000 == 0:
+            print "-- %dk lines --" % (line_count // 1000)
+        if line_count % 1000000 == 0:
+            break
+    connection.commit()
+    return i    
+
+
+def add_synonyms( fname, only_first=3):
+    """this version takes all cids into the memory for later comparison and is therefore
+    much faster, it can however consume much memory for big databases"""
+    f = _open_infile( fname)
+    connection = sqlite.connect( Config.database_file)
+    c = connection.cursor()
+    c2 = connection.cursor()
+    i = 0
+    last_cid = None
+    line_count = 0
+    c.execute( "SELECT id FROM structures;")
+    cids = set( [row[0] for row in c])
+    for line in f:
+        line_count += 1
+        parts = line.split()
+        cid = int( parts[0])
+        if last_cid != cid:
+            last_cid = cid
+            count = 1
+            exists = cid in cids
+        else:
+            count += 1
+        if exists and count <= only_first:
+            name = " ".join( parts[1:])
+            c.execute( "INSERT INTO synonyms (id,synonym) VALUES (?,?);", (cid, name))
+            i += 1
+            if i % 500 == 0:
+                connection.commit()
+            if i % 10000 == 0:
+                print "Added %d" % i
+        if line_count % 1000000 == 0:
+            print "-- %dk lines --" % (line_count // 1000)
+        #if line_count % 1000000 == 0:
+        #    break
+    connection.commit()
+    return i    
+
 
 
 if __name__ == "__main__":
@@ -192,19 +284,48 @@ if __name__ == "__main__":
 ##     print >> sys.stderr, a, i
 ##     sys.exit()
 
-    if len( sys.argv) > 1:
-        fname = sys.argv[1]
-        if os.path.exists( fname):
-            if not os.path.exists( Config.database_file):
-                create_database()
-            #try:
-            added, ignored = fill_database( fname)
-            print "Added: %d, Ignored: %d" % (added, ignored)
-            #except:
-            #    print "given file must be a text file with one compound per line in format 'InChI CID ### name'"
-        else:
-            print "you must supply a valid filename to update the database or no argument for a test to run"
-    else:
+    from optparse import OptionParser
+    op = OptionParser(usage="python %prog command [options]")
+
+    op.add_option( "-c", "--command", action="store",
+                   dest="command", default="test",
+                   help="command - what to do; one of 'test','update','rebuild','synonyms'")
+    op.add_option( "-s", "--synonyms", action="store",
+                   dest="synonyms", default="",
+                   help="file containing synonyms")
+    (options, args) = op.parse_args()
+
+    if options.command == "test":
         print get_compounds_from_database( inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
         import smiles
         print find_molecule_in_database( smiles.text_to_mol("C1CCC=CC1"))
+        print find_molecule_in_database( smiles.text_to_mol("c1ccccc1C"))
+        print get_compounds_from_database( synonym="toluene")
+    elif options.command in ('update','rebuild','synonyms'):
+        if not options.command == 'synonyms':
+            if len( args) >= 1:
+                fname = args[0]
+            else:
+                print >> sys.stderr, "You must supply a valid filename of a file containing structures to be read."
+                sys.exit()
+            if options.command == 'rebuild' and os.path.exists( Config.database_file):
+                try:
+                    os.remove( Config.database_file)
+                except Exception, e:
+                    print >> sys.stderr, "Old database file could not be removed. Reason: %s" % e
+                    print >> sys.stderr, "Quitting.."
+                    sys.exit()
+                else:
+                    create_database()
+            added, ignored = fill_database( fname)
+            print "Added: %d, Ignored: %d" % (added, ignored)
+        if options.synonyms:
+            print "Adding synonyms"
+            #import profile
+            #profile.run( 'add_synonyms( options.synonyms)')
+            i = add_synonyms( options.synonyms)
+            #i = 0
+            print "Added %d synonyms" % i
+    else:
+        if options.command not in ("test","rebuild","update"):
+            print >> sys.argv, "Invalid action '%s'" % options.command
