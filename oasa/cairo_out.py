@@ -367,10 +367,13 @@ class cairo_out:
           side = 1 # select arbitrary value
         else:
           # bond between two unshown atoms - we want to center them only in some cases
-          if len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
+          if len( v1.neighbors) == 1 and len( v2.neighbors) == 1:
+            # both atoms have only one neighbor 
+            side = 0
+          elif len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
             # try to figure out which side is more towards the center of the molecule
             side = reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y))
-                                          for a in self.molecule.vertices if a!=v1 and a!=v2])
+                                          for a in self.molecule.vertices if a!=v1 and a!=v2], 0)
             if not side:
               side = 1 # we choose arbitrary value, we don't want centering
       if side:
@@ -697,11 +700,11 @@ if __name__ == "__main__":
 
   import smiles
 
-  mol = smiles.text_to_mol( "SC=CC", calc_coords=30)
-  mol.vertices[0].properties_['show_hydrogens'] = False
-  mol.vertices[1].properties_['show_symbol'] = False
-  mol.vertices[2].properties_['show_symbol'] = True
-  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, show_carbon_symbol=True)
+  mol = smiles.text_to_mol( "C=C", calc_coords=30)
+  #mol.vertices[0].properties_['show_hydrogens'] = False
+  #mol.vertices[1].properties_['show_symbol'] = False
+  #mol.vertices[2].properties_['show_symbol'] = True
+  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, show_carbon_symbol=False)
 
 ##   import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
