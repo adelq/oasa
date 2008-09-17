@@ -56,14 +56,15 @@ class cairo_out:
                          }
 
   ## taken from: http://bodr.svn.sourceforge.net/viewvc/*checkout*/bodr/trunk/bodr/elements/elements.xml?revision=34&content-type=text%2Fplain
-  ## C anh H modified to be black
+  ## C and H modified to be black
+  ## F,S,Cl modified to a darker color (suggested by Toon Verstraelen)
   atom_colors_full = {
     'H': (0.00,0.00,0.00), 'He': (0.85,1.00,1.00),
     'Li': (0.80,0.50,1.00), 'Be': (0.76,1.00,0.00), 'B': (1.00,0.71,0.71),
     'C': (0.0,0.0,0.0), 'N': (0.05,0.05,1.00), 'O': (1.00,0.05,0.05),
-    'F': (0.70,1.00,1.00), 'Ne': (0.70,0.89,0.96), 'Na': (0.67,0.36,0.95),
+    'F': (0.30,0.70,0.70), 'Ne': (0.70,0.89,0.96), 'Na': (0.67,0.36,0.95),
     'Mg': (0.54,1.00,0.00), 'Al': (0.75,0.65,0.65), 'Si': (0.50,0.60,0.60),
-    'P': (1.00,0.50,0.00), 'S': (1.00,1.00,0.19), 'Cl': (0.12,0.94,0.12),
+    'P': (1.00,0.50,0.00), 'S': (0.80,0.80,0.20), 'Cl': (0.00,0.80,0.00),
     'Ar': (0.50,0.82,0.89), 'K': (0.56,0.25,0.83), 'Ca': (0.24,1.00,0.00),
     'Sc': (0.90,0.90,0.90), 'Ti': (0.75,0.76,0.78), 'V': (0.65,0.65,0.67),
     'Cr': (0.54,0.60,0.78), 'Mn': (0.61,0.48,0.78), 'Fe': (0.50,0.48,0.78),
@@ -700,11 +701,11 @@ if __name__ == "__main__":
 
   import smiles
 
-  mol = smiles.text_to_mol( "C=C", calc_coords=30)
+  mol = smiles.text_to_mol( "FCCSCl", calc_coords=30)
   #mol.vertices[0].properties_['show_hydrogens'] = False
   #mol.vertices[1].properties_['show_symbol'] = False
   #mol.vertices[2].properties_['show_symbol'] = True
-  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, show_carbon_symbol=False)
+  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True)
 
 ##   import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)

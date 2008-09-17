@@ -285,7 +285,7 @@ if __name__ == "__main__":
 ##     sys.exit()
 
     from optparse import OptionParser
-    op = OptionParser(usage="python %prog command [options]")
+    op = OptionParser(usage="python %prog -c command [options] [structure file]")
 
     op.add_option( "-c", "--command", action="store",
                    dest="command", default="test",
