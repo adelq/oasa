@@ -297,6 +297,7 @@ if __name__ == "__main__":
 
     if options.command == "test":
         print get_compounds_from_database( inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
+        print get_compounds_from_database( smiles="O")
         import smiles
         print find_molecule_in_database( smiles.text_to_mol("C1CCC=CC1"))
         print find_molecule_in_database( smiles.text_to_mol("c1ccccc1C"))
@@ -308,15 +309,15 @@ if __name__ == "__main__":
             else:
                 print >> sys.stderr, "You must supply a valid filename of a file containing structures to be read."
                 sys.exit()
-            if options.command == 'rebuild' and os.path.exists( Config.database_file):
-                try:
-                    os.remove( Config.database_file)
-                except Exception, e:
-                    print >> sys.stderr, "Old database file could not be removed. Reason: %s" % e
-                    print >> sys.stderr, "Quitting.."
-                    sys.exit()
-                else:
-                    create_database()
+            if options.command == 'rebuild':
+                if os.path.exists( Config.database_file):
+                    try:
+                        os.remove( Config.database_file)
+                    except Exception, e:
+                        print >> sys.stderr, "Old database file could not be removed. Reason: %s" % e
+                        print >> sys.stderr, "Quitting.."
+                        sys.exit()
+                create_database()
             added, ignored = fill_database( fname)
             print "Added: %d, Ignored: %d" % (added, ignored)
         if options.synonyms:
