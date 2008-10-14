@@ -103,11 +103,11 @@ class linear_formula( object):
         chunks = reverse_chunks( chunks)
       for chunk in chunks:
         if chunk:
-          as = self.chunk_to_atoms( chunk, mol)
-          if as == None:
+          atms = self.chunk_to_atoms( chunk, mol)
+          if atms == None:
             return None
           last_atom = self.get_last_free_atom( mol)
-          for a in as:
+          for a in atms:
             mol.add_vertex( a)
             if last_atom:
               max_val = min( last_atom.free_valency, a.free_valency, 3)

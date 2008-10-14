@@ -738,13 +738,13 @@ class graph( object):
 ##     while attrs or threads:
 ##       if len( threads) < processes and attrs:
 ##         if len( attrs) > group_by:
-##           as = attrs[0:group_by]
+##           _as = attrs[0:group_by]
 ##           del attrs[0:group_by]
 ##         else:
-##           as = attrs
+##           _as = attrs
 ##           attrs = []
 
-##         t = MyThread( self.mark_vertices_with_distance_from, as)
+##         t = MyThread( self.mark_vertices_with_distance_from, _as)
 ##         threads.append( t)
 ##         t.start()
 ##       else:

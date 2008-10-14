@@ -43,19 +43,19 @@ class coords_generator:
         for a in (st.references[0],st.references[-1]):
           self.stereo[a] = self.stereo.get( a, []) + [st]
     # at first we have a look if there is already something with coords
-    as = Set( [a for a in mol.vertices if a.x != None and a.y != None])
+    atms = Set( [a for a in mol.vertices if a.x != None and a.y != None])
     # then we check if they are in a continuos block but not the whole molecule
     # (in this case we regenerate all the coords if force, otherwise exit)
-    if len( as) == len( mol.vertices) and not force:
+    if len( atms) == len( mol.vertices) and not force:
       return 
-    elif not force and as and not len( as) == len( mol.vertices):
+    elif not force and atms and not len( atms) == len( mol.vertices):
       # this is here just to setup the molecule well
       self.rings = mol.get_smallest_independent_cycles()
       # it is - we can use it as backbone
-      sub = mol.get_new_induced_subgraph( as, mol.vertex_subgraph_to_edge_subgraph( as))
+      sub = mol.get_new_induced_subgraph( atms, mol.vertex_subgraph_to_edge_subgraph( atms))
       subs = [comp for comp in sub.get_connected_components()]
       if len( subs) == 1:
-        backbone = as
+        backbone = atms
       else:
         # we should not be here, but when yes than we have to solve it
         maxlength = max( map( len, subs))

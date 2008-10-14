@@ -321,8 +321,8 @@ class substructure_match( object):
   def get_significant_atoms( self):
     ret = []
     for i,af in enumerate( self.atoms_found):
-      as = self.atoms_searched[i]
-      if as not in self.substructure.atoms_to_ignore:
+      atms = self.atoms_searched[i]
+      if atms not in self.substructure.atoms_to_ignore:
         ret.append( af)
     return ret
 
