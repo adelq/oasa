@@ -149,7 +149,7 @@ class svg_out:
   def _draw_vertex( self, v):
     parent = self._create_parent( v, self.top)
 
-    if v.symbol != "C":
+    if v.symbol != "C" or v.charge != 0 or v.multiplicity != 1:
       x = v.x - 5
       y = v.y + 6
       x1 = x
@@ -162,7 +162,7 @@ class svg_out:
           text += "H"
         elif v.free_valency > 1:
           text += "H%d" % v.free_valency
-
+      # charge
       if v.charge == 1:
         text += "+"
       elif v.charge == -1:
@@ -171,7 +171,11 @@ class svg_out:
         text += str( v.charge) + "+"
       elif v.charge < -1:
         text += str( v.charge)
-        
+      # radicals
+      if v.multiplicity in (2,3):
+        self._draw_circle( parent, self.transformer.transform_xy((x2+x1)/2,y-17), fill_color="#000", opacity=1, radius=3)
+        if v.multiplicity == 3:
+          self._draw_circle( parent, self.transformer.transform_xy((x2+x1)/2,y+5), fill_color="#000", opacity=1, radius=3)  
       self._draw_rectangle( parent, self.transformer.transform_4( (x1, y1, x2, y2)), fill_color="#fff")
       self._draw_text( parent, self.transformer.transform_xy(x,y), text)
 
@@ -206,7 +210,7 @@ class svg_out:
                                   ( 'fill', fill_color),
                                   ( 'stroke', stroke_color)))
 
-  def _draw_circle( self, parent, xy, radius=5, fill_color="#fff", stroke_color="#fff", id=""):
+  def _draw_circle( self, parent, xy, radius=5, fill_color="#fff", stroke_color="#fff", id="", opacity=0):
     x, y = xy
     el = dom_extensions.elementUnder( parent, 'ellipse',
                                       (( 'cx', str( x)),
@@ -216,8 +220,8 @@ class svg_out:
                                        ( 'stroke-width', "1"),
                                        ( 'fill', fill_color),
                                        ( 'stroke', stroke_color),
-                                       ( 'fill-opacity', "0"),
-                                       ( 'stroke-opacity', "0"),
+                                       ( 'fill-opacity', str(opacity)),
+                                       ( 'stroke-opacity', str(opacity)),
                                       ))
     if id:
       el.setAttribute( "id", id)
@@ -233,8 +237,12 @@ def mol_to_svg( mol, filename):
 
 if __name__ == "__main__":
 
-  import inchi
-  mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
+  #import inchi
+  #mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
+  #import smiles
+  #mol = smiles.text_to_mol( "CC[CH]", calc_coords=40)
+  import molfile
+  mol = molfile.file_to_mol( file( "/home/beda/bkchem/bkchem/untitled0.mol", "r"))
   mol_to_svg( mol, "output.svg")
 
 

@@ -59,9 +59,11 @@ class molfile( plugin):
       b, i, j = self._read_bond( file)
       self.structure.add_edge( i, j, e=b)
     for line in file:
-      #print line.strip()
       if line.strip() == "M  END":
         break
+      if line.strip().startswith( "M  "):
+        self._read_property( line.strip())
+      #print line.strip()
 
   def _read_atom( self, file):
     x = read_molfile_value( file, 10, conversion=float)
@@ -91,6 +93,16 @@ class molfile( plugin):
     b.order = order
     b.type = type
     return b, a1, a2
+
+  def _read_property( self, prop):
+    import re
+    m = re.match( "M\s+RAD\s+(\d+)(.*)", prop)
+    if m:
+      for at,rad in re.findall( "(\d+)\s+(\d+)", m.group( 2)):
+        index = int( at)
+        multi = int( rad)
+        self.structure.vertices[index-1].multiplicity = multi
+    
 
   def write_file( self, file):
     """file should be a writable file object"""

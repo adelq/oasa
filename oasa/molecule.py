@@ -843,6 +843,14 @@ class molecule( graph.graph):
     ss.update( res)
     return ss.hexdigest()
 
+  def create_CIP_digraph( self, center):
+    """creates a digraph according to rules described in CIP paper."""
+    assert center in self.vertices
+    from graph.digraph import digraph
+    dg = digraph()
+    dg.add_vertex( center.copy())
+    return dg
+
 
 def the_right_sorting_function( t1, t2):
   for i,l in enumerate( t1):

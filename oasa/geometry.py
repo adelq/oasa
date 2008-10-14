@@ -500,3 +500,24 @@ def same_or_oposite_side( plane1,plane2):
 def expand_rectangle( coords, d):
   x1,y1,x2,y2 = coords
   return x1-d,y1-d,x2+d,y2+d
+
+
+def create_transformation_to_coincide_point_with_z_axis( mov, point):
+  """takes 3d coordinates 'point' (vector (0,0,0)->point) and returns 3d transform object
+  (transform3d.transform3d) that performs rotation to get 'point' onto z axis (x,y)=(0,0)
+  with positive 'z'.
+  NOTE: this is probably far from efficient, but it works
+  """
+  from transform3d import transform3d
+  t = transform3d()
+  a,b,c = mov
+  t.set_move( -a, -b, -c)
+  t.set_rotation_y( atan2( point[0], point[2]))
+  x,y,z = t.transform_xyz( *point)
+  t.set_rotation_x( -atan2( y, sqrt(x**2+z**2)))
+  x,y,z = t.transform_xyz( *point)
+  if z < 0:
+      t.set_rotation_x( pi)
+  t.set_move( *mov)
+  return t
+
