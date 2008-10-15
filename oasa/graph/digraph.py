@@ -21,7 +21,7 @@
 """this module contains a graph class that provides a minimalistic
 graph implementation suitable for analysis of chemical problems"""
 
-from sets import Set
+
 from diedge import diedge
 from vertex import vertex
 import warnings
@@ -87,15 +87,15 @@ class digraph( graph.graph):
 
   def get_connected_components( self):
     """returns the connected components of graph in a form o list of lists of vertices"""
-    comp = Set() # just processed component 
+    comp = set() # just processed component 
     comps = []
-    not_processed = Set( self.vertices)
+    not_processed = set( self.vertices)
     if not_processed:
-      recent = Set() # [not_processed.pop()])
-    processed = Set()
+      recent = set() # [not_processed.pop()])
+    processed = set()
       
     while not_processed:
-      recent = Set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
+      recent = set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
       processed = recent | comp
       for e in self.edges:
         v1, v2 = e.get_vertices()
@@ -106,7 +106,7 @@ class digraph( graph.graph):
       if not recent:
         if comp:
           yield comp
-        recent = Set( [not_processed.pop()])
+        recent = set( [not_processed.pop()])
         comp = recent
       else:
         comp |= recent

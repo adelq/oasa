@@ -24,7 +24,7 @@ import molfile
 import misc
 
 import re
-from sets import Set
+
 import operator
 import time
 import xml.dom.minidom as dom
@@ -65,7 +65,7 @@ class inchi( plugin):
     self.charge = 0
     self.forced_charge = 0
     self._protonation_dealt_with_already = 0
-    self._added_hs = Set()
+    self._added_hs = set()
 
   def set_structure( self, structure):
     self.structure = structure
@@ -667,7 +667,7 @@ class inchi( plugin):
           if len( chunk) == 1:
             vs = chunk
           else:
-            vs = [v for v in chunk if len( Set( v.neighbors) & chunk) == 1]
+            vs = [v for v in chunk if len( set( v.neighbors) & chunk) == 1]
           for v in vs:
             if charge < 0:
               if v.symbol in self.proton_donors and v.free_valency:

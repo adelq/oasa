@@ -22,7 +22,6 @@ import graph
 from atom import atom
 from query_atom import query_atom
 from bond import bond
-from sets import Set, ImmutableSet
 import copy
 import common
 import operator
@@ -73,7 +72,7 @@ class molecule( graph.graph):
     out = graph.graph.get_disconnected_subgraphs( self)
     for part in out:
       for st in self.stereochemistry:
-        if Set( st.references) <= Set( part.vertices):
+        if set( st.references) <= set( part.vertices):
           part.add_stereochemistry( st)
     return out
 
@@ -104,7 +103,7 @@ class molecule( graph.graph):
 
 
   def add_missing_hydrogens( self):
-    hs = Set()
+    hs = set()
     for v in copy.copy( self.vertices):
       for i in range( v.free_valency):
         h = self.create_vertex()
@@ -182,17 +181,17 @@ class molecule( graph.graph):
 
 
   def _gen_free_valency_connected_components( self):
-    done = Set()
-    vs = Set( copy.copy( self.vertices))
+    done = set()
+    vs = set( copy.copy( self.vertices))
     while vs:
-      now = Set()
+      now = set()
       v = vs.pop()
       if v.free_valency:
         now.add( v)
-        new = Set( now)
+        new = set( now)
         while new:
           added = False
-          now_new = Set()
+          now_new = set()
           for v in new:
             for n in v.neighbors:
               if n.free_valency and not n in done:
@@ -233,7 +232,7 @@ class molecule( graph.graph):
 
 
   def _get_atoms_possible_aromatic_electrons( self, at, ring):
-    out = Set()
+    out = set()
     if at.charge > 0 and at.symbol not in PT.accept_cation:
       out.add( 0)
     elif at.charge < 0:
@@ -465,7 +464,7 @@ class molecule( graph.graph):
 
   def _read_file( self, name="/home/beda/oasa/oasa/mol.graph"):
     self.vertices = []
-    self.edges = Set()
+    self.edges = set()
     f = file( name, 'r')
     vs = f.readline()
     for i in vs.split(' '):
@@ -565,11 +564,11 @@ class molecule( graph.graph):
         v.properties_['subsearch'][i] = a
 
     # now we can proceed with the search
-    yielded = Set()
+    yielded = set()
     for thread in self._mark_matching_threads( v, other):
       vs = [v.properties_['subsearch'][thread] for v in other.vertices]
       # for symetrical fragments we have to get rid of copies (O1=N=O2 and O2=N=O1)
-      vsset = ImmutableSet( vs)
+      vsset = frozenset( vs)
       if vsset not in yielded:
         if self._freesites_match( other, thread):
           yield [v for v in vs if not 'implicit_hydrogen' in v.properties_.keys()]
@@ -617,7 +616,7 @@ class molecule( graph.graph):
       mirror = v.properties_['subsearch'][thread]
       for e, n in v.get_neighbor_edge_pairs():
         if thread not in n.properties_['subsearch']:
-          candidates = Set()
+          candidates = set()
           for me, mn in mirror.get_neighbor_edge_pairs():
             if thread not in mn.properties_['subsearch'] and mn.matches( n) and me.matches( e) and thread not in e.properties_['subsearch']:
               candidates.add( (mn, me, e))
@@ -714,7 +713,7 @@ class molecule( graph.graph):
     # double bonds
     # detect clusters of double bonds
     double_paths = []
-    processed = Set()
+    processed = set()
     for e in self.edges:
       if e.order == 2 and e not in processed:
         if omit_rings and not self.is_edge_a_bridge( e):
@@ -723,7 +722,7 @@ class molecule( graph.graph):
         add_neighbor_double_bonds( e, path)
         if len( path) % 2:
           double_paths.append( path)
-          processed |= Set( path)
+          processed |= set( path)
     # detect config on these paths
     for path in double_paths:
         vertices = []
@@ -757,7 +756,7 @@ class molecule( graph.graph):
                 to_remove = None
                 to_add = None
                 for st1 in self.stereochemistry:
-                  if Set( st1.references) == Set( st.references):
+                  if set( st1.references) == set( st.references):
                     if st.value == st1.value:
                       break
                     else:
@@ -773,7 +772,7 @@ class molecule( graph.graph):
     old_morgs = 0
     for v in self.vertices:
       v.properties_['new_morgan'] = v.degree #sum( [n.degree for n in v.neighbors])
-    new_morgs = len( Set( [v.properties_['new_morgan'] for v in self.vertices]))
+    new_morgs = len( set( [v.properties_['new_morgan'] for v in self.vertices]))
 
     while new_morgs > old_morgs:
       for v in self.vertices:
@@ -782,7 +781,7 @@ class molecule( graph.graph):
       for v in self.vertices:
         v.properties_['new_morgan'] = v.properties_['morgan'] + sum( [n.properties_['morgan'] for n in v.neighbors])
       old_morgs = new_morgs
-      new_morgs = len( Set( [v.properties_['new_morgan'] for v in self.vertices]))
+      new_morgs = len( set( [v.properties_['new_morgan'] for v in self.vertices]))
       
     print "morgan", old_morgs, [v.properties_['morgan'] for v in self.vertices]
 

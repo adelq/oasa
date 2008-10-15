@@ -20,7 +20,7 @@
 """implements the vertex class"""
 
 #import basic
-from sets import Set
+
 import copy
 
 

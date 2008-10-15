@@ -553,11 +553,10 @@ class cairo_out:
   def _draw_text( self, xy, text, font_name=None, font_size=None, center_letter=None,
                   color=(0,0,0)):
     import xml.sax
-    from sets import Set
     class text_chunk:
       def __init__( self, text, attrs=None):
         self.text = text
-        self.attrs = attrs or Set()
+        self.attrs = attrs or set()
 
     class FtextHandler ( xml.sax.ContentHandler):
       def __init__( self):
@@ -573,7 +572,7 @@ class cairo_out:
         self._above.pop( -1)
       def _closeCurrentText( self):
         if self._text:
-          self.chunks.append( text_chunk( self._text, attrs = Set( self._above)))
+          self.chunks.append( text_chunk( self._text, attrs = set( self._above)))
           self._text = ""
       def characters( self, data):
         self._text += data

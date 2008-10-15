@@ -26,7 +26,7 @@ from common import is_uniquely_sorted
 
 import copy
 from warnings import warn
-from sets import Set
+
 import re
 from atom import atom
 
@@ -42,7 +42,7 @@ class query_atom( chem_vertex):
 
   def __init__( self, coords=None):
     chem_vertex.__init__( self, coords=coords)
-    self.symbols = Set()
+    self.symbols = set()
     self.free_sites = 0
 
 
@@ -81,7 +81,7 @@ class query_atom( chem_vertex):
     if symbol in PT.periodic_table.keys():
       if not "query" in PT.periodic_table[ symbol]:
         warn( "Setting normal atom symbol to a query_atom instance, do you mean it?")
-      self.symbols = Set( [symbol])
+      self.symbols = set( [symbol])
     else:
       self.symbols = self.parse_query_definition( symbol)
 
@@ -124,7 +124,7 @@ class query_atom( chem_vertex):
 
   def parse_query_definition( self, text):
     if self.is_query_definition( text):
-      syms = Set( map( str, text[1:-1].split(",")))
+      syms = set( map( str, text[1:-1].split(",")))
       for sym in syms:
         if sym not in PT.periodic_table.keys():
           raise oasa_invalid_atom_symbol( "invalid symbol in query definition", sym)

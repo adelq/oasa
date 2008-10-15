@@ -21,7 +21,7 @@ from __future__ import division
 from math import pi, sqrt, sin, cos
 import geometry
 import misc
-from sets import Set
+
 import warnings
 
 class coords_generator:
@@ -43,7 +43,7 @@ class coords_generator:
         for a in (st.references[0],st.references[-1]):
           self.stereo[a] = self.stereo.get( a, []) + [st]
     # at first we have a look if there is already something with coords
-    atms = Set( [a for a in mol.vertices if a.x != None and a.y != None])
+    atms = set( [a for a in mol.vertices if a.x != None and a.y != None])
     # then we check if they are in a continuos block but not the whole molecule
     # (in this case we regenerate all the coords if force, otherwise exit)
     if len( atms) == len( mol.vertices) and not force:
@@ -149,7 +149,7 @@ class coords_generator:
           new_processed += self.process_atom_neigbors( v)
         else:
           # v is in ring so we process the ring
-          if len( processed) > 1 and mol.defines_connected_subgraph_v( processed) and Set( processed) <= ring:
+          if len( processed) > 1 and mol.defines_connected_subgraph_v( processed) and set( processed) <= ring:
             new_processed += self.process_all_anelated_rings( processed)
           else:
             self.rings.remove( ring)
@@ -170,7 +170,7 @@ class coords_generator:
   def process_all_anelated_rings( self, base):
     out = []
     to_go = []
-    b = Set( base)
+    b = set( base)
     for r in self.rings:
       if r & b:
         to_go.append( r)
@@ -186,7 +186,7 @@ class coords_generator:
     mol = self.mol
     out = []
     ring = None
-    b = Set( base)
+    b = set( base)
     for r in self.rings:
       if r & b:
         ring = r

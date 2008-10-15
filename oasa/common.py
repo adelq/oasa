@@ -17,7 +17,7 @@
 
 #--------------------------------------------------------------------------
 
-from sets import Set
+
 
 
 def gen_combinations_of_series( series):

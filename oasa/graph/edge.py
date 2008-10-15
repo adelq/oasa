@@ -18,7 +18,7 @@
 #--------------------------------------------------------------------------
 
 
-from sets import Set
+
 from warnings import warn
 import copy
 
@@ -27,7 +27,7 @@ class edge:
   attrs_to_copy = ("disconnected",)
 
   def __init__( self, vs=[]):
-    self.vertices = Set([])
+    self.vertices = set([])
     self.set_vertices( vs)
     self.properties_ = {}
     self.disconnected = False
@@ -43,7 +43,7 @@ class edge:
 
   def set_vertices( self, vs=[]):
     if vs and len( vs) == 2:
-      self.vertices = Set( vs)
+      self.vertices = set( vs)
 
   def get_vertices( self):
     return self.vertices

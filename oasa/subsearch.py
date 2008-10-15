@@ -19,7 +19,7 @@
 
 import smiles
 from graph.digraph import digraph
-from sets import Set
+
 import os
 
 class substructure_search_manager( object):
@@ -169,7 +169,7 @@ class substructure_search_manager( object):
     for hit in hits2:
       keep = True
       for rhit in ring_hits:
-        if Set(rhit.get_significant_atoms()) & Set(hit.get_significant_atoms()):
+        if set(rhit.get_significant_atoms()) & set(hit.get_significant_atoms()):
           keep = False
           break
       if keep:
@@ -182,7 +182,7 @@ class substructure_search_manager( object):
       for i,hit1 in enumerate( hits):
         for hit2 in hits[i+1:]:
           if hit1 is not hit2:
-            if Set(hit1.get_significant_atoms()) & Set(hit2.get_significant_atoms()):
+            if set(hit1.get_significant_atoms()) & set(hit2.get_significant_atoms()):
               winner = self.which_substructure_is_more_specific( hit1.substructure, hit2.substructure)
               if winner == 1:
                 to_delete.append( hit2)

@@ -31,7 +31,7 @@ else:
 
 import operator
 import re
-from sets import Set
+
 
 triplets = [ 
 "AAA","AAB","AAC","AAD","AAE","AAF","AAG","AAH","AAI","AAJ","AAK","AAL","AAM","AAN","AAO","AAP",
@@ -1206,12 +1206,12 @@ def compute_inchi_check( key):
 def flag( version, parts):
   assert type( version) == type( 0) and 1 <= version <= 3
   flag = 0
-  starts = Set( [x[0] for x in parts])
-  if starts & Set( "tbms"):
+  starts = set( [x[0] for x in parts])
+  if starts & set( "tbms"):
     flag |= 0x01
-  if starts & Set( "f"):
+  if starts & set( "f"):
     flag |= 0x02
-  if starts & Set( "i"):
+  if starts & set( "i"):
     flag |= 0x04
   version_flag_set = ["ABCDEFGH","IJKLMNOP","QRSTUVWX"]
   return version_flag_set[int(version)-1][flag]

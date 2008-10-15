@@ -28,7 +28,7 @@ import stereochemistry
 from config import Config
 
 import re
-from sets import Set
+
 import operator
 import time
 
@@ -56,7 +56,7 @@ class smiles( plugin):
         # bacause there is nothing we can do if there are clashing constrains anyway
         other, st = others[0]
         end1,inside1,inside2,end2 = st.references
-        if Set( other.vertices) == Set( [end1,inside1]):
+        if set( other.vertices) == set( [end1,inside1]):
           v1 = inside1
           v2 = end1
         else:
@@ -469,7 +469,7 @@ class smiles( plugin):
     the_right_branch = None
     the_right_branch_atom = None
     ring_joints_in_branch = 1000
-    ring_join_vertices = Set( reduce( operator.add, [e.vertices for e in self.ring_joins], []))
+    ring_join_vertices = set( reduce( operator.add, [e.vertices for e in self.ring_joins], []))
     for e in mol.edges:
       d1, d2 = [x.get_degree() for x in e.get_vertices()]
       if d1 > 2 or d2 > 2:
