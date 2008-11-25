@@ -206,6 +206,13 @@ class formula_dict( dict):
     for i in self:
       tot += self[i]* periodic_table[i]['weight']
     return tot
+
+  def get_exact_molecular_mass( self):
+    tot = 0
+    for i in self:
+      tot += self[i]* periodic_table[i]['exact_mass']
+    return tot
+
   
   def keys_in_order( self):
     return self.sorted_keys()
