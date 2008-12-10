@@ -1,3 +1,24 @@
+RELEASE - OASA 0.12.5
+----------------------------------------
+ * enhancements - cairo_out - default color scheme was changed to a slightly modified version of
+		  http://bodr.svn.sourceforge.net/viewvc/*checkout*/bodr/trunk/bodr/elements/elements.xml?revision=34&content-type=text%2Fplain (old scheme is still available)
+		- cairo_out - carbon atom in methane is always visible
+		- cairo_out - it is possible to change symbol and hydrogen display on per-atom
+		  	      basis by setting atom.properties_['show_hydrogens'] == True
+			      and/or atom.properties_['show_symbol]
+		- cairo_out - function mol_to_png now passes all keyword arguments to cairo_out
+		  	      constructor
+		- cairo_out - more tuning of double bond centering
+		- monoisotopic mass was added to the periodic_table and formula dict
+		  can thus compute exact (monoisotopic) mass
+		- molfile - RAD property is properly parsed
+
+ * changes - several changes to make OASA compatible with Python 2.6 were made which break
+   	     backwards compatibility with Python 2.3
+
+ * info - this version of OASA corresponds to that of BKChem-0.12.5
+
+
 RELEASE - OASA 0.12.1
 ----------------------------------------
 

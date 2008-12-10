@@ -61,7 +61,7 @@ class cis_trans_stereochemistry( stereochemistry):
 
   # override of value
   def _set_value( self, value):
-    if value not in (self.SAME_SIDE, self.OPPOSITE_SIDE):
+    if value not in (self.SAME_SIDE, self.OPPOSITE_SIDE, self.UNDEFINED):
       raise oasa_exceptions.oasa_stereochemistry_error( "invalid stereochemistry identifier '%s'" % value)
     super( self.__class__, self)._set_value( value)
   value = property( stereochemistry._get_value, _set_value)
@@ -78,3 +78,37 @@ class cis_trans_stereochemistry( stereochemistry):
       raise ValueError, "submitted object is not referenced in this stereochemistry object."
     ref1, _r1, _r2, ref2 = self.references
     return ref is ref1 and ref2 or ref1
+
+
+class tetrahedral_stereochemistry( stereochemistry):
+
+  UNDEFINED = 0
+  # as in CIP - put the last atom behind the reference and observer the first 3
+  # this should create the same result as SMILES notation - put firts in front and observe the rest
+  CLOCKWISE = 1  
+  ANTICLOCKWISE = 2
+
+  # override of value
+  def _set_value( self, value):
+    if value not in (self.CLOCKWISE, self.ANTICLOCKWISE, self.UNDEFINED):
+      raise oasa_exceptions.oasa_stereochemistry_error( "invalid stereochemistry identifier '%s'" % value)
+    super( self.__class__, self)._set_value( value)
+  value = property( stereochemistry._get_value, _set_value)
+
+  # references overriden
+  def _set_references( self, references):
+    if len( references) != 4:
+      raise oasa_exceptions.oasa_stereochemistry_error( "wrong number of references in stereochemistry specification '%s'" % len( references))
+    super( self.__class__, self)._set_references( references)
+  references = property( stereochemistry._get_references, _set_references)
+
+
+
+class explicit_hydrogen( object):
+  """this object serves as a placeholder for explicit hydrogen in stereochemistry references"""
+
+  def __eq__( self, other):
+    if isinstance( other, explicit_hydrogen):
+      return True
+    else:
+      return False

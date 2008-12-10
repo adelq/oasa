@@ -72,7 +72,7 @@ class molecule( graph.graph):
     out = graph.graph.get_disconnected_subgraphs( self)
     for part in out:
       for st in self.stereochemistry:
-        if set( st.references) <= set( part.vertices):
+        if set( [ref for ref in st.references if isinstance(ref,atom)]) <= set( part.vertices):
           part.add_stereochemistry( st)
     return out
 
@@ -105,14 +105,32 @@ class molecule( graph.graph):
   def add_missing_hydrogens( self):
     hs = set()
     for v in copy.copy( self.vertices):
-      for i in range( v.free_valency):
-        h = self.create_vertex()
-        h.symbol = 'H'
-        self.add_vertex( h)
-        self.add_edge( h, v)
-        hs.add( h)
+      hs |= self.add_missing_hydrogens_to_atom( v)
     return hs
 
+
+  def add_missing_hydrogens_to_atom( self, v):
+    hs = set()
+    for i in range( v.free_valency):
+      h = self.create_vertex()
+      h.symbol = 'H'
+      self.add_vertex( h)
+      self.add_edge( h, v)
+      hs.add( h)
+    return hs
+
+
+  def explicit_hydrogens_to_real_atoms( self, v):
+    hs = set()
+    for i in range( v.explicit_hydrogens):
+      h = self.create_vertex()
+      h.symbol = 'H'
+      self.add_vertex( h)
+      self.add_edge( h, v)
+      hs.add( h)
+    v.explicit_hydrogens = 0
+    return hs
+  
 
   def add_missing_bond_orders( self, retry=False):
     """retry means to try a different approach because the last one was not successful"""

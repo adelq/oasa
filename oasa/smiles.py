@@ -41,6 +41,8 @@ class smiles( plugin):
   smiles_to_oasa_bond_recode = {'-': 1, '=': 2, '#': 3, ':': 4, ".": 0, "\\": 1, "/": 1}
   oasa_to_smiles_bond_recode = {1: '', 2: '=', 3: '#', 4:''}
 
+  organic_subset = ['B', 'C', 'N', 'O', 'P', 'S', 'F', 'Cl', 'Br', 'I']
+
   def __init__( self, structure=None):
     self.structure = structure
 
@@ -299,20 +301,59 @@ class smiles( plugin):
       st = stereochemistry.cis_trans_stereochemistry( center=center, value=value, references=refs)
       mol.add_stereochemistry( st)
 
+    # tetrahedral stereochemistry
+    for v in mol.vertices:
+      refs = None
+      if 'stereo' in v.properties_:
+        idx = [mol.vertices.index( n) for n in v.neighbors]
+        idx.sort()
+        if len( idx) < 3:
+          pass # no stereochemistry with less then 3 neighbors
+        elif len( idx) == 3:
+          if v.explicit_hydrogens == 0:
+            pass # no stereochemistry without adding hydrogen here
+          else:
+            #hs = mol.explicit_hydrogens_to_real_atoms( v)
+            #h = hs.pop()
+            h = stereochemistry.explicit_hydrogen()
+            v_idx = mol.vertices.index( v)
+            idx1 = [i for i in idx if i < v_idx]
+            idx2 = [i for i in idx if i > v_idx]
+            refs = [mol.vertices[i] for i in idx1] + [h] + [mol.vertices[i] for i in idx2]
+        elif len( idx) == 4:
+          refs = [mol.vertices(i) for i in idx]
+        else:
+          pass # unhandled stereochemistry
+      if refs:
+        if v.properties_["stereo"] == "@":
+          direction = stereochemistry.tetrahedral_stereochemistry.ANTICLOCKWISE
+        elif v.properties_['stereo'] == "@@":
+          direction = stereochemistry.tetrahedral_stereochemistry.CLOCKWISE
+        else:
+          continue # no meaning
+        st = stereochemistry.tetrahedral_stereochemistry( center=v, value=direction, references=refs)
+        mol.add_stereochemistry( st)
+
+    # delete the data after processing
     for e in mol.edges:
       if 'stereo' in e.properties_:
         del e.properties_['stereo']
+    for v in mol.vertices:
+      if 'stereo' in v.properties_:
+        del v.properties_['stereo']
 
 
   def get_smiles( self, mol):
     if not mol.is_connected():
       raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc.")
     #mol = molec.copy()
+    self.molecule = mol
     self.ring_joins = []
     self._processed_atoms = []
     self.branches = {}
     self._stereo_bonds_to_code = {} # for bond it will contain character it uses
     self._stereo_bonds_to_others = {} # for bond it will contain the other bonds
+    self._stereo_centers = {}
     # at first we mark all the atoms with aromatic bonds
     # it is much simple to do it now when all the edges are present
     # we can make use of the properties attribute of the vertex
@@ -322,18 +363,37 @@ class smiles( plugin):
           v.properties_[ 'aromatic'] = 1
     # stereochemistry information preparation
     for st in mol.stereochemistry:
-      end1, inside1, inside2, end2 = st.references
-      e1 = end1.get_edge_leading_to( inside1)
-      e2 = end2.get_edge_leading_to( inside2)
-      self._stereo_bonds_to_others[ e1] = self._stereo_bonds_to_others.get( e1, []) + [(e2, st)]
-      self._stereo_bonds_to_others[ e2] = self._stereo_bonds_to_others.get( e2, []) + [(e1, st)]
-
+      if isinstance( st, stereochemistry.cis_trans_stereochemistry):
+        end1, inside1, inside2, end2 = st.references
+        e1 = end1.get_edge_leading_to( inside1)
+        e2 = end2.get_edge_leading_to( inside2)
+        self._stereo_bonds_to_others[ e1] = self._stereo_bonds_to_others.get( e1, []) + [(e2, st)]
+        self._stereo_bonds_to_others[ e2] = self._stereo_bonds_to_others.get( e2, []) + [(e1, st)]
+      elif isinstance( st, stereochemistry.tetrahedral_stereochemistry):
+        self._stereo_centers[st.center] = st
+      else:
+        pass # we cannot handle this
+        
     ret = ''.join( [i for i in self._get_smiles( mol)])
     mol.reconnect_temporarily_disconnected_edges()
     # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
     # generation works - it splits the molecule while reusing the same atoms and bonds and thus disconnected bonds accounting fails
     for e in mol.edges:
       e.disconnected = False
+    # here tetrahedral stereochemistry is added
+    for v, st in self._stereo_centers.iteritems():
+      processed_neighbors = []
+      for n in self._processed_atoms:
+        if n in v.neighbors:
+          processed_neighbors.append( n)
+        elif v.explicit_hydrogens and n is v:
+          processed_neighbors.append( stereochemistry.explicit_hydrogen())
+      count = match_atom_lists( st.references, processed_neighbors)
+      clockwise = st.value == st.CLOCKWISE
+      if count % 2 == 1:
+        clockwise = not clockwise
+      ch_symbol = clockwise and "@@" or "@"
+      ret = ret.replace( "{{stereo%d}}" % mol.vertices.index(v), ch_symbol)
     return ret
 
 
@@ -412,7 +472,9 @@ class smiles( plugin):
     else:
       symbol = v.symbol
 
-    if v.isotope or v.charge != 0 or v.valency != PT.periodic_table[ v.symbol]['valency'][0] or 'stereo' in v.properties_ or v.multiplicity != 1:
+    stereo = self._stereo_centers.get( v, None)
+
+    if (v.symbol not in self.organic_subset) or (v.isotope) or (v.charge != 0) or (v.valency != PT.periodic_table[ v.symbol]['valency'][0]) or (stereo) or (v.multiplicity != 1):
       # we must use square bracket
       isotope = v.isotope and str( v.isotope) or ""
       # charge
@@ -422,13 +484,13 @@ class smiles( plugin):
       else:
         charge = ""
       # explicit hydrogens
-      if v.explicit_hydrogens or v.valency != PT.periodic_table[ v.symbol]['valency'][0]:
-        num_h = v.valency - v.occupied_valency
-        h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
-      else:
-        h_spec = ""
+      num_h = v.valency - v.occupied_valency + v.explicit_hydrogens
+      h_spec = (num_h and "H" or "") + (num_h > 1 and str( num_h) or "")
       # stereo
-      stereo = v.properties_.get( "stereo", "")
+      if stereo:
+        stereo = "{{stereo%d}}" % self.molecule.vertices.index( v)
+      else:
+        stereo = ""
       return "[%s%s%s%s%s]" % (isotope, symbol, stereo, h_spec, charge)
     else:
       # no need to use square brackets
@@ -570,6 +632,20 @@ def is_line( mol):
 
 def is_pure_ring( mol):
   return filter( lambda x: x.get_degree() != 2, mol.vertices) == []
+
+def match_atom_lists( l1, l2):
+  """sort of bubble sort with counter"""
+  count = 0
+  for i1, v1 in enumerate( l1):
+    for i2 in range( i1, len( l2)):
+      v2 = l2[i2]
+      if v2 == v1:
+        if i1 != i2:
+          l2[i1],l2[i2] = l2[i2],l2[i1]
+          count += 1
+        break
+  assert l1 == l2
+  return count
 
 
 ##################################################
@@ -728,7 +804,7 @@ if __name__ == '__main__':
     for j in range( cycles):
       mols = conv.read_text( text)
       for mol in mols:
-        mol.remove_unimportant_hydrogens()
+        #mol.remove_unimportant_hydrogens()
         print "  summary formula:   ", mol.get_formula_dict()        
       text = conv.mols_to_text( mols)
       print "  generated SMILES:   %s" % text
@@ -740,7 +816,7 @@ if __name__ == '__main__':
 
   if not len( sys.argv) > 1:
     text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
-    text = "C1CC=CC1"
+    text = "[C@@H](C)(CC)O"
   else:
     text = sys.argv[1]
 
