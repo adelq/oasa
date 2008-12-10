@@ -65,6 +65,12 @@ class molecule( graph.graph):
       raise ValueError, "cannot remove non-existent stereochemistry information"
     self.stereochemistry.remove( stereo)
 
+  def get_stereochemistry_by_center( self, center):
+    for st in self.stereochemistry:
+      if st.center = center:
+        return st
+    return None
+
   # analytics
 
   # override of graphs method to add stereochemistry support
