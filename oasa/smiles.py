@@ -87,7 +87,8 @@ class smiles( plugin):
   def get_structure( self):
     return self.structure
 
-  def read_smiles( self, text):
+  def read_smiles( self, text, explicit_hydrogens_to_real_atoms=False):
+    self.explicit_hydrogens_to_real_atoms = explicit_hydrogens_to_real_atoms
     mol = Config.create_molecule()
     text = "".join( text.split())
     is_text = re.compile("^[A-Z][a-z]?$")
@@ -313,15 +314,17 @@ class smiles( plugin):
           if v.explicit_hydrogens == 0:
             pass # no stereochemistry without adding hydrogen here
           else:
-            #hs = mol.explicit_hydrogens_to_real_atoms( v)
-            #h = hs.pop()
-            h = stereochemistry.explicit_hydrogen()
+            if self.explicit_hydrogens_to_real_atoms:
+              hs = mol.explicit_hydrogens_to_real_atoms( v)
+              h = hs.pop()
+            else:
+              h = stereochemistry.explicit_hydrogen()
             v_idx = mol.vertices.index( v)
             idx1 = [i for i in idx if i < v_idx]
             idx2 = [i for i in idx if i > v_idx]
             refs = [mol.vertices[i] for i in idx1] + [h] + [mol.vertices[i] for i in idx2]
         elif len( idx) == 4:
-          refs = [mol.vertices(i) for i in idx]
+          refs = [mol.vertices[i] for i in idx]
         else:
           pass # unhandled stereochemistry
       if refs:
@@ -664,6 +667,7 @@ class smiles_converter( converter_base):
   default_configuration = {"R_GENERATE_COORDS": True,
                            "R_BOND_LENGTH": 1,
                            "R_LOCALIZE_AROMATIC_BONDS": True,
+                           "R_EXPLICIT_HYDROGENS_TO_REAL_ATOMS": False,
                            
                            "W_AROMATIC_BOND_AUTODETECT": True,
                            "W_INDIVIDUAL_MOLECULE_SEPARATOR": ".",
@@ -717,7 +721,7 @@ class smiles_converter( converter_base):
   def _read_string( self, text):
     converter_base.read_text( self, text)
     sm = smiles()
-    sm.read_smiles( text)
+    sm.read_smiles( text, explicit_hydrogens_to_real_atoms=self.configuration['R_EXPLICIT_HYDROGENS_TO_REAL_ATOMS'])
     mol = sm.structure
     if mol == None:
       return []
@@ -801,6 +805,7 @@ if __name__ == '__main__':
   def main( text, cycles):
     t = time.time()
     conv = converter()
+    conv.configuration['R_EXPLICIT_HYDROGENS_TO_REAL_ATOMS'] = True
     for j in range( cycles):
       mols = conv.read_text( text)
       for mol in mols:

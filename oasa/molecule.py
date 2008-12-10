@@ -67,7 +67,7 @@ class molecule( graph.graph):
 
   def get_stereochemistry_by_center( self, center):
     for st in self.stereochemistry:
-      if st.center = center:
+      if st.center == center:
         return st
     return None
 
