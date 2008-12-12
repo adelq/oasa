@@ -124,7 +124,10 @@ class PybelConverter( object):
     ok = obc.ReadString( obmol, text)
     mols = []
     while ok:
-      mols.append( self.pybel_to_oasa_molecule( pybel.Molecule( obmol)))
+      mol = self.pybel_to_oasa_molecule( pybel.Molecule( obmol))
+      if len( mol.vertices) > 0:
+        # throw away empty molecules - CDX seems to cause these to appear
+        mols.append( mol)
       obmol = openbabel.OBMol()
       ok = obc.Read( obmol)
     return mols
@@ -220,4 +223,12 @@ if __name__ == "__main__":
 
   for mol in PybelConverter.read_text( "smi", "CCCC\nCCC"):
     print mol
-  
+
+  print "AAAA"
+  t = file( "/zaloha/temp/3-chlorbenzoic_acid.cdx", "r").read()
+  pmol = pybel.readstring( "cdx", t)
+  print "XXX", pmol
+
+  for mol in PybelConverter.read_text( "cdx", t):
+    print mol
+
