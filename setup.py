@@ -10,15 +10,11 @@ try:
 except:
   pass
 
-## A few pre-setup hacks
-#if os.name != 'posix':
-#  sys.path.insert( 0, 'bkchem')
-
 # the setup itself
 
 set = setup(
   name = 'oasa',
-  version = '0.12.5',
+  version = '0.12.6',
   description = "OASA is a free cheminformatics library written in Python",
   author = "Beda Kosata",
   author_email = "beda@zirael.org",
