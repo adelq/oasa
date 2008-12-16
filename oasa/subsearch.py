@@ -227,7 +227,7 @@ class substructure_search_manager( object):
   def _data_files_to_python_module( self, structure_file=None, ring_file=None):
     out = file( "subsearch_data.py", "w")
     f = file( structure_file or self.substructure_def_file, "r")
-    print >> out """#--------------------------------------------------------------------------
+    print >> out, """#--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
 #     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 

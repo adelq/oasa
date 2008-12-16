@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+
 ## automatically generated file - may be overwritten at any time
 structures = [
 ('aldehyde', 'carbonyl group', 'HC=O', []) ,
