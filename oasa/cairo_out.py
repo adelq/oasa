@@ -160,41 +160,37 @@ class cairo_out:
     for e in copy.copy( mol.edges):
       self._draw_edge( e)
 
-  def create_surface( self, w, h):
+  def create_surface( self, w, h, format):
     """currently implements PNG writting, but might be overriden to write other types;
     w and h are minimal estimated width and height"""
     # trick - we use bigger surface and then copy from it to a new surface and crop
-    self.surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, w, h)
+    if format == "png":
+      self.surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, w, h)
+    elif format == "pdf":
+      self.surface = cairo.PDFSurface( self.filename, w, h)
+    elif format == "svg":
+      self.surface = cairo.SVGSurface( self.filename, w, h)
+    else:
+      raise Exception( "unknown format '%s'" % format)
 
+  def init_surface( self):
+    """make all necessary operations to prepare a surface for drawing:
+    set antialiasing as requested, create background, etc."""
+    pass
+
+  def create_dummy_surface( self, w, h):
+    self.surface = cairo.ImageSurface( cairo.FORMAT_A1, w, h)
+    
 
   def write_surface( self):
-    """currently implements PNG writting, but might be overriden to write other types"""
-    # Because it is not possible to calculate the bounding box of a drawing before its drawn (mainly
-    # because we don't know the size of text items), this object internally draws to a surface with
-    # large margins and the saves a cropped version into a file (this is done by drawing to a new
-    # surface and using the old one as source.
-    #self.surface.write_to_png( self.filename)
-    #return 
-    # real width and height
-    x1, y1, x2, y2 = self._get_bbox()
-    x1, y1 = self.context.user_to_device( x1, y1)
-    x2, y2 = self.context.user_to_device( x2, y2)
-    width = int( x2 - x1 + 2*self.margin*self.scaling)
-    height = int( y2 - y1 + 2*self.margin*self.scaling)
-    surface = cairo.ImageSurface( cairo.FORMAT_ARGB32, width, height)
-    context = cairo.Context( surface)
-    context.set_source_rgb( *self.background_color)
-    context.rectangle( 0, 0, width, height)
-    context.fill()
-    context.set_source_surface( self.surface, round( -x1+self.margin*self.scaling), round( -y1+self.margin*self.scaling))
-    context.rectangle( 0, 0, width, height)
-    context.fill()
-    context.show_page()
-    surface.write_to_png( self.filename)
-    surface.finish()
+    """finishes the surface and write it to the file if necessary"""
+    self.context.show_page()
+    if isinstance( self.surface, cairo.ImageSurface):
+      self.surface.write_to_png( self.filename)
+    self.surface.finish()
 
 
-  def mol_to_cairo( self, mol, filename):
+  def mol_to_cairo( self, mol, filename, format="png"):
     x1, y1, x2, y2 = None, None, None, None
     for v in mol.vertices:
       v.y = -v.y # flip coords - molfiles have them the other way around
@@ -213,13 +209,24 @@ class cairo_out:
     h = int( y2 - y1)
     self._bboxes.append( (x1,y1,x2,y2))
 
-    self.filename = filename
-
-    # create cairo surface for drawing
+    # dummy surface to get complete size of the drawing
+    # Because it is not possible to calculate the bounding box of a drawing before its drawn (mainly
+    # because we don't know the size of text items), this object internally draws to a surface with
+    # large margins to ger the bbox
     _w = int( w+2*self.scaling*self._temp_margin)
     _h = int( h+2*self.scaling*self._temp_margin)
-    self.create_surface( _w, _h)
+    self.create_dummy_surface( _w, _h)
+    self.context = cairo.Context( self.surface)
+    self.draw_mol( mol)
+    x1, y1, x2, y2 = self._get_bbox()
+    x1, y1 = self.context.user_to_device( x1, y1)
+    x2, y2 = self.context.user_to_device( x2, y2)
+    width = int( x2 - x1 + 2*self.margin*self.scaling)
+    height = int( y2 - y1 + 2*self.margin*self.scaling)
 
+    # now paint for real
+    self.filename = filename
+    self.create_surface( width, height, format)
     self.context = cairo.Context( self.surface)
     if not self.antialias_drawing:
       self.context.set_antialias( cairo.ANTIALIAS_NONE)
@@ -227,16 +234,14 @@ class cairo_out:
       options = self.context.get_font_options()
       options.set_antialias( cairo.ANTIALIAS_NONE)
       self.context.set_font_options( options)
-    self.context.translate( round( -x1*self.scaling+self.scaling*self._temp_margin), round( -y1*self.scaling+self.scaling*self._temp_margin))
+    self.context.translate( round( -x1*self.scaling+self.scaling*self.margin), round( -y1*self.scaling+self.scaling*self.margin))
     self.context.scale( self.scaling, self.scaling)
     self.context.rectangle( x1, y1, w, h)
     self.context.new_path()
     self.context.set_source_rgb( 0, 0, 0)
     self.draw_mol( mol)
-    self.context.show_page()
     # write the content to the file
     self.write_surface()
-    self.surface.finish()
     # flip y coordinates back
     for v in mol.vertices:
       v.y = -v.y
