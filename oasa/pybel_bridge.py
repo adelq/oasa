@@ -38,6 +38,7 @@ class PybelConverter( object):
     psymbol = num2symbol[patom.atomicnum]
     oatom.symbol = psymbol
     oatom.x, oatom.y, oatom.z = patom.coords
+    oatom.charge = patom.formalcharge
     return oatom
 
   @classmethod
@@ -78,6 +79,7 @@ class PybelConverter( object):
     obatom = openbabel.OBAtom()
     obatom.SetAtomicNum( num)
     obatom.SetVector( oatom.x, oatom.y, oatom.z)
+    obatom.SetFormalCharge( oatom.charge)
     #patom = pybel.Atom()
     #patom.atomicnum = num
     return obatom
