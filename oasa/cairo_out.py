@@ -190,21 +190,22 @@ class cairo_out:
     self.surface.finish()
 
 
-  def mol_to_cairo( self, mol, filename, format="png"):
+  def mols_to_cairo( self, mols, filename, format="png"):
     x1, y1, x2, y2 = None, None, None, None
-    for v in mol.vertices:
-      v.y = -v.y # flip coords - molfiles have them the other way around
-      if self.align_coords:
-        v.x = self._round( v.x)
-        v.y = self._round( v.y)
-      if x1 == None or x1 > v.x:
-        x1 = v.x
-      if x2 == None or x2 < v.x:
-        x2 = v.x
-      if y1 == None or y1 > v.y:
-        y1 = v.y
-      if y2 == None or y2 < v.y:
-        y2 = v.y
+    for mol in mols:
+      for v in mol.vertices:
+        v.y = -v.y # flip coords - molfiles have them the other way around
+        if self.align_coords:
+          v.x = self._round( v.x)
+          v.y = self._round( v.y)
+        if x1 == None or x1 > v.x:
+          x1 = v.x
+        if x2 == None or x2 < v.x:
+          x2 = v.x
+        if y1 == None or y1 > v.y:
+          y1 = v.y
+        if y2 == None or y2 < v.y:
+          y2 = v.y
     w = int( x2 - x1)
     h = int( y2 - y1)
     self._bboxes.append( (x1,y1,x2,y2))
@@ -212,12 +213,12 @@ class cairo_out:
     # dummy surface to get complete size of the drawing
     # Because it is not possible to calculate the bounding box of a drawing before its drawn (mainly
     # because we don't know the size of text items), this object internally draws to a surface with
-    # large margins to ger the bbox
+    # large margins to get the bbox
     _w = int( w+2*self.scaling*self._temp_margin)
     _h = int( h+2*self.scaling*self._temp_margin)
     self.create_dummy_surface( _w, _h)
     self.context = cairo.Context( self.surface)
-    self.draw_mol( mol)
+    [self.draw_mol( mol) for mol in mols]
     x1, y1, x2, y2 = self._get_bbox()
     x1, y1 = self.context.user_to_device( x1, y1)
     x2, y2 = self.context.user_to_device( x2, y2)
@@ -239,12 +240,18 @@ class cairo_out:
     self.context.rectangle( x1, y1, w, h)
     self.context.new_path()
     self.context.set_source_rgb( 0, 0, 0)
-    self.draw_mol( mol)
+    [self.draw_mol( mol) for mol in mols]
     # write the content to the file
     self.write_surface()
     # flip y coordinates back
     for v in mol.vertices:
       v.y = -v.y
+    
+
+  def mol_to_cairo( self, mol, filename, format="png"):
+    """This is a convenience method kept for backward compatibility,
+    it just calls mols_to_cairo internally"""
+    return self.mols_to_cairo( [mol], filename, format=format)
 
   def _round( self, x):
     if self.line_width % 2:
@@ -699,6 +706,10 @@ class cairo_out:
 def mol_to_png( mol, filename, **kw):
   c = cairo_out( **kw)
   c.mol_to_cairo( mol, filename)
+
+def mols_to_png( mol, filename, **kw):
+  c = cairo_out( **kw)
+  c.mols_to_cairo( mol, filename)
 
 
 if __name__ == "__main__":
