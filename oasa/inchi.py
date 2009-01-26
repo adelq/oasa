@@ -763,37 +763,12 @@ class inchi( plugin):
 #        elif x == 0:
 #          break
         
+import subprocess
 
 def _run_command( command, input):
-  if os.name == "nt":
-    return _run_command_nt( command, input)
-  p = popen2.Popen4( command)
-  out, inp = p.fromchild, p.tochild
-  inp.write( input)
-  inp.close()
-  outf = out.fileno()
-  result = ""
-  try:
-    while 1:
-      ready = select.select( [outf], [], [])
-      if ready[0]:
-        text = os.read( ready[0][0], 1024)
-        if not text:
-          break
-        result += text
-      time.sleep(0.01)
-  finally:
-    out.close()
-    p.poll()
-    del p
-  return result
-
-def _run_command_nt( command, input):
-  out, inp = popen2.popen4( command)
-  inp.write( input)
-  inp.close()
-  text = out.read()
-  return text
+  p = subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+  o, er = p.communicate( input)
+  return o
 
 
 def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_error=False):
@@ -807,7 +782,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_erro
     options = "/AUXNONE /STDIO /Key" + (fixed_hs and " /FixedH" or "")
   else:
     options = "-AUXNONE -STDIO -Key" + (fixed_hs and " -FixedH" or "")
-  command = ' '.join( ('"'+os.path.abspath( program)+'"', options))
+  command = [os.path.abspath( program)] + options.split()
   text = _run_command( command, mf)
   inchi = ""
   key = ""
@@ -910,14 +885,15 @@ if __name__ == '__main__':
       mol = text_to_mol( text, calc_coords=True, include_hydrogens=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
-      print "  inchi:  ", mol_to_text( mol, fixed_hs=True)
+      print "  inchi:  ", mol_to_text( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
       print "  charge: ", sum( [a.charge for a in mol.vertices])
       print "  mw:     ", mol.weight
+    print generate_inchi_and_inchikey( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
     t1 = time.time() - t1
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "InChI=1/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3-,6-4+" #1/C6H6/c1-2-3-4-5-6-1/h1-6H"
+  inch = "InChI=1S/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3-,6-4+" #1/C6H6/c1-2-3-4-5-6-1/h1-6H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

@@ -1189,6 +1189,7 @@ def minor_digest( minor):
   return ret
 
 def compute_inchi_check( key):
+  """this is not used in new InChIKey - starting from 1.02 version of InChI software"""
   assert type( key) == type( "") or type( key) == type( u"")
   if key.startswith( "InChIKey="):
     key = key[9:]
@@ -1203,7 +1204,8 @@ def compute_inchi_check( key):
   return new_check
 
 
-def flag( version, parts):
+def flag_old( version, parts):
+  """this code is for InChIKey from 1.02Beta version of InChI software!"""
   assert type( version) == type( 0) and 1 <= version <= 3
   flag = 0
   starts = set( [x[0] for x in parts])
@@ -1217,7 +1219,8 @@ def flag( version, parts):
   return version_flag_set[int(version)-1][flag]
 
 
-def key_from_inchi( inp):
+def key_from_inchi_old( inp):
+  """this code is for InChIKey from 1.02Beta version of InChI software"""
   assert type( inp) == type( "") or type( inp) == type( u"")
   if inp.startswith("InChI="):
     inp = inp[6:]
@@ -1249,13 +1252,13 @@ def key_from_inchi( inp):
   minor = minor and "/"+minor or minor
   if len( minor) < 255: # interesting property of the original algorithm
     minor = 2*minor
-  base = major_digest( major) + "-" + minor_digest( minor) + flag( int(version), parts_minor)
+  base = major_digest( major) + "-" + minor_digest( minor) + flag_old( int(version), parts_minor)
   check = compute_inchi_check( base)
   return base+check
 
-
 def check_inchi_key( key):
-  """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta"""
+  """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta;
+  check character is not used in 1.02 final"""
   assert type( key) == type( "") or type( key) == type( u"")
   if key.startswith( "InChIKey="):
     key = key[9:]
@@ -1270,9 +1273,55 @@ def check_inchi_key( key):
   return True
 
 
+## new code
+
+def key_from_inchi( inp):
+  """this is for new InChIKey starting with 1.02 release"""
+  assert type( inp) == type( "") or type( inp) == type( u"")
+  if inp.startswith("InChI="):
+    inp = inp[6:]
+  parts = inp.split( "/")
+  version = parts[0]
+  if version.endswith("S"):
+    standard = "S"
+    version = version[:-1]
+  else:
+    standard = "N"
+  if not version.isdigit():
+    if len( parts) == 1:
+      raise Exception( "Invalid InChI string '%s'" % inp)
+    else:
+      raise Exception( "Invalid data in version part of InChI - '%s' in '%s'" % (version, inp))
+  elif version not in "123":
+    raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
+  del parts[0]
+  i = 1
+  next = True
+  parts_major = [parts[0]]
+  # sort the layers into a major and minor part - these are hashed separately
+  while next:
+    if i >= len( parts):
+      break
+    if parts[i][0] in "chq":
+      parts_major.append( parts[i])
+      i += 1
+    else:
+      next = False
+  major = "/".join( parts_major)
+  parts_minor = parts[i:]
+  minor = "/".join( parts_minor)
+  minor = minor and "/"+minor or minor
+  if len( minor) < 255: # interesting property of the original algorithm
+    minor = 2*minor
+  base = major_digest( major) + "-" + minor_digest( minor) + standard + "ABCDEFG"[int(version)-1]
+  return base + "-"+"N"
+
+
+
+
 if __name__ == "__main__":
-  inp = "InChI=1/C97H158N8O66S/c1-27-54(126)66(138)69(141)88(151-27)149-25-46-76(62(134)50(101-30(4)117)84(152-46)105-47(125)11-9-8-10-12-98-26-172)161-85-51(102-31(5)118)63(135)73(42(21-112)157-85)162-89-70(142)79(165-93-83(68(140)58(130)39(18-109)156-93)167-87-53(104-33(7)120)65(137)75(44(23-114)159-87)164-91-72(144)81(60(132)41(20-111)154-91)171-97(95(147)148)14-35(122)49(100-29(3)116)78(169-97)56(128)37(124)16-107)61(133)45(160-89)24-150-92-82(67(139)57(129)38(17-108)155-92)166-86-52(103-32(6)119)64(136)74(43(22-113)158-86)163-90-71(143)80(59(131)40(19-110)153-90)170-96(94(145)146)13-34(121)48(99-28(2)115)77(168-96)55(127)36(123)15-106/h27,34-46,48-93,106-114,121-124,126-144H,8-25H2,1-7H3,(H,99,115)(H,100,116)(H,101,117)(H,102,118)(H,103,119)(H,104,120)(H,105,125)(H,145,146)(H,147,148)/t27-,34-,35-,36+,37+,38+,39+,40+,41+,42+,43+,44+,45+,46+,48+,49+,50+,51+,52+,53+,54+,55+,56+,57+,58+,59-,60-,61+,62+,63+,64+,65+,66+,67-,68-,69-,70-,71+,72+,73+,74+,75+,76+,77+,78+,79-,80-,81-,82-,83-,84+,85-,86-,87-,88+,89-,90-,91-,92-,93+,96-,97-/m0/s1"
-  out = "InChIKey=FCLSYSXPOHISFP-WNQFAWBRBF"
+  inp = "InChI=1S/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3+,6-4+"
+  out = "APPOKADJQUIAHP-GGWOSOGESA-N"
   ret = key_from_inchi( inp)
   print ret
   print ret == out

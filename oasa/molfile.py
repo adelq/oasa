@@ -234,7 +234,7 @@ def read_molfile_value( file, length, strip=1, conversion=None):
 ##################################################
 # MODULE INTERFACE
 
-from StringIO import StringIO
+from cStringIO import StringIO
 
 reads_text = 1
 reads_files = 1
@@ -258,6 +258,66 @@ def file_to_mol( f):
 
 def text_to_mol( text):
   return file_to_mol( StringIO( text))
+
+# NEW MODULE INTERFACE
+
+from converter_base import converter_base
+
+class molfile_converter( converter_base):
+
+  # standard converter attrs
+  reads_text = True
+  writes_text = True
+  reads_files = True
+  writes_files = True
+
+  default_configuration = {
+                           }
+
+  def __init__( self):
+    converter_base.__init__( self)
+
+  def mols_to_text( self, structures):
+    f = StringIO()
+    self.mols_to_file( structures, f)
+    return f.getvalue()
+
+  def read_text( self, text):
+    converter_base.read_text( self, text)
+    mf = StringIO( text)
+    for mol in self.read_file( mf):
+      yield mol
+
+  def read_file( self, f):
+    converter_base.read_file( self, f)
+    chunk = []
+    m = molfile()
+    for line in f:
+      if line.strip() != "$$$$":
+        chunk.append( line)
+      else:
+        m.read_file( StringIO( "".join( chunk)))
+        yield m.structure
+        chunk = []
+    if chunk:
+      m.read_file( StringIO("".join( chunk)))
+      yield m.structure
+
+  def mols_to_file( self, structures, f):
+    converter_base.mols_to_file( self, structures, f)
+    m = molfile()
+    first = True
+    for mol in structures:
+      if not first:
+        f.write( "$$$$\n")
+      first = False
+      m.structure = mol
+      m.write_file( f)
+    self.last_status = self.STATUS_OK
+
+    
+converter = molfile_converter
+
 
 #
 ##################################################
