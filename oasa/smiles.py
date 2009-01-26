@@ -772,11 +772,12 @@ def mol_to_text( structure):
   structure.mark_aromatic_bonds()
   return sm.get_smiles( structure)
 
-def text_to_mol( text, calc_coords=1):
+def text_to_mol( text, calc_coords=1, localize_aromatic_bonds=True):
   sm = smiles()
   sm.read_smiles( text)
   mol = sm.structure
-  mol.localize_aromatic_bonds()
+  if localize_aromatic_bonds:
+    mol.localize_aromatic_bonds()
   for b in mol.bonds:
     b.aromatic = 0
   if calc_coords:

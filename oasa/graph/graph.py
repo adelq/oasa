@@ -69,10 +69,13 @@ class graph( object):
     all the used objects are different"""
     c = self.create_graph()
     for v in self.vertices:
-      c.add_vertex()
+      new = v.copy()
+      c.add_vertex( new)
     for e in self.edges:
-      i, j = e.get_vertices()
-      c.add_edge( i, j)
+      v1, v2 = e.get_vertices()
+      i1 = self.vertices.index( v1)
+      i2 = self.vertices.index( v2)
+      c.add_edge( c.vertices[i1], c.vertices[i2])
     return c
     
   def create_vertex( self):
@@ -165,7 +168,8 @@ class graph( object):
     self.edges.remove( e)
     v1, v2 = e.get_vertices()
     v1.remove_edge_and_neighbor( e)
-    v2.remove_edge_and_neighbor( e)
+    if v1 is not v2:
+      v2.remove_edge_and_neighbor( e)
     self._flush_cache()
     
 
@@ -399,7 +403,7 @@ class graph( object):
 
 
 
-  def get_all_cycles_e( self):
+  def get_all_cycles_e_old( self):
     """returns all cycles found in the graph as sets of edges;
     this version of the algorithm strips all non-cyclic (bridge) edges
     and then searches for cycles in the rest"""
@@ -417,12 +421,11 @@ class graph( object):
     all_cycles = set( map( frozenset, all_cycles))
 
     self.reconnect_temporarily_disconnected_edges()
-    
     return all_cycles
 
 
 
-  def get_all_cycles_e_old( self):
+  def get_all_cycles_e_oldest( self):
     """returns all cycles found in the graph as sets of edges"""
     to_go = set( self.vertices)
     for v in self.vertices:
@@ -628,16 +631,69 @@ class graph( object):
 
 
 
-  def get_all_cycles( self):
+  def get_all_cycles_old( self):
     """returns all cycles found in the graph as sets of vertices,
     use get_all_cycles_e to get the edge variant, which is better for building new
     graphs as the mapping edges => vertices is unambiguous, while edges=>vertices=>edges might
     include some more edges"""
-    return map( self.edge_subgraph_to_vertex_subgraph, self.get_all_cycles_e())
+    return map( self.edge_subgraph_to_vertex_subgraph, self.get_all_cycles_e_old())
 
 
-      
+  def get_all_cycles_e( self):
+    return map( self.vertex_subgraph_to_edge_subgraph, self.get_all_cycles())
+  
 
+  def get_all_cycles( self):
+    """
+    implementation of:
+    A New Algorithm for Exhaustive Ring Perception in a Molecular Graph
+    Th. Hanser, Ph. Jauffret, and G. Kaufmann
+    J. Chem. Inf. Comput. Sci., 1996, 36 (6), 1146-1152 . DOI: 10.1021/ci960322f
+    """
+    pgraph = self._get_p_graph()
+    rings = set()
+    for pv in copy.copy( pgraph.vertices):
+      rings |= graph._p_graph_remove( pv, pgraph)
+    final_rings = set()
+    for ring in rings:
+      final_ring = frozenset( [v.properties_['original'] for v in ring])
+      final_rings.add( final_ring)
+    return final_rings
+  
+
+  def _get_p_graph( self):
+    """helper method for p-graph (path graph) generation"""
+    p = self.deep_copy()
+    # we count on order of vertices remaining the same
+    for i,v in enumerate( self.vertices):
+      p.vertices[i].properties_['original'] = v
+    for e in p.edges:
+      e.path_ = set( e.vertices) 
+    return p
+
+  @staticmethod
+  def _p_graph_remove( v, pgraph):
+    rings = set()
+    neighbor_edge_vertex_pairs = list( v.get_neighbor_edge_pairs())
+    new_edges = []
+    for i,(ne1,nv1) in enumerate( neighbor_edge_vertex_pairs):
+      for ne2,nv2 in neighbor_edge_vertex_pairs[i+1:]:
+        if (nv1 is nv2 and (ne1.path_ & ne2.path_ == set( [v,nv2]))) or (ne1.path_ & ne2.path_ == set( [v])):
+          new_path = ne1.path_ | ne2.path_
+          new_edge = pgraph.create_edge()
+          new_edge.path_ = new_path
+          pgraph.add_edge( nv1, nv2, new_edge)
+          new_edges.append( new_edge)
+    for ne,nv in neighbor_edge_vertex_pairs:
+      pgraph.disconnect_edge( ne)
+    for e in new_edges:
+      end1, end2 = e.vertices
+      if end1 is end2:
+        # we have a loop here
+        rings.add( frozenset( e.path_))
+        pgraph.disconnect_edge( e)
+    pgraph.remove_vertex( v)
+    return rings
 
   def mark_vertices_with_distance_from( self, v):
     """returns the maximum d"""
