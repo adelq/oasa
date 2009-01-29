@@ -306,7 +306,7 @@ class molfile_converter( converter_base):
   def mols_to_file( self, structures, f):
     converter_base.mols_to_file( self, structures, f)
     m = molfile()
-    first = True
+    first = f.tell() == 0
     for mol in structures:
       if not first:
         f.write( "$$$$\n")

@@ -348,7 +348,7 @@ class smiles( plugin):
 
   def get_smiles( self, mol):
     if not mol.is_connected():
-      raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc.")
+      raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc. HINT - use molecule.get_disconnected_subgraphs() to devide the molecule to individual parts.")
     #mol = molec.copy()
     self.molecule = mol
     self.ring_joins = []
