@@ -83,7 +83,7 @@ class molfile( plugin):
 
   def _read_bond( self, file):
     a1 = read_molfile_value( file, 3, conversion=int) -1 # molfiles index from 1
-    a2 = read_molfile_value( file, 3, conversion=int) -1 # how lamish :)
+    a2 = read_molfile_value( file, 3, conversion=int) -1
     order = read_molfile_value( file, 3, conversion=int)
     type = read_molfile_value( file, 3, conversion=int)
     type_remap = { 0: 'n', 1: 'w', 6: 'h', 4: 'a'}
