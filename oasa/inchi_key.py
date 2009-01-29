@@ -1274,6 +1274,7 @@ def check_inchi_key( key):
 
 
 ## new code
+import string
 
 def key_from_inchi( inp):
   """this is for new InChIKey starting with 1.02 release"""
@@ -1281,12 +1282,13 @@ def key_from_inchi( inp):
   if inp.startswith("InChI="):
     inp = inp[6:]
   parts = inp.split( "/")
-  version = parts[0]
-  if version.endswith("S"):
-    standard = "S"
-    version = version[:-1]
+  if not parts:
+    raise Exception( "Invalid InChI string '%s'" % inp)
+  m = re.match( "(\d)(S)?", parts[0])
+  if not m:
+    raise Exception( "Invalid data in version part of InChI - '%s' in '%s'" % (parts[0], inp))
   else:
-    standard = "N"
+    version, standard = m.groups()
   if not version.isdigit():
     if len( parts) == 1:
       raise Exception( "Invalid InChI string '%s'" % inp)
@@ -1294,16 +1296,22 @@ def key_from_inchi( inp):
       raise Exception( "Invalid data in version part of InChI - '%s' in '%s'" % (version, inp))
   elif version not in "123":
     raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
+  elif standard != "S":
+    raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with '1S/'); sorry - invalid version part '%s'" % parts[0])
   del parts[0]
   i = 1
   next = True
   parts_major = [parts[0]]
+  p_count = 0
   # sort the layers into a major and minor part - these are hashed separately
   while next:
     if i >= len( parts):
       break
     if parts[i][0] in "chq":
       parts_major.append( parts[i])
+      i += 1
+    elif parts[i][0] == "p":
+      p_count += int( parts[i][1:])
       i += 1
     else:
       next = False
@@ -1313,8 +1321,15 @@ def key_from_inchi( inp):
   minor = minor and "/"+minor or minor
   if len( minor) < 255: # interesting property of the original algorithm
     minor = 2*minor
-  base = major_digest( major) + "-" + minor_digest( minor) + standard + "ABCDEFG"[int(version)-1]
-  return base + "-"+"N"
+  base = major_digest( major) + "-" + minor_digest( minor) + standard + string.ascii_uppercase[int(version)-1]
+  # last letter - we must check bounds
+  index = 13+p_count
+  if index < 0:
+    index = 0
+  elif index >= len( string.ascii_uppercase):
+    index = len( string.ascii_uppercase) -1
+  p_part = string.ascii_uppercase[index]
+  return base + "-"+p_part
 
 
 
@@ -1325,3 +1340,18 @@ if __name__ == "__main__":
   ret = key_from_inchi( inp)
   print ret
   print ret == out
+
+  if False:
+    f = file( "test_inchi_key.txt","r")
+    odd = True
+    for line in f:
+      if odd:
+        inchi = line.strip()
+      else:
+        key = line.strip()
+        if not key == "InChIKey="+key_from_inchi( inchi):
+          print inchi
+          print key
+        
+      odd = not odd
+    f.close()
