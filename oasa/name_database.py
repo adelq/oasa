@@ -19,6 +19,9 @@
 
 import os, sys
 import anydbm
+import inchi as inchimod
+import inchi_key
+
 
 
 class Config:
@@ -34,13 +37,15 @@ def normalize_inchi( inchi):
 
 def compound_to_database_string( c):
     c['inchi'] = normalize_inchi( c['inchi'])
-    return "%(inchi)s %(cid)s ### %(name)s\n" % c
+    c['inchikey'] = inchi_key.key_from_inchi( c['inchi'])
+    return "%(inchikey)s %(cid)s ### %(name)s\n" % c
 
 
 def database_string_to_compound( line):
     a,name = line.split( "###")
     inchi, cid = a.split()
-    return {'inchi':inchi.strip(), 'cid':cid.strip(), 'name':name.strip()}
+    inchikey = inchi_key.key_from_inchi( inchi)
+    return {'inchikey':inchikey.strip(), 'cid':cid.strip(), 'name':name.strip()}
     
 
 def mydb_to_gdbm( infilename, outfilename):
@@ -49,21 +54,21 @@ def mydb_to_gdbm( infilename, outfilename):
     base = gdbm.open( outfilename, "n")
     for line in infile:
         rec = database_string_to_compound( line)
-        base[ rec['inchi']] = rec['cid'] + " " + rec['name']
+        base[ rec['inchikey']] = rec['cid'] + " " + rec['name']
         
     
 
-def get_compound_from_database( inchi, database_file=None):
-    inchi = normalize_inchi( inchi)
+def get_compound_from_database( inchikey, database_file=None):
+    #inchi = normalize_inchi( inchi)
     for fname in (database_file, Config.database_file):
         if fname and os.path.exists(fname):
             break
     else:
         raise Exception("Name database not found")
     base = anydbm.open( fname)
-    if base.has_key( inchi):
-        cid, name = base[ inchi].split( " ", 1)
-        return {'inchi': inchi, 'cid': cid, 'name': name}
+    if base.has_key( inchikey):
+        cid, name = base[ inchikey].split( " ", 1)
+        return {'inchikey': inchikey, 'cid': cid, 'name': name}
     else:
         return None
 
@@ -71,9 +76,8 @@ def get_compound_from_database( inchi, database_file=None):
 def name_molecule( mol, database_file=None):
     """tries to find name for an OASA molecule in the database,
     it requires InChI generation to work"""
-    import inchi
-    inch = inchi.mol_to_text( mol)
-    return get_compound_from_database( inch, database_file=database_file)
+    key = inchimod.generate_inchi_key( mol)
+    return get_compound_from_database( key, database_file=database_file)
 
 
 if __name__ == "__main__":
@@ -88,4 +92,4 @@ if __name__ == "__main__":
         else:
             print "you must supply a valid filename to update the database or no argument for a test to run"
     else:
-        print get_compound_from_database( "1S/C4H10/c1-3-4-2/h3-4H2,1-2H3")
+        print get_compound_from_database( "IJDNQMDRQITEOD-UHFFFAOYSA-N")
