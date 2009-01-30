@@ -88,4 +88,4 @@ if __name__ == "__main__":
         else:
             print "you must supply a valid filename to update the database or no argument for a test to run"
     else:
-        print get_compound_from_database( "1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
+        print get_compound_from_database( "1S/C4H10/c1-3-4-2/h3-4H2,1-2H3")
