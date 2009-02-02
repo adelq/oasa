@@ -118,7 +118,8 @@ class cairo_out:
     'wedge_width': 6.0,
     'font_name': "Arial",
     'font_size': 16,
-    'background_color': (1,1,1),
+    # background color in RGBA
+    'background_color': (1,1,1,1),
     'color_atoms': True,
     'color_bonds': True,
     'space_around_atom': 2,
@@ -238,6 +239,8 @@ class cairo_out:
     self.context.translate( round( -x1*self.scaling+self.scaling*self.margin), round( -y1*self.scaling+self.scaling*self.margin))
     self.context.scale( self.scaling, self.scaling)
     self.context.rectangle( x1, y1, w, h)
+    self._set_source_color( self.background_color)
+    self.context.paint()
     self.context.new_path()
     self.context.set_source_rgb( 0, 0, 0)
     [self.draw_mol( mol) for mol in mols]
@@ -648,7 +651,7 @@ class cairo_out:
       # background
       if self.add_background_to_text:
         self.context.rectangle( x1+xbearing, y1+ybearing, width, height)
-        self.context.set_source_rgb( *self.background_color)
+        self._set_source_color( self.background_color)
         self.context.fill()
         #self.context.set_line_width( 3)
         #self.context.stroke()
@@ -702,6 +705,16 @@ class cairo_out:
         bbox[3] = y2
     return bbox
 
+  def _set_source_color( self, color):
+    """depending on the value of color uses the proper method,
+    either set_source_rgb or set_source_rgba"""
+    if len( color) == 3:
+      self.context.set_source_rgb( *color)
+    elif len( color) == 4:
+      self.context.set_source_rgba( *color)
+    else:
+      raise ValueError( "wrong specification of color '%s'" % color)
+    
 
 def mol_to_png( mol, filename, **kw):
   c = cairo_out( **kw)
