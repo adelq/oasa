@@ -29,8 +29,8 @@ OVERALL:
 
 
 SMILES:
-- as stereo information are not supported (yet), they are also not read properly so don't use them -
-  the result is unpredictable
+- cis/trans stereochemistry is supported, some attempt were made to make tetrahedral stereochemistry
+  work, but it is not very much tested
 
 
 InChI:
@@ -45,9 +45,10 @@ MOLFILE
 
 COORDS GENERATOR:
 - coords for molecules like calix[4]arene and similar do not give a very nice picture
+- tetrahedral stereochemistry is not taken into account
 
 
 CAIRO_OUT:
 - pycairo is required to make use of cairo_out functionality
-- only PNG export is supported now
+- PNG, PDF and SVG export is supported now
 

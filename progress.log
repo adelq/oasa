@@ -1,3 +1,9 @@
+RELEASE - OASA 0.12.7
+----------------------------------------
+ * enhancements - cairo_out - mols_to_cairo and mol_to_cairo convenience functions added
+ * fixes - cairo_out - background was not properly painted (thanks to Noel O'Boyle for reporting this)
+
+
 RELEASE - OASA 0.12.6
 ----------------------------------------
  * enhancements - cairo_out - more than one molecule can be placed onto a canvas

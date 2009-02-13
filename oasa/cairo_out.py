@@ -720,9 +720,17 @@ def mol_to_png( mol, filename, **kw):
   c = cairo_out( **kw)
   c.mol_to_cairo( mol, filename)
 
-def mols_to_png( mol, filename, **kw):
+def mols_to_png( mols, filename, **kw):
   c = cairo_out( **kw)
-  c.mols_to_cairo( mol, filename)
+  c.mols_to_cairo( mols, filename)
+
+def mol_to_cairo( mol, filename, format, **kw):
+  c = cairo_out( **kw)
+  c.mol_to_cairo( mol, filename, format=format)
+
+def mols_to_cairo( mols, filename, format, **kw):
+  c = cairo_out( **kw)
+  c.mols_to_cairo( mols, filename, format=format)
 
 
 if __name__ == "__main__":

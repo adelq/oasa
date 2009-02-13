@@ -31,7 +31,6 @@ import xml.dom.minidom as dom
 import dom_extensions
 import string
 import os
-import popen2
 import coords_generator
 from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
 import select
