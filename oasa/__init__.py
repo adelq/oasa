@@ -42,6 +42,9 @@ import name_database
 import subsearch
 import svg_out
 import stereochemistry
+import geometry
+import transform3d
+import transform
 
 atom = atom.atom
 molecule = molecule.molecule
@@ -52,7 +55,7 @@ chem_vertex = chem_vertex.chem_vertex
 all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
        "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
        'query_atom','oasa_exceptions','name_database',"subsearch", "svg_out",
-       'stereochemistry']
+       'stereochemistry','geometry','transform','transform3d']
 
 try:
   import cairo_out

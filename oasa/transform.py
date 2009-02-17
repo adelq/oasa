@@ -1,6 +1,6 @@
 #--------------------------------------------------------------------------
 #     This file is part of BKchem - a chemical drawing program
-#     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
+#     Copyright (C) 2003-2009 Beda Kosata <beda@zirael.org>
 
 #     This program is free software; you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -23,7 +23,9 @@
 
 """this module provides basic coordinate transformations based on matrix algebra"""
 
+from __future__ import division
 from math import cos, sin, pi
+import geometry
 
 class transform:
   """this class provides basic higher-level interface for coordinate transforms"""
@@ -80,6 +82,21 @@ class transform:
     "add an scaling step to transformation matrix, same scaling for both dimensions"
     self.mat = matrix( mat=self.mat.get_multiplied( [[scale,0,0],[0,scale,0],[0,0,1]]))
 
+  def get_scaling( self):
+    """computes the value of scaling from self"""
+    x01, y01, x02, y02 = [0, 0, 100, 100]
+    x11, y11, x12, y12 = self.transform_4( (x01, y01, x02, y02))
+    l1 = geometry.point_distance( x01, y01, x02, y02)
+    l2 = geometry.point_distance( x11, y11, x12, y12)
+    return l2/l1
+
+
+  def get_scaling_xy( self):
+    """computes the scaling for 'x' and 'y' separately"""
+    x01, y01, x02, y02 = [0, 0, 100, 100]
+    x11, y11, x12, y12 = self.transform_4( (x01, y01, x02, y02))
+    return (x12-x11)/(x02-x01), (y12-y11)/(y02-y01)
+ 
 
 class matrix:
   "this class provides common operations for matrix of 3x3 elements"

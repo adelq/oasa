@@ -766,12 +766,12 @@ import subprocess
 
 def _run_command( command, input):
   p = subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  o, er = p.communicate( input)
+  o, er = p.communicate( str( input))
   return o
 
 
 def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_error=False):
-  """ignore the case when InChIKey cannot be generated to some reason
+  """ignore the case when InChIKey cannot be generated for some reason
   (no mhash library and old InChI program)"""
   if not program:
     import config
@@ -781,6 +781,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_erro
     options = "/AUXNONE /STDIO /Key" + (fixed_hs and " /FixedH" or "")
   else:
     options = "-AUXNONE -STDIO -Key" + (fixed_hs and " -FixedH" or "")
+  #print options
   command = [os.path.abspath( program)] + options.split()
   text = _run_command( command, mf)
   inchi = ""
@@ -884,7 +885,7 @@ if __name__ == '__main__':
       mol = text_to_mol( text, calc_coords=True, include_hydrogens=False)
       print map( str, [b for b in mol.bonds if b.order == 0])
       print "  smiles: ", smiles.mol_to_text( mol)
-      print "  inchi:  ", mol_to_text( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
+      print "  inchi:  ", generate_inchi( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
       print "  charge: ", sum( [a.charge for a in mol.vertices])
       print "  mw:     ", mol.weight
     print generate_inchi_and_inchikey( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
