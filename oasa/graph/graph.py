@@ -562,7 +562,7 @@ class graph( object):
         if not c <= reduce( operator.or_, map( set, cs)):
           print "AAA"
           cs.insert( 0, c)
-      cycles = set( cs)
+      cycles = set( [frozenset( _c) for _c in cs])
 
     # count the cycles and report warnings if their number is wrong
     if len( cycles) < ncycles:
