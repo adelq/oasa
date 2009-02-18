@@ -512,13 +512,14 @@ def create_transformation_to_coincide_point_with_z_axis( mov, point):
   t = transform3d()
   a,b,c = mov
   t.set_move( -a, -b, -c)
-  t.set_rotation_y( atan2( point[0], point[2]))
+  x,y,z = t.transform_xyz( *point)
+  t.set_rotation_y( atan2( x, z))
   x,y,z = t.transform_xyz( *point)
   t.set_rotation_x( -atan2( y, sqrt(x**2+z**2)))
   x,y,z = t.transform_xyz( *point)
   if z < 0:
       t.set_rotation_x( pi)
-  t.set_move( *mov)
+  #t.set_move( *mov)
   return t
 
 

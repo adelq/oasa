@@ -102,6 +102,8 @@ class transform3d:
     "add an scaling step to transformation matrix, same scaling for both dimensions"
     self.set_scaling_xyz( scale, scale, scale)
 
+  def get_inverse( self):
+    return transform3d( mat=self.mat.get_inverse())
 
 
 class matrix:
@@ -119,7 +121,36 @@ class matrix:
     return ret
 
   def get_inverse( self):
-    pass
+    def _part( a, b):
+      _ret = [[0,0,0],[0,0,0],[0,0,0]]
+      for i in range( len( m)):
+        if i == a:
+          continue
+        elif i > a:
+          i2 = i - 1
+        else:
+          i2 = i
+        for j in range( len( m)):
+          if j == b:
+            continue
+          elif j > b:
+            j2 = j - 1
+          else:
+            j2 = j
+          _ret[i2][j2] = m[i][j]
+      return _ret
+      
+    m = self.mat
+    inv = matrix([[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])
+    det = self.get_determinant()
+    for i in range( len( m)):
+      for j in range( len( m)):
+        part = _part( i, j)
+        part_det = matrix._determinant_3( part)
+        sign = (i+j)%2 and -1.0 or 1.0
+        inv.mat[i][j] = sign * part_det / det
+    return inv.get_transposed()
+
 
   def get_multiplied2( self, multi):
     "returns matrix multiplied by multi"
@@ -151,4 +182,17 @@ class matrix:
           m[i].append( multi[i][0]*self.mat[0][j] + multi[i][1]*self.mat[1][j] + multi[i][2]*self.mat[2][j] +  multi[i][3]*self.mat[3][j])
     return  m
 
+  def get_determinant( self):
+    _d3 = matrix._determinant_3
+    m = self.mat
+    a = m[0][0] * _d3([[m[1][1],m[1][2],m[1][3]],[m[2][1],m[2][2],m[2][3]],[m[3][1],m[3][2],m[3][3]]])
+    b = m[0][1] * _d3([[m[1][0],m[1][2],m[1][3]],[m[2][0],m[2][2],m[2][3]],[m[3][0],m[3][2],m[3][3]]])
+    c = m[0][2] * _d3([[m[1][0],m[1][1],m[1][3]],[m[2][0],m[2][1],m[2][3]],[m[3][0],m[3][1],m[3][3]]])
+    d = m[0][3] * _d3([[m[1][0],m[1][1],m[1][2]],[m[2][0],m[2][1],m[2][2]],[m[3][0],m[3][1],m[3][2]]])
+    return a-b+c-d
+
+
+  @staticmethod
+  def _determinant_3( _m):
+      return (((_m[0][0] * _m[1][1] * _m[2][2]) + (_m[0][1] * _m[1][2] * _m[2][0]) + (_m[0][2] * _m[1][0] * _m[2][1])) - ((_m[2][1] * _m[1][2] * _m[0][0]) + (_m[2][2] * _m[1][0] * _m[0][1]) + (_m[2][0] * _m[1][1] * _m[0][2])))
 

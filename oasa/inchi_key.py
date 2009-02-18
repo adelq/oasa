@@ -1297,7 +1297,8 @@ def key_from_inchi( inp):
   elif version not in "123":
     raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
   elif standard != "S":
-    raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with '1S/'); sorry - invalid version part '%s'" % parts[0])
+    return key_from_inchi_old( inp)
+    #raise Exception( "InChIKey generation from InChI is only supported for standard InChI (starting with '1S/'); sorry - invalid version part '%s'" % parts[0])
   del parts[0]
   i = 1
   next = True
