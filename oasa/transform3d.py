@@ -52,6 +52,11 @@ class transform3d:
       ret.append( y)
     return ret
 
+  def transform_xyz_flat_list( self, coords):
+    ret = []
+    for j in range( 0, len( coords), 3):
+      ret += self.transform_xyz( coords[j], coords[j+1], coords[j+2])
+    return ret
 
   def transform_list( self, l):
     ret = []

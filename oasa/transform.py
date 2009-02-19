@@ -39,6 +39,12 @@ class transform:
     x1, y1, one = self.mat.get_multiplied2( [[x],[y],[1]])
     return x1[0], y1[0]
 
+  def transform_xyz( self, x, y, z):
+    """used for compatibility with transform3d, it does not work with
+    z-coord at all"""
+    x,y = self.transform_xy( x, y)
+    return x,y,z
+
   def transform_4( self, list):
     "for items that have 4 coordinates (lines, rectangles) this transforms 'em all"
     x1, y1, one = self.mat.get_multiplied2( [[list[0]],[list[1]],[1]])
