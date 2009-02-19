@@ -215,16 +215,16 @@ class cairo_out:
     # Because it is not possible to calculate the bounding box of a drawing before its drawn (mainly
     # because we don't know the size of text items), this object internally draws to a surface with
     # large margins to get the bbox
-    _w = int( w+2*self.scaling*self._temp_margin)
-    _h = int( h+2*self.scaling*self._temp_margin)
+    _w = int( self.scaling*w+2*self.scaling*self._temp_margin)
+    _h = int( self.scaling*h+2*self.scaling*self._temp_margin)
     self.create_dummy_surface( _w, _h)
     self.context = cairo.Context( self.surface)
     [self.draw_mol( mol) for mol in mols]
     x1, y1, x2, y2 = self._get_bbox()
     x1, y1 = self.context.user_to_device( x1, y1)
     x2, y2 = self.context.user_to_device( x2, y2)
-    width = int( x2 - x1 + 2*self.margin*self.scaling)
-    height = int( y2 - y1 + 2*self.margin*self.scaling)
+    width = int( self.scaling*(x2-x1) + 2*self.margin*self.scaling)
+    height = int( self.scaling*(y2-y1) + 2*self.margin*self.scaling)
 
     # now paint for real
     self.filename = filename
@@ -741,7 +741,7 @@ if __name__ == "__main__":
   #mol.vertices[0].properties_['show_hydrogens'] = False
   #mol.vertices[1].properties_['show_symbol'] = False
   #mol.vertices[2].properties_['show_symbol'] = True
-  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True)
+  mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, scaling=2)
 
 ##   import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
