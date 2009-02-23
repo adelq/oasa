@@ -489,7 +489,7 @@ class graph( object):
     while vs and len( cycles) < ncycles:
       new_cycles = set()
       vs2 = [v for v in vs if v.degree == 2]
-      # disconnect something if there are no edges of degree 2
+      # disconnect something if there are no vertices of degree 2
       removed_e = None
       if not vs2:
         for v in vs:
@@ -506,36 +506,43 @@ class graph( object):
           if x:
             new_cycles.update( set( x))
             break
-      cycles.update( new_cycles)
-      # strip the cycles
-      to_disconnect = set()
-      for cycle in new_cycles:
-        # find the longest degree==2 chain in each cycle
-        paths = set()
-        to_go = set( [v for v in self.edge_subgraph_to_vertex_subgraph( cycle) if v.degree == 2])
-        while to_go:
-          now = set( [to_go.pop()])            
-          path = set( now)
-          while now:
-            now = reduce( operator.or_, [set( [n for n in v.neighbors if n.degree == 2]) for v in now])
-            now &= to_go
-            to_go -= now
-            path.update( now)
-          if path:
-            paths.add( frozenset( path))
-        #if not paths:
-        #  paths.add( now)
-        l = max( map( len, paths))
-        path = [p for p in paths if len( p) == l][0]
-        # now mark them for disconnection
-        v1 = set( path).pop()
-        to_disconnect.add( list( v1.neighbor_edges)[0])
-
-      # disconnect the new edges
-      [self.temporarily_disconnect_edge( e) for e in to_disconnect]
-      # reconnect the edge removed on the top
       if removed_e:
-        self.reconnect_temporarily_disconnected_edge( removed_e)
+        # we removed an edge - we need to check what cycles it would influence
+        # we can also assume that there are only two vertices with degree 2
+        # after the removal of this edge and these are the end vertices
+        # therefore the code to detect longest path of degree 2 vertices is
+        # superfluous
+        to_disconnect = [list( removed_e.vertices[0].neighbor_edges)[0]]
+        # reconnect the edge removed on the top
+        if removed_e:
+          self.reconnect_temporarily_disconnected_edge( removed_e)
+      else:
+        # strip the cycles
+        to_disconnect = set()
+        for cycle in new_cycles:
+          # find the longest degree==2 chain in each cycle
+          paths = set()
+          to_go = set( [v for v in self.edge_subgraph_to_vertex_subgraph( cycle) if v.degree == 2])
+          while to_go:
+            now = set( [to_go.pop()])            
+            path = set( now)
+            while now:
+              now = reduce( operator.or_, [set( [n for n in v.neighbors if n.degree == 2]) for v in now])
+              now &= to_go
+              to_go -= now
+              path.update( now)
+            if path:
+              paths.add( frozenset( path))
+          l = max( map( len, paths))
+          path = [p for p in paths if len( p) == l][0]
+          # now mark them for disconnection
+          v1 = set( path).pop()
+          to_disconnect.add( list( v1.neighbor_edges)[0])
+      # disconnect what needs to be disconnected
+      [self.temporarily_disconnect_edge( e) for e in to_disconnect]
+
+      # add new_cycles to cycles
+      cycles.update( new_cycles)
 
       # strip the degree==1 vertices
       vs1 = [v for v in self.vertices if v.degree == 1]
@@ -614,7 +621,7 @@ class graph( object):
         gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
     while 1:
       all_rets = []
-      for i, gen in enumerate( gens):
+      for gen in gens:
         rets = gen.next()
         new_rets = []
         if rets:

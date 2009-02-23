@@ -232,7 +232,12 @@ class molecule( graph.graph):
 
 
   def mark_aromatic_bonds( self):
-    rings = self.get_all_cycles()   #self.get_smallest_independent_cycles()
+    sssr = self.get_smallest_independent_cycles()
+    if len( sssr) > 10:
+      # turn off processing of all cycles - it would be too slow
+      rings = sssr
+    else:
+      rings = self.get_all_cycles()   #self.get_smallest_independent_cycles()
     solved = [1]
     # we need to repeat it to mark such things as 'badly' drawn naphtalene (no double bond in the centre) 
     while solved:

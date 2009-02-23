@@ -108,6 +108,9 @@ class TestEqualSMILES(unittest.TestCase):
               ("C=1CC=1","C1C=C1", True),
               ("C12CC%01CC2","C12CC1CC2", True),
               ("C%01%02CC%01CC2","C12CC1CC2", True),
+              ("Oc%11ccccc%11","Oc1ccccc1",True),
+              ("C%99CCCCC%992CCCCC2","C1CCCCC12CCCCC2",True),
+              ("C%99CCCCC%88%99CCCCC%88","C1CCCCC12CCCCC2",True),
               ("H","[H]", False),
               ("C","[2H]C", False),
               ("[C]","[CH0]", True),
@@ -132,6 +135,7 @@ class TestSMILESReading(unittest.TestCase):
 
   formulas = [("Sc1ccccc1",("C6H6S",)),
               ("Oc1ccccc1",("C6H6O",)),
+              ("Oc%11ccccc%11",("C6H6O",)),
               ("[Na+].[Cl-]", ("Na","Cl")),
               ("[O-]c1ccccc1.[Na+]",("C6H5O","Na")),
               ("O=C[O-].[NH4+]",("CHO2","H4N")),

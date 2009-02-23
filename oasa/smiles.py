@@ -348,7 +348,7 @@ class smiles( plugin):
 
   def get_smiles( self, mol):
     if not mol.is_connected():
-      raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc. HINT - use molecule.get_disconnected_subgraphs() to devide the molecule to individual parts.")
+      raise oasa_exceptions.oasa_not_implemented_error( "SMILES", "Cannot encode disconnected compounds, such as salts etc. HINT - use molecule.get_disconnected_subgraphs() to divide the molecule to individual parts.")
     #mol = molec.copy()
     self.molecule = mol
     self.ring_joins = []
@@ -409,7 +409,7 @@ class smiles( plugin):
       for e in self.ring_joins:
         if v in e.get_vertices():
           yield self.recode_oasa_to_smiles_bond( e)
-          yield str( self.ring_joins.index( e) +1)
+          yield self._create_ring_join_smiles( self.ring_joins.index( e))
       return
     while not (is_line( mol) and (not start_from or start_from.get_degree() <= 1)):
       if is_pure_ring( mol):
@@ -444,7 +444,7 @@ class smiles( plugin):
           _b = self.recode_oasa_to_smiles_bond( e)
           if _b not in "/\\":
             yield _b
-          yield str( self.ring_joins.index( e) +1)
+          yield self._create_ring_join_smiles( self.ring_joins.index( e))
       # branches
       if v in self.branches:
         for edg, branch in self.branches[ v]:
@@ -613,6 +613,14 @@ class smiles( plugin):
           return e, p1, v, p2
     print mol, mol.is_connected(), ',', map( len, mol.get_connected_components()), ',', start_from
     raise "fuck, how comes!?"
+
+  @staticmethod
+  def _create_ring_join_smiles( index):
+    i = index +1
+    if i > 9:
+      return "%%%d" % i
+    else:
+      return str( i)
 
 
 
