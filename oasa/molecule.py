@@ -234,7 +234,7 @@ class molecule( graph.graph):
   def mark_aromatic_bonds( self):
     sssr = self.get_smallest_independent_cycles()
     if len( sssr) > 10:
-      # turn off processing of all cycles - it would be too slow
+      # turn off processing of all cycles - it would be too slow, just use SSSR
       rings = sssr
     else:
       rings = self.get_all_cycles()   #self.get_smallest_independent_cycles()
