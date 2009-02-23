@@ -25,7 +25,7 @@ import misc
 import operator
 import copy
 import sys
-
+import transform3d
 
 class cairo_out:
 
@@ -339,88 +339,121 @@ class cairo_out:
       self.context.stroke()
 
     # code itself
-
+    # at first detect the need to make 3D adjustments
+    self._transform = transform3d.transform3d()
+    self._invtransform = transform3d.transform3d()
+    transform = None
+    if e.order > 1:
+      atom1,atom2 = e.vertices
+      for n in atom1.neighbors + atom2.neighbors:
+        # e.atom1 and e.atom2 are in this list as well
+        if n.z != 0:
+          # engage 3d transform prior to detection of where to draw
+          transform = self._get_3dtransform_for_drawing( e)
+          #transform = None
+          break
+      if transform:
+        for n in atom1.neighbors + atom2.neighbors:
+          n.coords = transform.transform_xyz( *n.coords)
+        self._transform = transform
+        self._invtransform = transform.get_inverse()
+    # // end of 3D adjustments
+    # now the code itself
     coords = self._where_to_draw_from_and_to( e)
-    if not coords:
-      return 
-    start = coords[:2]
-    end = coords[2:]
-    v1, v2 = e.vertices
-    if self.color_bonds:
-      color1 = self.atom_colors.get( v1.symbol, (0,0,0))
-      color2 = self.atom_colors.get( v2.symbol, (0,0,0))
-    else:
-      color1 = color2 = (0,0,0)
-    has_shown_vertex = bool( [1 for _v in e.vertices if _v in self._vertex_to_bbox])
-
-    if e.order == 1:
-      if e.type == 'w':
-        draw_plain_or_colored_wedge( start, end)
-      elif e.type == 'h':
-        draw_plain_or_colored_hatch( start, end)
+    if coords:
+      start = coords[:2]
+      end = coords[2:]
+      v1, v2 = e.vertices
+      if self.color_bonds:
+        color1 = self.atom_colors.get( v1.symbol, (0,0,0))
+        color2 = self.atom_colors.get( v2.symbol, (0,0,0))
       else:
-        draw_plain_or_colored_line( start, end)
-      
-    if e.order == 2:
-      side = 0
-      # find how to center the bonds
-      # rings have higher priority in setting the positioning
-      in_ring = False
-      for ring in self.molecule.get_smallest_independent_cycles():
-        double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
-        if v1 in ring and v2 in ring:
-          in_ring = True
-          side += double_bonds * reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y)) for a in ring if a!=v1 and a!=v2])
-      # if rings did not decide, use the other neigbors
-      if not side:
-        for v in v1.neighbors + v2.neighbors:
-          if v != v1 and v!= v2:
-            side += geometry.on_which_side_is_point( start+end, (v.x, v.y))
-      # if neighbors did not decide either
-      if not side and (in_ring or not has_shown_vertex):
-        if in_ring:
-          # we don't want centered bonds inside rings
-          side = 1 # select arbitrary value
+        color1 = color2 = (0,0,0)
+      has_shown_vertex = bool( [1 for _v in e.vertices if _v in self._vertex_to_bbox])
+
+      if e.order == 1:
+        if e.type == 'w':
+          draw_plain_or_colored_wedge( start, end)
+        elif e.type == 'h':
+          draw_plain_or_colored_hatch( start, end)
         else:
-          # bond between two unshown atoms - we want to center them only in some cases
-          if len( v1.neighbors) == 1 and len( v2.neighbors) == 1:
-            # both atoms have only one neighbor 
-            side = 0
-          elif len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
-            # try to figure out which side is more towards the center of the molecule
-            side = reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y))
-                                          for a in self.molecule.vertices if a!=v1 and a!=v2], 0)
-            if not side:
-              side = 1 # we choose arbitrary value, we don't want centering
-      if side:
-        draw_plain_or_colored_line( start, end)
-        x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
-        # shorten the second line
-        length = geometry.point_distance( x1,y1,x2,y2)
-        if v2 not in self._vertex_to_bbox:
-          x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -self.bond_second_line_shortening*length)
-        if v1 not in self._vertex_to_bbox:
-          x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -self.bond_second_line_shortening*length)
-        draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
-      else:
-        for i in (1,-1):
-          x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
-          draw_plain_or_colored_line( (x1, y1), (x2, y2))
+          draw_plain_or_colored_line( start, end)
 
-    elif e.order == 3:
-      self._draw_line( start, end, line_width=self.line_width)
-      for i in (1,-1):
-        x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
-        draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
+      if e.order == 2:
+        side = 0
+        # find how to center the bonds
+        # rings have higher priority in setting the positioning
+        in_ring = False
+        for ring in self.molecule.get_smallest_independent_cycles():
+          double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
+          if v1 in ring and v2 in ring:
+            in_ring = True
+            side += double_bonds * reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y)) for a in ring if a!=v1 and a!=v2])
+        # if rings did not decide, use the other neigbors
+        if not side:
+          for v in v1.neighbors + v2.neighbors:
+            if v != v1 and v!= v2:
+              side += geometry.on_which_side_is_point( start+end, (v.x, v.y))
+        # if neighbors did not decide either
+        if not side and (in_ring or not has_shown_vertex):
+          if in_ring:
+            # we don't want centered bonds inside rings
+            side = 1 # select arbitrary value
+          else:
+            # bond between two unshown atoms - we want to center them only in some cases
+            if len( v1.neighbors) == 1 and len( v2.neighbors) == 1:
+              # both atoms have only one neighbor 
+              side = 0
+            elif len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
+              # try to figure out which side is more towards the center of the molecule
+              side = reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y))
+                                            for a in self.molecule.vertices if a!=v1 and a!=v2], 0)
+              if not side:
+                side = 1 # we choose arbitrary value, we don't want centering
+        if side:
+          draw_plain_or_colored_line( start, end)
+          x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], self.bond_width*misc.signum( side))
+          # shorten the second line
+          length = geometry.point_distance( x1,y1,x2,y2)
+          if v2 not in self._vertex_to_bbox:
+            x2, y2 = geometry.elongate_line( x1, y1, x2, y2, -self.bond_second_line_shortening*length)
+          if v1 not in self._vertex_to_bbox:
+            x1, y1 = geometry.elongate_line( x2, y2, x1, y1, -self.bond_second_line_shortening*length)
+          draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
+        else:
+          for i in (1,-1):
+            x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
+            draw_plain_or_colored_line( (x1, y1), (x2, y2))
+
+      elif e.order == 3:
+        self._draw_line( start, end, line_width=self.line_width)
+        for i in (1,-1):
+          x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
+          draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
+
+    if transform:
+      # if transform was used, we need to transform back
+      for n in atom1.neighbors + atom2.neighbors:
+        n.coords = self._invtransform.transform_xyz( *n.coords)
     
 
   def _where_to_draw_from_and_to( self, b):
+    def fix_bbox( a):
+      x, y = a.x, a.y
+      data = self._vertex_to_bbox.get( a, None)
+      if data:
+        (ox, oy), bbox = data
+        dx = x - ox
+        dy = y - oy
+        bbox = [bbox[0]+dx,bbox[1]+dy,bbox[2]+dx,bbox[3]+dy]
+        return bbox
+      return None
     # at first check if the bboxes are not overlapping
     atom1, atom2 = b.vertices
     x1, y1 = atom1.x, atom1.y
     x2, y2 = atom2.x, atom2.y
-    bbox1 = self._vertex_to_bbox.get( atom1, None)
-    bbox2 = self._vertex_to_bbox.get( atom2, None)
+    bbox1 = fix_bbox( atom1)
+    bbox2 = fix_bbox( atom2)
     if bbox1 and bbox2 and geometry.do_rectangles_intersect( bbox1, bbox2):
       return None
     # then we continue with computation
@@ -502,7 +535,7 @@ class cairo_out:
         color = (0,0,0)
       center_letter = pos <= 0 and 'first' or 'last'
       bbox = self._draw_text( (x,y), text, center_letter=center_letter, color=color)
-      self._vertex_to_bbox[v] = geometry.expand_rectangle( bbox, self.space_around_atom)
+      self._vertex_to_bbox[v] = ((x,y), geometry.expand_rectangle( bbox, self.space_around_atom))
 
       # sometimes charge is done here, if it wasn't done before
       if charge:
@@ -531,6 +564,28 @@ class cairo_out:
         self.context.move_to( round( x-xbearing-0.5*width), round( y+0.5*height))
         self.context.show_text( charge)
 
+  def _get_3dtransform_for_drawing( self, b):
+    """this is a helper method that returns a transform3d which rotates
+    a bond and its neighbors to coincide with the x-axis and rotates neighbors to be in (x,y)
+    plane."""
+    atom1, atom2 = b.vertices
+    x1,y1,z1 = atom1.coords
+    x2,y2,z2 = atom2.coords
+    t = geometry.create_transformation_to_coincide_point_with_z_axis( [x1,y1,z1],[x2,y2,z2])
+    x,y,z = t.transform_xyz( x2,y2,z2)
+    # now rotate to make the plane of neighbor atoms coincide with x,y plane
+    angs = []
+    for n in atom1.neighbors + atom2.neighbors:
+      if n is not atom1 and n is not atom2:
+        nx,ny,nz = t.transform_xyz( *n.coords)
+        ang = math.atan2( ny, nx)
+        if ang < -0.00001:
+          ang += math.pi
+        angs.append( ang)
+    ang = sum( angs) / len( angs)
+    t.set_rotation_z( ang + math.pi/2.0)
+    t.set_rotation_y( math.pi/2.0)
+    return t
 
 
   ## ------------------------------ lowlevel drawing methods ------------------------------
@@ -669,7 +724,7 @@ class cairo_out:
     return bbox
 
 
-
+  # not used
   def _draw_rectangle( self, coords, fill_color=(1,1,1)):
     #outline = self.paper.itemcget( item, 'outline')
     x1, y1, x2, y2 = coords
@@ -684,6 +739,7 @@ class cairo_out:
     
     
   def _create_cairo_path( self, points, closed=False):
+    points = [self._invtransform.transform_xyz( p[0],p[1],0)[:2] for p in points]
     x, y = points[0]
     self.context.move_to( x, y)
     for (x,y) in points[1:]:

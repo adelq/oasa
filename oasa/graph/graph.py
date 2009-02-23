@@ -558,9 +558,7 @@ class graph( object):
       # now try to remove the biggest ones
       while len( cs) - ncycles > 0:
         c = set( cs.pop( -1))
-        print c, reduce( operator.or_, map( set, cs))
         if not c <= reduce( operator.or_, map( set, cs)):
-          print "AAA"
           cs.insert( 0, c)
       cycles = set( [frozenset( _c) for _c in cs])
 
