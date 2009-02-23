@@ -14,7 +14,7 @@ except:
 
 set = setup(
   name = 'oasa',
-  version = '0.12.7',
+  version = '0.13.0',
   description = "OASA is a free cheminformatics library written in Python",
   author = "Beda Kosata",
   author_email = "beda@zirael.org",

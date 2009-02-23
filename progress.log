@@ -1,3 +1,15 @@
+RELEASE - OASA 0.13.0
+----------------------------------------
+ * enhancements - cairo_out - double bonds in 3D rotated molecules look much better
+   		  	      (z-coordinate is taken into account when the bond is drawn)
+ * fixes - smiles - smiles encoder did not prefix two digit ring numbers with "%"
+   	 - graph - SSSR code did not find really smallest rings in case no vertices with
+	   	   degree 2 were present in the initial drawing (fullerene and such)
+	 - molecule - aromatic bond detection uses SSSR instead of all possible rings
+	   	      when there are more then 10 smallest rings - fixes lockup for fullerene
+ 	 - cairo_out - when scaling != 1 the resulting image was improperly cropped
+
+
 RELEASE - OASA 0.12.7
 ----------------------------------------
  * enhancements - cairo_out - mols_to_cairo and mol_to_cairo convenience functions added
