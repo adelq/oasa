@@ -38,7 +38,6 @@ import config
 import query_atom
 import chem_vertex
 import oasa_exceptions
-import name_database
 import subsearch
 import svg_out
 import stereochemistry
@@ -74,6 +73,15 @@ except Exception, e:
 else:
   all.append( "inchi_key")
   INCHI_KEY_AVAILABLE = True
+
+# name_database (requires inchi_key which requires mhash in Python 2.4)
+try:
+  import name_database
+except Exception, e:
+  NAME_DATABASE_AVAILABLE = False
+else:
+  all.append( "name_database")
+  NAME_DATABASE_AVAILABLE = True
 
 # structure_database requires sqlite
 try:
