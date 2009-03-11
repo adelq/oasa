@@ -531,6 +531,11 @@ class molecule( graph.graph):
     return p
 
 
+  def remove_zero_order_bonds( self):
+    """zero order bonds are created for example when SMILES is read"""
+    zero_bonds = [e for e in self.edges if e.order == 0]
+    for b in zero_bonds:
+      self.disconnect_edge( b)
 
 
 

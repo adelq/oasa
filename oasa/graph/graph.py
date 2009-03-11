@@ -231,7 +231,10 @@ class graph( object):
   #return len( self.get_connected_components()) == 1
 
   def is_tree( self):
-    return self.is_connected() and len( self.vertices)-1 == len( self.edges)
+    if self.is_connected():
+      return len( self.vertices)-1 == len( self.edges)
+    else:
+      return len( self.vertices)-len( list( self.get_connected_components())) == len( self.edges)
 
   def is_cycle( self):
     for i in self.get_degrees():
@@ -247,7 +250,6 @@ class graph( object):
 
   def contains_cycle( self):
     """this assumes that the graph is connected"""
-    assert self.is_connected()
     return not self.is_tree()
 
 
@@ -469,15 +471,15 @@ class graph( object):
     other cycles in graph are guaranteed to be combinations of them.
     Gasteiger J. (Editor), Engel T. (Editor), Chemoinformatics : A Textbook, John Wiley & Sons 2001,
     ISBN 3527306811, 174."""
-    assert self.is_connected()
-    ncycles = len( self.edges) - len( self.vertices) + 2 - len( list( self.get_connected_components()))
+    #assert self.is_connected()
+    ncycles = len( self.edges) - len( self.vertices) + len( list( self.get_connected_components()))
 
     # check if the graph is connected, don't know if we should do it...
     if ncycles < 0:
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
       ncycles = 0
 
-    # trivial case of linear molecule
+    # trivial case of tree graph
     if ncycles == 0:
       return set()
 

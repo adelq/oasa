@@ -158,6 +158,7 @@ class smiles( plugin):
         last_atom = bracket_openings.pop(-1)
 
     ## FINISH
+    # deal with explicit valency, etc.
     for a in mol.vertices:
       if not "explicit_valency" in a.properties_:
         a.raise_valency_to_senseful_value()
@@ -733,9 +734,7 @@ class smiles_converter( converter_base):
     mol = sm.structure
     if mol == None:
       return []
-    zero_bonds = [e for e in mol.edges if e.order == 0]
-    for b in zero_bonds:
-      mol.disconnect_edge( b)
+    mol.remove_zero_order_bonds()
     mols = mol.get_disconnected_subgraphs()
     for mol in mols:
       if self.configuration["R_LOCALIZE_AROMATIC_BONDS"]:
