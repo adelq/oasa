@@ -102,6 +102,12 @@ class molfile( plugin):
         index = int( at)
         multi = int( rad)
         self.structure.vertices[index-1].multiplicity = multi
+    m = re.match( "M\s+CHG\s+(\d+)(.*)", prop)
+    if m:
+      for at,chg in re.findall( "(\d+)\s+(-?\d+)", m.group( 2)):
+        index = int( at)
+        charge = int( chg)
+        self.structure.vertices[index-1].charge = charge
     
 
   def write_file( self, file):
