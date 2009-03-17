@@ -473,7 +473,6 @@ class graph( object):
     ISBN 3527306811, 174."""
     #assert self.is_connected()
     ncycles = len( self.edges) - len( self.vertices) + len( list( self.get_connected_components()))
-
     # check if the graph is connected, don't know if we should do it...
     if ncycles < 0:
       warnings.warn( "The number of edges is smaller than number of vertices-1, the molecule must be disconnected, which means there is something wrong with it.", UserWarning, 3)
@@ -556,7 +555,8 @@ class graph( object):
             self.temporarily_disconnect_edge( e)
         vs1 = [v for v in self.vertices if v.degree == 1]
 
-      vs = [v for v in self.vertices if v.degree]          
+      self.temporarily_strip_bridge_edges()
+      vs = [v for v in self.vertices if v.degree]
 
     # remove extra cycles in some cases like adamantane
     if len( cycles) - ncycles > 0:
@@ -621,7 +621,13 @@ class graph( object):
       # we dont want to go back, therefore we use went_through
       if (not went_through or neigh not in went_through) and not e == came_from:
         gens.append( self._get_smallest_cycles_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
+
+    counter = 0
     while 1:
+      counter += 1
+      if counter > 10000:
+        raise Exception( "This exception is triggered when ring-searching code does not find anything in 10000 steps. This means that there is with high probability something wrong with the code and it would be futile to continue in an endless search. Please let me know at beda@zirael.org where this happened")
+
       all_rets = []
       for gen in gens:
         rets = gen.next()
@@ -959,7 +965,7 @@ class graph( object):
     f is an file-like object opened for reading"""
     num = int( f.readline().strip())
     for i in range( num):
-      self.add_vertex( vertex())
+      self.add_vertex( self.create_vertex())
     for line in f:
       i1, i2 = map( int, line.split())
       self.add_edge( self.vertices[i1], self.vertices[i2])

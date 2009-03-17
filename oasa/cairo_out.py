@@ -384,7 +384,7 @@ class cairo_out:
         # find how to center the bonds
         # rings have higher priority in setting the positioning
         in_ring = False
-        for ring in self.molecule.get_smallest_independent_cycles():
+        for ring in self.molecule.get_smallest_independent_cycles_dangerous_and_cached():
           double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
           if v1 in ring and v2 in ring:
             in_ring = True
