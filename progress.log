@@ -1,3 +1,17 @@
+RELEASE - OASA 0.13.1
+----------------------------------------
+
+ * fixes - cairo_out - use cached version of ring searching - significantly speeds
+   	   	       up exports of larger molecules (10x or even more)
+		     - fix disconnected molecules crashing cairo_out
+	 - graph - fix rare lockups in SSSR algorithm
+	 - __init__ - make name_database import conditional
+
+ * enhancements - molfile - parse charge information from property line in molfiles
+      
+ * acknowledgments - thanks to István Vágó for several useful bug reports
+
+
 RELEASE - OASA 0.13.0
 ----------------------------------------
  * enhancements - cairo_out - double bonds in 3D rotated molecules look much better

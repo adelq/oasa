@@ -5,16 +5,12 @@ from distutils.core import setup
 import glob
 import os
 import operator
-try:
-  import py2exe
-except:
-  pass
 
 # the setup itself
 
 set = setup(
   name = 'oasa',
-  version = '0.13.0',
+  version = '0.13.1',
   description = "OASA is a free cheminformatics library written in Python",
   author = "Beda Kosata",
   author_email = "beda@zirael.org",
