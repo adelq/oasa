@@ -111,7 +111,7 @@ class smiles( plugin):
         else:
           # just atom symbol
           if c.islower():
-            symbol = c.upper()
+            symbol = c.capitalize()
             a.properties_['aromatic'] = 1
           else:
             symbol = c
@@ -119,6 +119,12 @@ class smiles( plugin):
 
         mol.add_vertex( a)
         if last_bond: # and not (not 'aromatic' in a.properties_ and last_bond.aromatic):
+          # make last bond aromatic if it was stereo and atoms are aromatic
+          if 'stereo' in last_bond.properties_ and \
+             'aromatic' in last_atom.properties_ and \
+             'aromatic' in a.properties_ and \
+             not last_bond.aromatic:
+            last_bond.aromatic = True
           mol.add_edge( last_atom, a, e=last_bond)
           last_bond = None
         elif last_atom:
@@ -192,7 +198,7 @@ class smiles( plugin):
     else:
       raise ValueError( "unparsable square bracket content '%s'" % c)
     if symbol.islower():
-      symbol = symbol.upper()
+      symbol = symbol.capitalize()
       a.properties_['aromatic'] = 1
     a.symbol = symbol
     if isotope:
@@ -785,8 +791,8 @@ def text_to_mol( text, calc_coords=1, localize_aromatic_bonds=True):
   mol = sm.structure
   if localize_aromatic_bonds:
     mol.localize_aromatic_bonds()
-  for b in mol.bonds:
-    b.aromatic = 0
+    for b in mol.bonds:
+      b.aromatic = 0
   if calc_coords:
     coords_generator.calculate_coords( mol, bond_length=calc_coords)
   return mol
@@ -830,6 +836,7 @@ if __name__ == '__main__':
   if not len( sys.argv) > 1:
     text = "COc5ccc4c2sc(cc2nc4c5)-c(cc1nc3c6)sc1c3ccc6OC"  #"ccc4ccc2cc1cc3ccccc3cc1cc2c4"
     text = "[C@@H](C)(CC)O"
+    text = "O=C1c2c3c4c(cc2)c2ccc5c6c2c(ccc6C(=O)c2c5cccc2)c4ccc3c2ccccc12"
   else:
     text = sys.argv[1]
 

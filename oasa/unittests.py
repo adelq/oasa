@@ -392,6 +392,36 @@ for i in range( len( TestStereo3.formulas)):
 ## // Stereo testing
 
 
+## Graph matching algorithm testing
+
+class TestGraphMatching(unittest.TestCase):
+  """tests if graph algorithm to find maximum matchings works"""
+
+  formulas = [("C1CCCCC1",3,0),  # smiles, matching pairs, exposed vertices
+              ("C1CCCCC1C",3,1),
+              ("C1CCCCC1CC",4,0),
+              ("C1CC1C(C)C",2,2),
+              ]
+    
+  def _testformula(self, num):
+    smile1,match_pair_num,exposed_vs_num = self.formulas[num]
+    conv = smiles.converter()
+    mols = conv.read_text( smile1)
+    self.assertEqual( len( mols), 1)
+    mol = mols[0]
+    mate, nrex = mol.get_maximum_matching()
+    self.assertEqual( nrex,exposed_vs_num)
+    self.assertEqual( len( [v for v,m in mate.items() if m!=0]), 2*match_pair_num)
+
+# this creates individual test for substructures
+for i in range( len( TestGraphMatching.formulas)):
+  setattr( TestGraphMatching, "testformula"+str(i+1), create_test(i,"_testformula"))
+
+
+## // Graph matching algorithm testing
+
+
+
 
 if __name__ == '__main__':
   import sys

@@ -75,7 +75,8 @@ class graph( object):
       v1, v2 = e.get_vertices()
       i1 = self.vertices.index( v1)
       i2 = self.vertices.index( v2)
-      c.add_edge( c.vertices[i1], c.vertices[i2])
+      new_e = e.copy()
+      c.add_edge( c.vertices[i1], c.vertices[i2], new_e)
     return c
     
   def create_vertex( self):
@@ -348,7 +349,33 @@ class graph( object):
       if v1 in vs and v2 in vs:
         g.add_edge( v1, v2, e)  # BUG - it should copy the edge?
     return g
-    
+
+
+  def get_induced_copy_subgraph_from_vertices_and_edges( self, vertices, edges, add_back_links=False):
+    """it creates a new graph, populates it with copies of vertices and edges;
+    it only uses the vertices and edges that are supplied as argument;
+    add_back_links - add x.properties_['original'] link to the original edges and vertices
+    """
+    c = self.create_graph()
+    old_v_to_new_v = {}
+    for v in vertices:
+      new = v.copy()
+      c.add_vertex( new)
+      old_v_to_new_v[v] = new
+      if add_back_links:
+        new.properties_['original'] = v
+    for e in edges:
+      v1, v2 = e.get_vertices()
+      if (v1 in old_v_to_new_v) and (v2 in old_v_to_new_v):
+        # exclude edges to not-copied vertices (this prevents programmers errors and adds the possibility
+        # to replace edges in this call by all edges)
+        new_e = e.copy()
+        if add_back_links:
+          new_e.properties_['original'] = e
+        c.add_edge( old_v_to_new_v[v1], old_v_to_new_v[v2], new_e)
+    return c
+
+  
       
   def get_degrees( self):
     """returns a generator of degrees, this is useful because for many properties
@@ -677,11 +704,15 @@ class graph( object):
   def _get_p_graph( self):
     """helper method for p-graph (path graph) generation"""
     p = self.deep_copy()
+    p.temporarily_strip_bridge_edges()
     # we count on order of vertices remaining the same
     for i,v in enumerate( self.vertices):
       p.vertices[i].properties_['original'] = v
     for e in p.edges:
-      e.path_ = set( e.vertices) 
+      e.path_ = set( e.vertices)
+    to_remove = [v for v in p.vertices if not v.neighbors]
+    for v in to_remove:
+      p.delete_vertex( v)
     return p
 
   @staticmethod
@@ -925,7 +956,7 @@ class graph( object):
 
 
   def temporarily_strip_bridge_edges( self):
-    """strip all edges that ar ea bridge, thus leaving only the cycles connected"""
+    """strip all edges that are a bridge, thus leaving only the cycles connected"""
     bridge_found = True
     while bridge_found:
       vs = [v for v in self.vertices if v.degree == 1]
@@ -976,6 +1007,112 @@ class graph( object):
       return True
     else:
       return False
+
+  ## MAXIMUM MATCHING RELATED STUFF
+
+  def get_initial_matching( self):
+    """simple method to get initial matching"""
+    nrex = len( self.vertices)
+    mate = {}.fromkeys( self.vertices, 0)
+    #return mate, nrex
+    for v in self.vertices[:-1]:
+      if mate[v] == 0:
+        for n in v.neighbors:
+          if mate[n] == 0:
+            mate[n] = v
+            mate[v] = n
+            nrex -= 2
+            break
+    return mate, nrex
+
+  def get_initial_matching_old( self):
+    """simple method to get initial matching"""
+    nrex = len( self.vertices)
+    mate = nrex*[0]
+    for i,v in enumerate( self.vertices[:-1]):
+      if mate[i] == 0:
+        for n in v.neighbors:
+          j = self.vertices.index( n)
+          if mate[j] == 0:
+            mate[j] = v
+            mate[i] = n
+            nrex -= 2
+            break
+    return mate, nrex
+
+  def find_augmenting_path_from( self, start, mate):
+    """tries to find augmenting path from start to any other exposed vertex;
+    it is not the most sophisticated algorithm and does not treat blossoms very
+    effectively, but it should work.
+    """
+    def add_copy_vertex( _v):
+      _new_v = alt_tree.create_vertex()
+      alt_tree.add_vertex( _new_v)
+      _new_v.properties_['original'] = _v
+      return _new_v
+    
+    alt_tree = self.create_graph() # alternating tree
+    copy_root = add_copy_vertex( start)
+    new_layer = [copy_root]
+    inner = True # we are now going to process inner vertices
+    hit = None
+    while new_layer and not hit:
+      next_new_layer = []
+      for copy_parent in new_layer:
+        if inner:
+          # to prevent backtracking to already walked path
+          path_from_root_to_copy_parent_original = [x.properties_['original'] for x in alt_tree.find_path_between( copy_root, copy_parent)]
+          for child in copy_parent.properties_['original'].neighbors:
+            if child not in path_from_root_to_copy_parent_original:
+              new_v = add_copy_vertex( child)
+              alt_tree.add_edge( copy_parent, new_v)
+              if mate[child] == 0:
+                hit = new_v
+                break
+              next_new_layer.append( new_v)
+        else:
+          m = mate[copy_parent.properties_['original']]
+          new_v = add_copy_vertex( m)
+          alt_tree.add_edge( copy_parent, new_v)
+          next_new_layer.append( new_v)
+      inner = not inner
+      new_layer = next_new_layer
+    if hit:
+      path = alt_tree.find_path_between( hit, copy_root)
+      aug_p = [v.properties_['original'] for v in path]
+      return aug_p
+    return None
+  
+
+  def update_matching_using_augmenting_path( self, path, mate):
+    assert len( path) % 2 == 0 # there must be an even number of vertices
+    for i in range( 0, len( path), 2):
+      v1 = path[i]
+      v2 = path[i+1]
+      mate[v1] = v2
+      mate[v2] = v1
+    return mate
+
+
+  def get_maximum_matching( self):
+    mate, nrex = self.get_initial_matching()
+    while nrex > 1:
+      #print "NREEEEEEX", nrex
+      #self._print_mate( mate)
+      exposed = [v for v,m in mate.items() if m == 0]
+      aug = self.find_augmenting_path_from( exposed[0], mate)
+      if not aug:
+        break
+      mate = self.update_matching_using_augmenting_path( aug, mate)
+      nrex -= 2
+    return mate, nrex
+    
+  def _print_mate( self, mate):
+    print "MATE",
+    for k,v in mate.items():
+      if v:
+        print "%d-%d" % (self.vertices.index(k), self.vertices.index(v)),
+    print "END"
 
   ## STATIC METHODS
 

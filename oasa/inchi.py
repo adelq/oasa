@@ -893,7 +893,9 @@ if __name__ == '__main__':
     print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
 
   repeat = 3
-  inch = "InChI=1S/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3-,6-4+" #1/C6H6/c1-2-3-4-5-6-1/h1-6H"
+  inch = "InChI=1S/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
+
+  #"InChI=1/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch

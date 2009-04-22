@@ -344,6 +344,11 @@ class atom( chem_vertex):
       yield None
 
 
+  def get_highest_possible_free_valency( self):
+    """this is used in case of aromatic bonds - it takes all aromatic bonds as single,
+    thus giving the maximum free valency that would be possible if all these localized to single"""
+    return self.valency - chem_vertex._get_occupied_valency( self)
+
 
 def cip_sorting_function( a, b):
   return -cmp( a[0], b[0])

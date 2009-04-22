@@ -1,3 +1,4 @@
+
 #--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
 #     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
@@ -91,7 +92,7 @@ periodic_table = {
 "La" : {"ord":  57, "weight": 138.9055, "exact_mass": 138.90635330, "en": 1.10, "els":  3, "valency": (3,)},
 "Ce" : {"ord":  58, "weight": 140.1160, "exact_mass": 139.90543870, "en": 1.12, "els":  4, "valency": (3, 4)},
 # conflicts with propyl
-#"Pr" : {"ord":  59, "weight": 140.9076, "exact_mass": 140.90765280, "en": 1.13, "els":  5, "valency": (3, 4)},
+"Pr" : {"ord":  59, "weight": 140.9076, "exact_mass": 140.90765280, "en": 1.13, "els":  5, "valency": (3, 4)},
 "Nd" : {"ord":  60, "weight": 144.2420, "exact_mass": 141.90772330, "en": 1.14, "els":  6, "valency": (3,)},
 "Pm" : {"ord":  61, "weight": 145.0000, "exact_mass": 144.91274900, "en": 1.13, "els":  7, "valency": (3,)},
 "Sm" : {"ord":  62, "weight": 150.3600, "exact_mass": 151.91973240, "en": 1.17, "els":  8, "valency": (2, 3)},
@@ -122,7 +123,7 @@ periodic_table = {
 "Fr" : {"ord":  87, "weight": 223.0000, "exact_mass": 223.01973590, "en": 0.70, "els":  1, "valency": (1,)},
 "Ra" : {"ord":  88, "weight": 226.0254, "exact_mass": 226.02540980, "en": 0.90, "els":  2, "valency": (2,)},
 # conflicts with acetyl
-#"Ac" : {"ord":  89, "weight": 227.0000, "exact_mass": 227.02775210, "en": 1.10, "els":  3, "valency": (2, 3)},
+"Ac" : {"ord":  89, "weight": 227.0000, "exact_mass": 227.02775210, "en": 1.10, "els":  3, "valency": (2, 3)},
 "Th" : {"ord":  90, "weight": 232.0381, "exact_mass": 232.03805530, "en": 1.30, "els":  4, "valency": (3, 4)},
 "Pa" : {"ord":  91, "weight": 231.0359, "exact_mass": 231.03588400, "en": 1.50, "els":  5, "valency": (4, 5)},
 "U"  : {"ord":  92, "weight": 238.0289, "exact_mass": 238.05078820, "en": 1.38, "els":  6, "valency": (3, 4, 5, 6)},

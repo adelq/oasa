@@ -274,15 +274,106 @@ class molecule( graph.graph):
     #  out.add( 1)
     for b, a in at.get_neighbor_edge_pairs():
       if b.order > 1 and (a in ring or b.aromatic):
-        out.add( 1)
-      elif b.order > 1:
+        if b.order == 4:
+          # we localize aromatic bonds
+          if at.get_highest_possible_free_valency() and a.get_highest_possible_free_valency():
+            # we calculate free valency with all aromatic bonds as single
+            out.add( 1)
+        else:
+          # we detect aromatic bonds
+          out.add( 1)
+      elif b.order == 2 and not (a in ring):
         out.add( 0)
     return tuple( out)
 
 
 
-
   def localize_aromatic_bonds( self):
+    """localizes aromatic bonds (does not relocalize already localized ones),
+    for those that are not aromatic but marked so
+    (it is for instance possible to misuse 'cccc' in smiles to create butadiene)
+    they will be properly localized but marked as non-aromatic"""
+    # at first get all clusters of aromatic bonds
+    for b in copy.copy( self.edges):
+      if not b.aromatic:
+        self.temporarily_disconnect_edge( b)
+    self.temporarily_strip_bridge_edges()
+    ring_clusters = map( list, [sub for sub in self.get_connected_components() if len( sub) > 1])
+    self.reconnect_temporarily_disconnected_edges()
+    # now proceed in localizing double bonds in each one
+    for cluster in ring_clusters:
+      els = [self._get_atoms_possible_aromatic_electrons( a, cluster) for a in cluster]
+      if () in els:
+        continue  # misuse of aromatic bonds (e.g. by smiles) or e.g. tetrahydronaphtalene
+      current_bonds = self.vertex_subgraph_to_edge_subgraph( cluster)
+      combinations = list( common.gen_combinations_of_series( els))
+      # try most promissing combinations first (4n+2 with maximum number of 1's and maximum sum)
+      combinations.sort( reverse=True, key=lambda x: sum(x)%4==2 and 1000000+1000*len([v for v in x if v==1])+sum(x) or sum(x)+1000*len([v for v in x if v==1]))
+      for comb in combinations:
+        if sum( comb) % 2 == 0:
+          # assign the aromatic electrons to each vertex for this run
+          for i,v in enumerate( cluster):
+            v.properties_['arom_els'] = comb[i]
+          # at first we process the bonds that are surely single (like C-S-C in thiophene)
+          to_process = []
+          for b in current_bonds:
+            v1,v2 = b.vertices
+            if v1.properties_['arom_els'] + v2.properties_['arom_els'] != 2 or \
+               (b.order in (1,4) and (not v2.get_highest_possible_free_valency() or not v1.get_highest_possible_free_valency())):
+              # these bonds must be single
+              # either the number of electrons between the atoms is not 2 or
+              # the atoms have no possible way of accomodating different than single bond
+              b.order = 1
+            else:
+              to_process.append( b)
+          to_process_atoms = self.edge_subgraph_to_vertex_subgraph( to_process)
+          processed = [v for v in cluster if not v in to_process_atoms]
+          # now we use the maximum_matching graph algorithm to localize the bonds
+          work_graph = self.get_induced_copy_subgraph_from_vertices_and_edges( to_process_atoms, to_process, add_back_links=True)
+          #return work_graph
+          mate,nrex = work_graph.get_maximum_matching()
+          ok = True
+          if not nrex:
+            # there are no exposed vertices
+            for work_v,work_n in mate.iteritems():
+              if work_n != 0:
+                work_e = work_v.get_edge_leading_to( work_n)
+                work_e.properties_['original'].order = 2
+            for e in to_process:
+              if e.order == 4:
+                e.order = 1
+          else:
+            ok = False
+          if ok:
+            # additional check
+            for v in cluster:
+              if v.properties_['arom_els'] == 1:
+                for e in v.neighbor_edges:
+                  if e.order == 2:
+                    # this is ok
+                    break
+                else:
+                  # this is not good
+                  ok = False
+                  break
+          #if not (2*len( [b for b in to_process if b.order == 2])+sum([v.properties_['arom_els'] for v in cluster if v not in to_process_atoms]) == sum( comb)):
+          #  ok = False
+          if not ok:
+            # there are some exposed vertices left
+            for b in self.vertex_subgraph_to_edge_subgraph( cluster):
+              b.order = 4
+          else:
+            break
+      if [b for b in current_bonds if b.order == 4]:
+        # we did not find a matching
+        raise ValueError( "Localization of aromatic bonds failed")
+    self.reconnect_temporarily_disconnected_edges()
+    self.localize_fake_aromatic_bonds()
+    
+
+
+
+  def localize_aromatic_bonds_old( self):
     """localizes aromatic bonds (does not relocalize already localized ones),
     for those that are not aromatic but marked so
     (it is for instance possible to misuse 'cccc' in smiles to create butadiene)
@@ -355,6 +446,11 @@ class molecule( graph.graph):
                 b.order = 1
             i += 1
           break
+##           # ensure chemical meaning
+##           if sum( comb) == 2*sum( [b.order-1 for b in self.vertex_subgraph_to_edge_subgraph( aring[:-1])]):
+##             break
+##           else:
+##             print "AAAA"
 
     self.localize_fake_aromatic_bonds()
 
