@@ -257,6 +257,8 @@ def gen_formula_fragments_helper( formula):
       opened_brackets += 1
     elif ch == ")":
       opened_brackets -= 1
+      if opened_brackets < 0:
+        opened_brackets = 0
       if opened_brackets == 0:
         if to_ret:
           yield ''.join( to_ret), True
@@ -307,8 +309,9 @@ def reverse_formula( text):
 if __name__ == "__main__":
   form = 'CH3(CH2)7'
   #form = 'CH3((CH2)2)2O'
+  form = "1) Bu"
 
-  a = linear_formula( form , start_valency=0, end_valency=1)
+  a = linear_formula( form, start_valency=0, end_valency=1)
   if a.molecule:
     m = a.molecule
     coords_generator.calculate_coords( m)
