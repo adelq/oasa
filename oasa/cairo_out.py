@@ -136,6 +136,8 @@ class cairo_out:
     'antialias_drawing': True,
     # this will only change appearance of overlapping text
     'add_background_to_text': False,
+    # should text be converted to curves?
+    'text_to_curves': False,
     }
 
 
@@ -562,7 +564,11 @@ class cairo_out:
         # draw
         self.context.set_source_rgb( *color)
         self.context.move_to( round( x-xbearing-0.5*width), round( y+0.5*height))
-        self.context.show_text( charge)
+        if self.text_to_curves:
+          self.context.text_path( charge)
+          self.context.fill()
+        else:
+          self.context.show_text( charge)
 
   def _get_3dtransform_for_drawing( self, b):
     """this is a helper method that returns a transform3d which rotates
@@ -718,7 +724,11 @@ class cairo_out:
         bbox = _bbox
       self.context.set_source_rgb( *color)
       self.context.move_to( x1, y1)
-      self.context.show_text( chunk.text)
+      if self.text_to_curves:
+        self.context.text_path( chunk.text)
+        self.context.fill()
+      else:
+        self.context.show_text( chunk.text)
       #self.context.fill()
       x1 += x_advance
     return bbox
