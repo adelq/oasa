@@ -305,7 +305,7 @@ class molfile_converter( converter_base):
         m.read_file( StringIO( "".join( chunk)))
         yield m.structure
         chunk = []
-    if chunk:
+    if [line for line in chunk if line.strip()]: # non empty lines
       m.read_file( StringIO("".join( chunk)))
       yield m.structure
 
