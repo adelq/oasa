@@ -183,6 +183,17 @@ class inchi( plugin):
           a.raise_valency_to_senseful_value()
           if not a.free_valency:
             repeat = False
+          # deal with CO and other that require adding both + and -
+          elif a.free_valency == 2 and [n for n in a.neighbors if n.free_valency==0 and n.symbol in self.electron_donors]:
+            neighbor = [n for n in a.neighbors if n.free_valency==0 and n.symbol in self.electron_donors][0]
+            a.charge -= 1
+            neighbor.charge += 1
+            a.get_edge_leading_to( neighbor).order = 1
+            self.structure.add_missing_bond_orders()
+            if not [v for v in self.structure.vertices if v.free_valency > 0]:
+              # we fixed it
+              repeat = False
+            
 
       if repeat and self._no_possibility_to_improve and self.charge:
         try:
@@ -650,13 +661,11 @@ class inchi( plugin):
       if v.symbol in ("N","S") and v.free_valency == -1:
         v.charge = 1
         forced_charge += 1
-
-        
     self.forced_charge = forced_charge
 
 
   def compensate_for_forced_charges( self):
-    """if there were foced charges and they the molecule should not have any charge,
+    """if there were foced charges and the molecule should not have any charge,
     we have to take care of it here"""
     charge = self.charge - self.forced_charge
     old_charge = charge
@@ -896,6 +905,7 @@ if __name__ == '__main__':
   inch = "InChI=1S/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
 
   #"InChI=1/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
+  #inch = "InChI=1S/CO/c1-2"
   print "oasa::INCHI DEMO"
   print "converting following inchi into smiles (%d times)" % repeat
   print "  inchi:   %s" % inch
