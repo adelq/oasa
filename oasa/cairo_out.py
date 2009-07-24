@@ -428,7 +428,7 @@ class cairo_out:
             draw_plain_or_colored_line( (x1, y1), (x2, y2))
 
       elif e.order == 3:
-        self._draw_line( start, end, line_width=self.line_width)
+        draw_plain_or_colored_line( start, end)
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
           draw_plain_or_colored_line( (x1, y1), (x2, y2), second=True)
