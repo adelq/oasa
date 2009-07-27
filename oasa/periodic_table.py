@@ -1,4 +1,3 @@
-
 #--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
 #     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
@@ -31,6 +30,8 @@ import types
 
 """periodic table as a dictionary, plus functions for molecular
 formula manipulation and computation"""
+
+# data come from kalzium and http://bodr.svn.sourceforge.net/viewvc/*checkout*/bodr/trunk/bodr/elements/elements.xml?revision=34&content-type=text%2Fplain with some manual changes
 
 periodic_table = {
 "H"  : {"ord":   1, "weight":   1.0079, "exact_mass":   1.00782503, "en": 2.10, "els":  1, "valency": (1,)},
