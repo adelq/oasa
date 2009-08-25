@@ -501,12 +501,15 @@ class cairo_out:
       x = v.x
       y = v.y
       text = v.symbol
+      # RADICAL
+      if v.multiplicity > 1:
+        text += "."*(v.multiplicity-1)
       hs = ""
       if self.show_hydrogens_on_hetero or v.properties_.get( 'show_hydrogens', False):
-        if v.free_valency == 1:
+        if v.get_hydrogen_count() == 1:
           hs = "H"
-        elif v.free_valency > 1:
-          hs = "H<sub>%d</sub>" % v.free_valency
+        elif v.get_hydrogen_count() > 1:
+          hs = "H<sub>%d</sub>" % v.get_hydrogen_count()
       if not hs:
         pos = -1
       if pos <= 0:
