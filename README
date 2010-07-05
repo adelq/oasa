@@ -3,7 +3,7 @@ More info can be found on http://bkchem.zirael.org/oasa_en.html
 
 INSTALL
 --------------------------------------------------
-OASA needs python 2.3 or higher to run properly.
+OASA needs Python 2.5 or higher to run properly.
 To use it, you can either copy the oasa directory inside your projects directory
 or you may use
 
