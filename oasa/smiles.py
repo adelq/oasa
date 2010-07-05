@@ -437,7 +437,7 @@ class smiles( plugin):
       start, end = filter( lambda x: x.get_degree() == 1, mol.vertices)
     except:
       #print filter( lambda x: x.get_degree() == 1, mol.vertices)
-      raise "shit"
+      raise Exception("shit")
     if start_from == end:
       start, end = end, start
     v = start
@@ -574,7 +574,7 @@ class smiles( plugin):
               the_right_branch_atom,
               the_right_branch)
     #print mol, mol.is_connected()
-    raise "fuck, how comes!?"
+    raise Exception("fuck, how comes!?")
 
 
 
@@ -619,7 +619,7 @@ class smiles( plugin):
           v = (v1 in p1.vertices) and v1 or v2
           return e, p1, v, p2
     print mol, mol.is_connected(), ',', map( len, mol.get_connected_components()), ',', start_from
-    raise "fuck, how comes!?"
+    raise Exception("fuck, how comes!?")
 
   @staticmethod
   def _create_ring_join_smiles( index):

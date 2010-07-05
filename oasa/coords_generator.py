@@ -296,7 +296,7 @@ class coords_generator:
       ring = self.mol.sort_vertices_in_path( ring, start_from=v)
       base_neighs = [a for a in v.get_neighbors() if a in base]
       if len( base_neighs) < 2:
-        raise "this should not happen"
+        raise Exception("this should not happen")
       d1 = base_neighs[0] 
       d2 = base_neighs[1]
       ca1 = geometry.clockwise_angle_from_east( v.x-d1.x, v.y-d1.y)
@@ -355,7 +355,8 @@ class coords_generator:
     if not sorted_back:
       # the already set atoms are not in one path - we have to process it "per partes"
       # it should not happen with the construction method we use
-      raise( "i am not able to handle this, it should normaly not happen. please send me the input.")
+      raise Exception("I am not able to handle this, it should normaly not "
+		      "happen. Please send me the input.")
     else:
       v1 = sorted_back[0]
       v2 = sorted_back[-1]

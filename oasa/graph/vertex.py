@@ -65,14 +65,14 @@ class vertex( object):
     if to_del:
       del self._neighbors[ to_del]
     else:
-      raise "cannot remove non-existing neighbor"
+      raise Exception("cannot remove non-existing neighbor")
 
   def remove_edge_and_neighbor( self, e):
     self._clean_cache()
     if e in self._neighbors.keys():
       del self._neighbors[ e]
     else:
-      raise "cannot remove non-existing edge", e
+      raise Exception("cannot remove non-existing edge", e)
 
 
   def get_neighbors( self):

@@ -113,7 +113,7 @@ class molfile( plugin):
   def write_file( self, file):
     """file should be a writable file object"""
     if not self.structure:
-      raise "No structure to write"
+      raise Exception("No structure to write")
     self._write_header( file)
     self._write_counts_line( file)
     self._write_body( file)

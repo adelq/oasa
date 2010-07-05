@@ -95,14 +95,14 @@ class inchi( plugin):
       return layers
     structs = doc.getElementsByTagName( 'structure')
     if not structs:
-      raise "no structures found in xml string %s" % text
+      raise Exception("no structures found in xml string %s" % text)
     struct = structs[0]
     layers = []
     for name in ('version','formula','connections','H'):
       try:
         layer = struct.getElementsByTagName( name)[0]
       except IndexError:
-        raise "no '%s' tag found in xml string" % name
+        raise Exception("no '%s' tag found in xml string" % name)
       layers.append( dom_extensions.getTextFromElement( layer))
     return layers
 

@@ -67,7 +67,7 @@ class chem_vertex( graph.vertex):
     elif len( coords) == 3:
       self.x, self.y, self.z = coords
     else:
-      raise "wrong number of coordinates"
+      raise Exception("wrong number of coordinates")
 
   def _get_coords( self):
     return self.x, self.y, self.z
