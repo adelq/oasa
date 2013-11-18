@@ -18,32 +18,32 @@
 #--------------------------------------------------------------------------
 
 import sys
-
-
-import atom
-import bond
-import molecule
-import smiles
-import coords_generator
-import coords_optimizer
-import molfile
-import inchi
-import cdml
-import graph
-import linear_formula
-import periodic_table
-import config
-import query_atom
-import chem_vertex
-import oasa_exceptions
-import subsearch
-import svg_out
-import stereochemistry
-import geometry
-import transform3d
-import transform
 if not (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)):
   raise ImportError("Python version %d.%d is lower than 2.6 which is needed by OASA" % sys.version_info[0:2])
+
+
+from . import atom
+from . import bond
+from . import molecule
+from . import smiles
+from . import coords_generator
+from . import coords_optimizer
+from . import molfile
+from . import inchi
+from . import cdml
+from . import graph
+from . import linear_formula
+from . import periodic_table
+from . import config
+from . import query_atom
+from . import chem_vertex
+from . import oasa_exceptions
+from . import subsearch
+from . import svg_out
+from . import stereochemistry
+from . import geometry
+from . import transform3d
+from . import transform
 
 atom = atom.atom
 molecule = molecule.molecule
