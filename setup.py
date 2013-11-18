@@ -18,7 +18,7 @@ set = setup(
   license = "GNU GPL",
   platforms = ["Unix", "Windows", "hopefully other OSes able to run Python"],
   long_description = "OASA is a free cheminformatics library written in Python",
-  
+
   packages=[ 'oasa', 'oasa/graph'],
 
   #data_files=[ ('oasa', glob.glob( 'oasa/templates/*.cdml')+glob.glob('templates/*.xml')),
