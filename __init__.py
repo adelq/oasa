@@ -18,7 +18,7 @@
 #--------------------------------------------------------------------------
 
 #import sys
-from oasa import *
+from .oasa import *
 
 #print dir( oasa)
 
