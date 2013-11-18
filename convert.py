@@ -17,10 +17,12 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
+
 try:
   import oasa
 except ImportError:
-  print "Sorry, but Python 2.6 or higher is required for OASA."
+  print("Sorry, but Python 2.6 or higher is required for OASA.")
 
 
 # small helper function
@@ -43,7 +45,7 @@ example: python convert.py is naftalen.ichi naftalen.smiles
 
 import sys
 if len( sys.argv) < 2:
-  print usage_text
+  print(usage_text)
   sys.exit()
 
 # initialization
@@ -64,29 +66,29 @@ else:
 try:
   inmode, outmode = conv
 except:
-  print usage_text
-  print "error: 'xy' input field should be exactly 2 characters long"
-  print
+  print(usage_text)
+  print("error: 'xy' input field should be exactly 2 characters long")
+  print()
   sys.exit()
 
 if inmode not in "csim":
-  print usage_text
-  print "error: the input format should be one of s,i,m"
-  print
+  print(usage_text)
+  print("error: the input format should be one of s,i,m")
+  print()
   sys.exit()
 
 if outmode not in "sim":
-  print usage_text
-  print "error: the output format should be one of s,m"
-  print
+  print(usage_text)
+  print("error: the output format should be one of s,m")
+  print()
   sys.exit()
 
 if inname:
   try:
     infile = file( inname, 'r')
   except:
-    print "error: cannot open file %s for reading" % inname
-    print
+    print("error: cannot open file %s for reading" % inname)
+    print()
     sys.exit()
 else:
   infile = None
@@ -95,8 +97,8 @@ if outname:
   try:
     outfile = file( outname, 'w')
   except:
-    print "error: cannot open file %s for writing" % inname
-    print
+    print("error: cannot open file %s for writing" % inname)
+    print()
     sys.exit()
 else:
   outfile = sys.stdout
@@ -122,7 +124,7 @@ if inname:
   if outname:
     outfile.close()
   else:
-    print
+    print()
   sys.stderr.write( "processing time %.2f ms\n" % ((time.time()-t)*1000))
 
 else:
@@ -146,6 +148,3 @@ else:
     except:
       text = ''
 
-    
-# end
-  
