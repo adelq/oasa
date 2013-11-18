@@ -20,7 +20,7 @@
 try:
   import oasa
 except ImportError:
-  print "Sorry, but Python 2.5 or higher is required for OASA."
+  print "Sorry, but Python 2.6 or higher is required for OASA."
 
 
 # small helper function

@@ -18,8 +18,6 @@
 #--------------------------------------------------------------------------
 
 import sys
-if not (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 5)):
-  raise ImportError, "Python version %d.%d is lower than 2.5 which is needed by OASA" % sys.version_info[0:2]
 
 
 import atom
@@ -44,6 +42,8 @@ import stereochemistry
 import geometry
 import transform3d
 import transform
+if not (sys.version_info[0] > 2 or (sys.version_info[0] == 2 and sys.version_info[1] >= 6)):
+  raise ImportError("Python version %d.%d is lower than 2.6 which is needed by OASA" % sys.version_info[0:2])
 
 atom = atom.atom
 molecule = molecule.molecule
