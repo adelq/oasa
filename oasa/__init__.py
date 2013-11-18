@@ -67,7 +67,7 @@ else:
 # inchi_key
 try:
   import inchi_key
-except Exception, e:
+except Exception as e:
   #print >> sys.stderr, "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n  %s" % e
   INCHI_KEY_AVAILABLE = False
 else:
@@ -77,7 +77,7 @@ else:
 # name_database (requires inchi_key which requires mhash in Python 2.4)
 try:
   import name_database
-except Exception, e:
+except Exception as e:
   NAME_DATABASE_AVAILABLE = False
 else:
   all.append( "name_database")
@@ -86,7 +86,7 @@ else:
 # structure_database requires sqlite
 try:
   import structure_database
-except Exception, e:
+except Exception as e:
   #print >> sys.stderr, "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n  %s" % e
   STRUCTURE_DATABASE_AVAILABLE = False
 else:
@@ -96,17 +96,13 @@ else:
 # pybel
 try:
   import pybel_bridge
-except Exception, e:
+except Exception as e:
   #print >> sys.stderr, "The 'pybel_bridge' python module could not be loaded - oasa-pybel integration will be disabled\nSee the error message for more info:\n  %s" % e
   PYBEL_AVAILABLE = False
 else:
   all.append( "pybel_bridge")
-  PYBEL_AVAILABLE = True  
+  PYBEL_AVAILABLE = True
 
 
 __all__ = all
 
-
-
-
-  
