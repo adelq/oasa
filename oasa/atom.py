@@ -18,18 +18,16 @@
 #--------------------------------------------------------------------------
 
 import sys
-sys.path.append( '../')
-
-import graph
-from chem_vertex import chem_vertex
-import periodic_table as PT
-from common import is_uniquely_sorted
-from oasa_exceptions import oasa_invalid_atom_symbol
-
 import copy
 import itertools
+
 from warnings import warn
 
+from . import graph
+from . import periodic_table as PT
+from .chem_vertex import chem_vertex
+from .common import is_uniquely_sorted
+from .oasa_exceptions import oasa_invalid_atom_symbol
 
 
 class atom( chem_vertex):
@@ -112,7 +110,7 @@ class atom( chem_vertex):
         # elements that can accept anions to increase their valency (BH4-)
         charge = -1
       else:
-        # otherwise charge reduces valency 
+        # otherwise charge reduces valency
         charge = abs( self.charge)
     else:
       charge = 0
@@ -189,7 +187,7 @@ class atom( chem_vertex):
       if isinstance( n, atom) and n.symbol != self.symbol:
         en += e.order * (n.electronegativity > self.electronegativity and 1 or -1)
     hen = PT.periodic_table['H']['en']
-    en += self.free_valency * (hen > self.electronegativity and 1 or -1) 
+    en += self.free_valency * (hen > self.electronegativity and 1 or -1)
     return en
 
   oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number")
@@ -205,7 +203,6 @@ class atom( chem_vertex):
 
 
 
-      
   def __str__( self):
     return "atom '%s'" % str( self.symbol)
 
@@ -245,7 +242,6 @@ class atom( chem_vertex):
   def get_hydrogen_count( self):
     return self.explicit_hydrogens + self.free_valency
 
-    
 
   def is_chiral( self):
     """this code is CIP (Cahn-Ingold-Prelog) based and therefore not necessarily
