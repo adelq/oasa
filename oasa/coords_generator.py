@@ -17,10 +17,10 @@
 
 #--------------------------------------------------------------------------
 
-from __future__ import division
 from math import pi, sqrt, sin, cos
 import geometry
 import misc
+from __future__ import division, print_function
 
 import warnings
 
@@ -516,17 +516,17 @@ if __name__ == '__main__':
   #sm = 'C1CC5(CC(C)CC5)CC(C)C12CC(CC(C(C)(C)CCCC)CCC)CC23C(CC)CC3'
   #sm = 'CCCC(C)(CCC)CCC(Cl)C(CCCCC)CCC(C)CCC'
 
-  print "oasa::coords_generator DEMO"
-  print "generating coords for following smiles"
-  print "  %s" % sm
- 
+  print("oasa::coords_generator DEMO")
+  print("generating coords for following smiles")
+  print("  %s" % sm)
+
   mol = smiles.text_to_mol( sm, calc_coords=False)
 
   import time
   #cg = coords_generator()
   t = time.time()
   calculate_coords( mol, force=1)
-  print "generation time: %.3f ms" % ((time.time()-t)*1000)
+  print("generation time: %.3f ms" % ((time.time()-t)*1000))
 
   show_mol( mol)
 
