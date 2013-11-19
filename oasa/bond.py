@@ -26,7 +26,7 @@
 import sys
 sys.path.append( '../')
 
-import graph
+from . import graph
 from warnings import warn
 import math
 
@@ -94,7 +94,7 @@ class bond( graph.edge, object):
       return math.sqrt( (v1.x-v2.x)**2 + (v1.y-v2.y)**2)
     else:
       return 0
-      
+
 
 
   ## PROPERTIES
@@ -106,7 +106,7 @@ class bond( graph.edge, object):
                     """property, 1-3 for normal bonds, 4 for aromatic bonds for which
                     localized order is not available, for localized aromatic bonds
                     check the bond.aromatic boolean attribute""")
-  
+
   length = property( get_length, None, None,
                      """the bond length""")
 
