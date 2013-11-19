@@ -17,12 +17,16 @@
 
 #--------------------------------------------------------------------------
 
-from math import pi, sqrt, sin, cos
-import geometry
-import misc
 from __future__ import division, print_function
 
+import misc
 import warnings
+
+from math import pi, sqrt, sin, cos
+
+from . import geometry
+
+
 
 class coords_generator:
 
