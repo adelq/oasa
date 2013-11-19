@@ -17,13 +17,15 @@
 
 #--------------------------------------------------------------------------
 
-from math import pi, sqrt, sin, cos, atan2
-import geometry
-import misc
 from __future__ import division, print_function
 
+import misc
 import warnings
-#import graph
+
+from math import pi, sqrt, sin, cos, atan2
+
+#from . import graph
+from . import geometry
 
 
 def sum_of_ring_internal_angles( size):
@@ -218,7 +220,7 @@ class coords_optimizer:
 
 if __name__ == "__main__":
 
-  import smiles
+  from . import smiles
   import time
 
   mol = smiles.text_to_mol( 'CC(C)C(C)CCCC')
@@ -235,6 +237,6 @@ if __name__ == "__main__":
 
   print([(v.x,v.y) for v in mol.vertices])
 
-  import coords_generator
+  from . import coords_generator
 
   coords_generator.show_mol( mol)
