@@ -19,16 +19,17 @@
 
 from __future__ import print_function
 
-from plugin import plugin
-from molecule import molecule
-from atom import atom
-from bond import bond
 import dom_extensions as dom_ext
 import xml.dom.minidom as dom
-from known_groups import cdml_to_smiles
-from periodic_table import periodic_table as PT
-from coords_generator import calculate_coords
-import smiles
+
+from . import smiles
+from .plugin import plugin
+from .atom import atom
+from .bond import bond
+from .molecule import molecule
+from .known_groups import cdml_to_smiles
+from .periodic_table import periodic_table as PT
+from .coords_generator import calculate_coords
 
 
 
@@ -56,7 +57,7 @@ def read_cdml( text):
       y = cm_to_float_coord( pos.getAttribute('y'))
       z = cm_to_float_coord( pos.getAttribute('z'))
       if name in PT:
-        # its really an atom 
+        # its really an atom
         a = atom( symbol=name,
                   charge=atom_el.getAttribute( 'charge') and int( atom_el.getAttribute( 'charge')) or 0,
                   coords=( x, y, z))
@@ -68,7 +69,7 @@ def read_cdml( text):
         a.x = x
         a.y = y
         a.z = z
-        mol.insert_a_graph( group) 
+        mol.insert_a_graph( group)
       atom_id_remap[ atom_el.getAttribute( 'id')] = a
     if do_not_continue_this_mol:
       break
@@ -89,7 +90,7 @@ def read_cdml( text):
     else:
       for comp in mol.get_disconnected_subgraphs():
         yield comp
-      
+
 
 def cm_to_float_coord( x):
   if not x:
@@ -98,7 +99,7 @@ def cm_to_float_coord( x):
     return float( x[:-2])*72/2.54
   else:
     return float( x)
-    
+
 
 ##################################################
 # MODULE INTERFACE
@@ -127,7 +128,7 @@ def text_to_mol( text):
 
 #
 ##################################################
-  
+
 
 ##################################################
 # DEMO
