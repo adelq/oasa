@@ -18,14 +18,13 @@
 #--------------------------------------------------------------------------
 
 import sys
-sys.path.append( '../')
-
-import graph
-import periodic_table as PT
-from common import is_uniquely_sorted
-
 import copy
+
 from warnings import warn
+
+from . import graph
+from . import periodic_table as PT
+from .common import is_uniquely_sorted
 
 
 
@@ -46,7 +45,7 @@ class chem_vertex( graph.vertex):
       self.x, self.y, self.z = coords
     else:
       self.x = None
-      self.y = None 
+      self.y = None
       self.z = None
     self._multiplicity = 1
 
@@ -55,7 +54,7 @@ class chem_vertex( graph.vertex):
     if other is self:
       return False
     return True
-      
+
 
   ## PROPERTIES
 
