@@ -47,7 +47,7 @@ class coords_generator:
     # then we check if they are in a continuos block but not the whole molecule
     # (in this case we regenerate all the coords if force, otherwise exit)
     if len( atms) == len( mol.vertices) and not force:
-      return 
+      return
     elif not force and atms and not len( atms) == len( mol.vertices):
       # this is here just to setup the molecule well
       self.rings = mol.get_smallest_independent_cycles()
@@ -180,7 +180,7 @@ class coords_generator:
       for b in to_go:
         out += self.process_all_anelated_rings( b)
     return out
-      
+
 
   def process_one_anelated_ring( self, base):
     mol = self.mol
@@ -215,7 +215,7 @@ class coords_generator:
         return attach_angle
       else:
         return -attach_angle
-      
+
     to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
     done = [a for a in v.get_neighbors() if a not in to_go]
     if len( done) == 1 and (len( to_go) == 1 or len( to_go) == 2 and [1 for _t in to_go if _t in self.stereo]):
@@ -297,7 +297,7 @@ class coords_generator:
       base_neighs = [a for a in v.get_neighbors() if a in base]
       if len( base_neighs) < 2:
         raise Exception("this should not happen")
-      d1 = base_neighs[0] 
+      d1 = base_neighs[0]
       d2 = base_neighs[1]
       ca1 = geometry.clockwise_angle_from_east( v.x-d1.x, v.y-d1.y)
       ca2 = geometry.clockwise_angle_from_east( v.x-d2.x, v.y-d2.y)
@@ -356,7 +356,7 @@ class coords_generator:
       # the already set atoms are not in one path - we have to process it "per partes"
       # it should not happen with the construction method we use
       raise Exception("I am not able to handle this, it should normaly not "
-		      "happen. Please send me the input.")
+                      "happen. Please send me the input.")
     else:
       v1 = sorted_back[0]
       v2 = sorted_back[-1]
@@ -434,7 +434,7 @@ def gen_coords_from_deg_stream( stream, length=1):
 def gen_coords_from_stream( stream, length=1):
   for a in stream:
     yield ( length*cos( a), length*sin( a))
-    
+
 def deg_to_rad( deg):
   return pi*deg/180
 
@@ -469,7 +469,7 @@ def show_mol( mol):
 
   dx = xmax-xmin
   dy = ymax-ymin
-  #print "dx", dy, ymax, ymin
+  #print("dx", dy, ymax, ymin)
   range = min( (600.0/dx, 450.0/dy))/2
   xp = 640-range*dx
   yp = 480-range*dy
@@ -484,7 +484,7 @@ def show_mol( mol):
     y2 = ytrans( a2.y)
     paper.create_line( x1, y1, x2, y2, fill='black')
     paper.create_text( (x1+x2)/2, (y1+y2)/2, text=str( b.order), fill="#F00")
-  for v in mol.vertices: 
+  for v in mol.vertices:
     x = xtrans( v.x)
     y = ytrans( v.y)
     #paper.create_oval( x-5, y-5, x+5, y+5, fill="#0F0")
