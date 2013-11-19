@@ -101,7 +101,10 @@ def cm_to_float_coord( x):
 ##################################################
 # MODULE INTERFACE
 
-from StringIO import StringIO
+try:
+  from io import StringIO
+except ImportError:
+  from StringIO import StringIO
 
 reads_text = 1
 reads_files = 1
