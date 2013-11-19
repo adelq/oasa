@@ -17,6 +17,8 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
+
 from plugin import plugin
 from molecule import molecule
 from atom import atom
@@ -46,7 +48,7 @@ def read_cdml( text):
     for atom_el in dom_ext.simpleXPathSearch( mol_el, "atom"):
       name = atom_el.getAttribute( 'name')
       if not name:
-        #print "this molecule has an invalid symbol"
+        #print("this molecule has an invalid symbol")
         do_not_continue_this_mol = 1
         break
       pos = dom_ext.simpleXPathSearch( atom_el, 'point')[0]
@@ -135,7 +137,7 @@ if __name__ == '__main__':
   import sys
 
   if len( sys.argv) < 1:
-    print "you must supply a filename"
+    print("you must supply a filename")
     sys.exit()
 
   # parsing of the file
@@ -150,23 +152,23 @@ if __name__ == '__main__':
   t = time.time()
   lens = map( len, mol.get_all_cycles())
   lens.sort()
-  print lens
-  print time.time() -t 
-  print "total %d rings" % len( lens)
+  print(lens)
+  print(time.time() - t)
+  print("total %d rings" % len( lens))
 
 ##     mring = mol.get_new_induced_subgraph( ring, mol.vertex_subgraph_to_edge_subgraph( ring))
 ##     if not mring.is_connected():
-##       print map( len, [a for a in mring.get_connected_components()])
+##       print(map( len, [a for a in mring.get_connected_components()]))
 ##       for vs in mring.get_connected_components():
-##         print [a.symbol for a in vs]
+##         print([a.symbol for a in vs])
       #import molfile
-      #print molfile.mol_to_text( mring)
+      #print(molfile.mol_to_text( mring))
 
 
   #calculate_coords( mol, bond_length=-1)
 
   #for a in mol.vertices:
-  #  print a.x, a.y
+  #  print(a.x, a.y)
 
-  print mol
-  #print smiles.mol_to_text( mol)
+  print(mol)
+  #print(smiles.mol_to_text( mol))
