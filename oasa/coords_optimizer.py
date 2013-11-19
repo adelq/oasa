@@ -17,10 +17,10 @@
 
 #--------------------------------------------------------------------------
 
-from __future__ import division
 from math import pi, sqrt, sin, cos, atan2
 import geometry
 import misc
+from __future__ import division, print_function
 
 import warnings
 #import graph
@@ -78,7 +78,7 @@ class coords_optimizer:
     i = 0
     ok = True
     self.end_reason = "converged"
-    
+
     while rms_grad > (self.cutoff_rms_grad / self.bond_length) or max_grad > (self.cutoff_max_grad / self.bond_length):
       i += 1
       if callback:
@@ -135,7 +135,7 @@ class coords_optimizer:
       dy -= gy/2.0
     vertex.properties_['dx'] += dx
     vertex.properties_['dy'] += dy
-    
+
     dx, dy = 0, 0
     vs = list( vertex.neighbors)
     variations = list( gen_variations( vs, 2))
@@ -174,7 +174,7 @@ class coords_optimizer:
     ang2 = geometry.clockwise_angle_from_east( v2.x-refv.x, v2.y-refv.y)
     ang = ang1 - ang2
     sign = -geometry.on_which_side_is_point( (refv.x, refv.y, v1.x, v1.y), (v2.x, v2.y))
-    
+
     while ang < 0:
       ang += 2*pi
     if ang > pi:
@@ -195,7 +195,7 @@ class coords_optimizer:
     ang2 = geometry.clockwise_angle_from_east( v2.x-refv.x+gx2, v2.y-refv.y+gy2)
     ang = ang1 - ang2
     sign = geometry.on_which_side_is_point( (refv.x, refv.y, v1.x, v1.y), (v2.x, v2.y))
-    
+
     while ang < 0:
       ang += 2*pi
       #sign *= -1
@@ -206,7 +206,7 @@ class coords_optimizer:
     dang2 = (ang - opt_angle) / 2
 
     if abs( dang2) > abs( dang):
-      print "fuck", rad_to_deg( ang1), rad_to_deg( ang2), rad_to_deg( dang)
+      print("fuck", rad_to_deg( ang1), rad_to_deg( ang2), rad_to_deg( dang))
     else:
       #rint "good", rad_to_deg( ang1), rad_to_deg( ang2), rad_to_deg( dang)
       pass
@@ -223,17 +223,17 @@ if __name__ == "__main__":
 
   mol = smiles.text_to_mol( 'CC(C)C(C)CCCC')
 
-  print [(v.x,v.y) for v in mol.vertices]
+  print([(v.x,v.y) for v in mol.vertices])
 
   opt = coords_optimizer()
   t = time.time()
   ok = opt.optimize_coords( mol, bond_length=0.9)
-  print "converged:", ok
-  print "%d iterations, RMS grad %f, max grad %f" % (opt.i, opt.rms_grad, opt.max_grad)
-  print "time %.1f ms" % ((time.time() - t) * 1000)
+  print("converged:", ok)
+  print("%d iterations, RMS grad %f, max grad %f" % (opt.i, opt.rms_grad, opt.max_grad))
+  print("time %.1f ms" % ((time.time() - t) * 1000))
 
 
-  print [(v.x,v.y) for v in mol.vertices]
+  print([(v.x,v.y) for v in mol.vertices])
 
   import coords_generator
 
