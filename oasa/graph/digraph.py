@@ -21,6 +21,7 @@
 """this module contains a graph class that provides a minimalistic
 graph implementation suitable for analysis of chemical problems"""
 
+from __future__ import print_function
 
 from diedge import diedge
 from vertex import vertex
@@ -78,22 +79,22 @@ class digraph( graph.graph):
         end = [x for x in self.vertices if 'd' in x.properties_ and x.properties_['d'] == dist][0]
         best_path = self.get_random_longest_path_numbered( v, end)
 
-    print "path"
+    print("path")
     best_path.reverse()
     for v in best_path:
-      print v
+      print(v)
     return diameter
 
 
   def get_connected_components( self):
     """returns the connected components of graph in a form o list of lists of vertices"""
-    comp = set() # just processed component 
+    comp = set() # just processed component
     comps = []
     not_processed = set( self.vertices)
     if not_processed:
       recent = set() # [not_processed.pop()])
     processed = set()
-      
+
     while not_processed:
       recent = set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
       processed = recent | comp
@@ -114,7 +115,7 @@ class digraph( graph.graph):
     # when there is only one atom in the last piece it is not yielded in the loop
     yield comp
 
-  
+
   def get_random_longest_path_numbered( self, start, end):
     """vertices have to be freshly marked with distance"""
     now = end
