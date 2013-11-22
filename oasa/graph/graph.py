@@ -77,7 +77,7 @@ class graph( object):
       new_e = e.copy()
       c.add_edge( c.vertices[i1], c.vertices[i2], new_e)
     return c
-    
+
   def create_vertex( self):
     return vertex()
 
@@ -86,7 +86,7 @@ class graph( object):
 
   def create_graph( self):
     return self.__class__()
-  
+
 
 
   ## MODIFICATION METHODS
@@ -139,14 +139,14 @@ class graph( object):
     self.vertices.extend( gr.vertices)
     self.edges.update( gr.edges)
     self._flush_cache()
-    
+
 
   # do we need it?
   def connect_a_graph( self, gr, v1, v2, e=None):
     """gr is a graph, v1 is vertex in self, v2 is vertex in gr, bond is what to use for connection"""
     self.insert_a_graph( gr)
     self.add_edge( v1, v2, e=e)
-    
+
 
 
   def disconnect( self, v1, v2):
@@ -171,7 +171,7 @@ class graph( object):
     if v1 is not v2:
       v2.remove_edge_and_neighbor( e)
     self._flush_cache()
-    
+
 
 
 
@@ -179,7 +179,7 @@ class graph( object):
     for neigh in v.get_neighbors():
       self.disconnect( v, neigh)
     self.delete_vertex( v)
-      
+
 
 
   def get_edge_between( self, v1, v2):
@@ -205,7 +205,7 @@ class graph( object):
     self.edges.add( e)
     e.disconnected = False
     self._flush_cache()
-    
+
 
   def reconnect_temporarily_disconnected_edges( self):
     while self.disconnected_edges:
@@ -217,7 +217,7 @@ class graph( object):
 
   ## PROPERTIES METHODS
   ## BOOLEAN
-    
+
   def is_connected( self):
     if len( self.edges) < len( self.vertices) -1:
       # in this case it cannot be connected
@@ -301,14 +301,14 @@ class graph( object):
     ps = [i for i in self.get_connected_components()]
     self.add_edge( v1, v2, e=e)
     return map( len, ps)
-    
+
 
 
   ## ANALYSIS
 
   def get_connected_components( self):
     """returns the connected components of graph in a form o list of lists of vertices"""
-    comp = set() # just processed component 
+    comp = set() # just processed component
     comps = []
     not_processed = set( self.vertices)
     if not_processed:
@@ -374,14 +374,14 @@ class graph( object):
         c.add_edge( old_v_to_new_v[v1], old_v_to_new_v[v2], new_e)
     return c
 
-  
-      
+
+
   def get_degrees( self):
     """returns a generator of degrees, this is useful because for many properties
     the whole list is not important"""
     for v in self.vertices:
       yield v.get_degree()
-  
+
 
   def get_neighbors( self, v):
     """Info - available also trough the vertex.get_neighbors()"""
@@ -399,7 +399,7 @@ class graph( object):
     """returns a set of smallest possible independent cycles,
     other cycles in graph are guaranteed to be combinations of them"""
     return map( self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e())
-                
+
 
   def get_smallest_independent_cycles_dangerous_and_cached( self):
     try:
@@ -407,7 +407,7 @@ class graph( object):
     except KeyError:
       self._cache['cycles'] = self.get_smallest_independent_cycles()
       return self._cache['cycles']
-    
+
 
 
 
@@ -551,7 +551,7 @@ class graph( object):
           paths = set()
           to_go = set( [v for v in self.edge_subgraph_to_vertex_subgraph( cycle) if v.degree == 2])
           while to_go:
-            now = set( [to_go.pop()])            
+            now = set( [to_go.pop()])
             path = set( now)
             while now:
               now = reduce( operator.or_, [set( [n for n in v.neighbors if n.degree == 2]) for v in now])
@@ -600,11 +600,11 @@ class graph( object):
     # count the cycles and report warnings if their number is wrong
     if len( cycles) < ncycles:
       warnings.warn( "The number of cycles found (%d) is smaller than the theoretical value %d (|E|-|V|+1)" % (len( cycles), ncycles), UserWarning, 2)
-    elif len( cycles) > ncycles: 
+    elif len( cycles) > ncycles:
       warnings.warn( "The number of independent cycles found (%d) is larger than the theoretical value %d (|E|-|V|+1), but I cannot improve it." % (len( cycles), ncycles), UserWarning, 2)
 
     self.reconnect_temporarily_disconnected_edges()
-      
+
     return cycles
 
 
@@ -680,7 +680,7 @@ class graph( object):
 
   def get_all_cycles_e( self):
     return map( self.vertex_subgraph_to_edge_subgraph, self.get_all_cycles())
-  
+
 
   def get_all_cycles( self):
     """
@@ -698,7 +698,7 @@ class graph( object):
       final_ring = frozenset( [v.properties_['original'] for v in ring])
       final_rings.add( final_ring)
     return final_rings
-  
+
 
   def _get_p_graph( self):
     """helper method for p-graph (path graph) generation"""
@@ -782,7 +782,7 @@ class graph( object):
         _e = [ee for ee in _e.get_neighbor_edges() if ee.properties_['dist'] == i][0]
         path.append( _e)
       return path
-  
+
 
   def _gen_diameter_progress( self):
     """this generator iteratively generates graph diameter during its computation,
@@ -837,7 +837,7 @@ class graph( object):
 ##     threads = []
 ##     attrs = list( self.vertices)
 ##     diameter = 0
-    
+
 ##     while attrs or threads:
 ##       if len( threads) < processes and attrs:
 ##         if len( attrs) > group_by:
@@ -864,7 +864,7 @@ class graph( object):
 ##     return diameter
 
 
-    
+
 
 
   def vertex_subgraph_to_edge_subgraph( self, cycle):
@@ -907,7 +907,7 @@ class graph( object):
   def defines_connected_subgraph_v( self, vertices):
     sub = self.get_new_induced_subgraph( vertices, self.vertex_subgraph_to_edge_subgraph( vertices))
     return sub.is_connected()
-  
+
 
   def find_path_between( self, start, end, dont_go_through=[]):
     """finds path between two vertices, if dont_go_through is given (as a list of vertices and edges),
@@ -1049,7 +1049,7 @@ class graph( object):
       alt_tree.add_vertex( _new_v)
       _new_v.properties_['original'] = _v
       return _new_v
-    
+
     alt_tree = self.create_graph() # alternating tree
     copy_root = add_copy_vertex( start)
     new_layer = [copy_root]
@@ -1081,7 +1081,7 @@ class graph( object):
       aug_p = [v.properties_['original'] for v in path]
       return aug_p
     return None
-  
+
 
   def update_matching_using_augmenting_path( self, path, mate):
     assert len( path) % 2 == 0 # there must be an even number of vertices
@@ -1234,7 +1234,7 @@ class graph( object):
 
   def _get_cache( self, name):
     return self._cache.get( name, None)
-    
+
 
 
 
@@ -1294,7 +1294,7 @@ def is_there_a_ring_between( start, end):
           for p in ps:
             p.remove( e)
         pths.extend( ps)
-  ## we use sets for filtering off the path that have common vertices 
+  ## we use sets for filtering off the path that have common vertices
   paths = [set( p) for p in pths]
   final = []
   while len( paths) > 0:
@@ -1311,7 +1311,7 @@ def is_there_a_ring_between( start, end):
     ret = set( reduce( operator.or_, final))
     return ret
   return False
-                
+
 def get_paths_down_to( end, start):
   paths = []
   if end == start:
