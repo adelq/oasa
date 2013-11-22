@@ -21,9 +21,12 @@
 """support module for some geometric mesurements ( geometric tramforms are in transform.py)"""
 
 from __future__ import division
-from math import sqrt, atan2, pi, cos, sin
-from misc import signum, normalize_coords
+
 import operator
+
+from math import sqrt, atan2, pi, cos, sin
+
+from .misc import signum, normalize_coords
 
 
 
