@@ -23,12 +23,13 @@ graph implementation suitable for analysis of chemical problems"""
 
 from __future__ import print_function
 
-from diedge import diedge
-from vertex import vertex
-import warnings
 import copy
 import operator
-import graph
+import warnings
+
+from . import graph
+from .diedge import diedge
+from .vertex import vertex
 
 
 
