@@ -25,7 +25,6 @@ from edge import edge
 from vertex import vertex
 import warnings
 import copy
-from types import *
 import operator
 import time
 
@@ -1147,7 +1146,7 @@ class graph( object):
 
   def _get_vertex_index( self, v):
     """if v is already an index, return v, otherwise return index of v on None"""
-    if type( v) == IntType and v < len( self.vertices):
+    if isinstance(v, int) and v < len(self.vertices):
       return v
     try:
       return self.vertices.index( v)
