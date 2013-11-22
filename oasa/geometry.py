@@ -30,10 +30,10 @@ import operator
 def find_parallel( x1, y1, x2, y2, d):
   "returns tuple of coordinates for parallel abscissa in distance d"
   # following is here to ensure that signum of "d" clearly determines
-  # the side of line on whitch the parallel is drawn  
+  # the side of line on whitch the parallel is drawn
   if round( y2, 3) -round( y1, 3) != 0:
     if y2 < y1:
-      d = -d 
+      d = -d
     k = -(x2-x1)/(y2-y1)
     x = ( d + sqrt( k**2 +1)*x1)/ sqrt( k**2 +1)
     y = y1 + k*( x -x1)
@@ -68,7 +68,7 @@ def get_parallel_distance( l1, l2):
     if qa < qb:
       d = -d
     return d
-  
+
 
 def get_parallel_signum( l1, l2):
   x1a, y1a, x2a, y2a = l1
@@ -94,7 +94,7 @@ def on_which_side_is_point( line, point, threshold=0):
     else:
       b += 2*pi
   if abs( a-b) <= threshold or abs( abs( a-b) -pi) <= threshold:
-    return 0    
+    return 0
   elif a-b < 0:
     return 1
   else:
@@ -165,7 +165,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
   else:
     xx = lx0
     xy = ly0
-    
+
   if abs( ldy) > 0.0001:
     # we calculate using x = f(y)
     k = ldx/ldy
@@ -183,7 +183,7 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
   else:
     yy = ly0
     yx = lx0
-    
+
   if point_distance( lx0, ly0, xx, xy) < point_distance( lx0, ly0, yx, yy):
     return (yx, yy)
   else:
@@ -205,12 +205,12 @@ def rectangle_intersection( rect1, rect2):
 
 def do_rectangles_intersect( rect1, rect2):
   xs1 = [rect1[0], rect1[2]]
-  xs2 = [rect2[0], rect2[2]]  
+  xs2 = [rect2[0], rect2[2]]
   xs = xs1 + xs2
   ys1 = [rect1[1], rect1[3]]
   ys2 = [rect2[1], rect2[3]]
   ys = ys1 + ys2
-  
+
   dx1 = abs( xs1[0] - xs1[1])
   dx2 = abs( xs2[0] - xs2[1])
   dx = max( xs) - min( xs)
@@ -247,20 +247,20 @@ def tkspline_to_quadratic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
         endx = (curvex+nextx)/2             #calculate midway point
         endy = (curvey+nexty)/2             #to find end point
         qbeziers.append((startx,starty,curvex,curvey,endx,endy))
-        
+
         startx,starty = endx,endy           #start where the last ended
         curvex,curvey = nextx,nexty
-      
+
       endx,endy = points[-1]                #no midway calculation for last point
-      qbeziers.append((startx,starty,curvex,curvey,endx,endy)) 
-        
+      qbeziers.append((startx,starty,curvex,curvey,endx,endy))
+
     else:
       startx,starty = points[0]             #If only two points are given
       endx,endy = points[1]                 #make a straight line
       curvex = (startx+endx)/2
       curvey = (starty+endy)/2
       qbeziers=((startx,starty,curvex,curvey,endx,endy),)
-    
+
     return qbeziers
 
 def tkspline_to_cubic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
@@ -270,20 +270,20 @@ def tkspline_to_cubic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
       startx, starty = qbez[0], qbez[1]
       endx, endy = qbez[4], qbez[5]
       qcurvex, qcurvey = qbez[2], qbez[3]
-      
+
       ccurvexa, ccurveya = startx + 2/3*(qcurvex-startx), starty + 2/3*(qcurvey-starty)
       ccurvexb, ccurveyb = ccurvexa + 1/3*(endx-startx), ccurveya + 1/3*(endy-starty)
       cbeziers.append( (startx, starty, ccurvexa, ccurveya, ccurvexb, ccurveyb, endx, endy))
     # http://fontforge.sourceforge.net/bezier.html
     return cbeziers
-    
+
 
 
 def point_at_distance_from_line( x1, y1, x2, y2, d):
   "returns tuple of coordinates for a point in distance d from line orthogonal to point (x2,y2)"
   if round( y2, 3) -round( y1, 3) != 0:
     if y2 < y1:
-      d = -d 
+      d = -d
     k = -(x2-x1)/(y2-y1)
     x0 = ( d + sqrt( k**2 +1)*x2)/ sqrt( k**2 +1)
     y0 = y2 + k*( x0 -x2)
@@ -295,18 +295,18 @@ def point_at_distance_from_line( x1, y1, x2, y2, d):
   return (x0, y0)
 
 
-def intersection_of_two_lines (x1,y1,x2,y2,x3,y3,x4,y4,parallel_detection_threshold=3): 
+def intersection_of_two_lines (x1,y1,x2,y2,x3,y3,x4,y4,parallel_detection_threshold=3):
   """lines 1-2 and 3-4
   returns x,y, 0 if succesful or 1 if parallel
   y=mx+c is used
   parallel_detection_threshold is a negative decadic logarithm of minimal displacement of m
   that is considered parallel"""
-  if x1-x2 == 0:                          
-    if x3-x4 == 0:                      
+  if x1-x2 == 0:
+    if x3-x4 == 0:
       return 0,0,1,0        #lines paralell
     m2 = (y3-y4)/(x3-x4)
     c2 = y3 - m2 * x3
-    rex,rey = x1,m2*x1+c2        
+    rex,rey = x1,m2*x1+c2
   elif x3-x4 == 0:
     m1 = (y1-y2)/(x1-x2)
     c1 = y1 - m1 * x1
@@ -331,13 +331,13 @@ def intersection_of_two_lines (x1,y1,x2,y2,x3,y3,x4,y4,parallel_detection_thresh
     online = 2
   else:
     online = 0
-  # x-coord, y-coord , paralell(0 or 1), on line (0=no line, 1=on line 1-2, 2=on line 3-4, 3=on both) 
+  # x-coord, y-coord , paralell(0 or 1), on line (0=no line, 1=on line 1-2, 2=on line 3-4, 3=on both)
   return rex,rey,0,online
 
 
 def mirror_point_on_line (xa,ya,x1,y1,x2,y2):
   """mirroring point a on line 1-2"""
-  if x1-x2 == 0:                           #y=mc+c is used                                           
+  if x1-x2 == 0:                           #y=mc+c is used
     return 2*x1-xa,ya
   elif y1-y2 == 0:
     return xa,2*y1-ya
@@ -355,7 +355,7 @@ def elongate_line (x1,y1,x2,y2,d):
   """line 1-2 will be elongatet at point 2 negative d will make it shorter"""
   if x1-x2 == 0:
     rex = x2
-    if y2 > y1: 
+    if y2 > y1:
       rey = y2 + d
     else:
       rey = y2 - d
@@ -365,7 +365,7 @@ def elongate_line (x1,y1,x2,y2,d):
     dy = m * dx
     if dy < 0:
       dy=-dy
-    if d<0: 
+    if d<0:
       dx,dy = -dx, -dy
     if x2 > x1:
       rex = x2 + dx
@@ -383,7 +383,7 @@ def coordinate_flat_list_to_xy_tuples( coords):
   for i in range( 0, len( coords), 2):
     ret.append( (coords[i],coords[i+1]))
   return ret
-    
+
 
 def find_parallel_polyline( coords, d):
   """take and returns list of tuples of coordinates for parallel abscissa in distance d"""
@@ -414,7 +414,7 @@ def find_parallel_polyline( coords, d):
           xa, ya = elongate_line(xa1,ya1,xa2,ya2,abs(d))
           if point_distance(xa,ya,xa2,ya2) < point_distance(xa,ya,xx,yy):
             xb, yb = elongate_line(xb1,yb1,xb2,yb2,abs(d))
-            res.append( (xa, ya))          
+            res.append( (xa, ya))
             res.append( (xb, yb))
           else:
             res.append( (xx, yy))
@@ -546,24 +546,21 @@ def create_transformation_to_rotate_around_particular_axis( line_start, line_end
   m11 = (u2 + (v2 + w2) * cosT)/l2;
   m12 = (u*v * (1 - cosT) - w*l*sinT)/l2;
   m13 = (u*w * (1 - cosT) + v*l*sinT)/l2;
-  m14 = (a*(v2 + w2) - u*(b*v + c*w) 
+  m14 = (a*(v2 + w2) - u*(b*v + c*w)
       + (u*(b*v + c*w) - a*(v2 + w2))*cosT + (b*w - c*v)*l*sinT)/l2;
 
   m21 = (u*v * (1 - cosT) + w*l*sinT)/l2;
   m22 = (v2 + (u2 + w2) * cosT)/l2;
   m23 = (v*w * (1 - cosT) - u*l*sinT)/l2;
-  m24 = (b*(u2 + w2) - v*(a*u + c*w) 
+  m24 = (b*(u2 + w2) - v*(a*u + c*w)
       + (v*(a*u + c*w) - b*(u2 + w2))*cosT + (c*u - a*w)*l*sinT)/l2;
 
   m31 = (u*w * (1 - cosT) - v*l*sinT)/l2;
   m32 = (v*w * (1 - cosT) + u*l*sinT)/l2;
   m33 = (w2 + (u2 + v2) * cosT)/l2;
-  m34 = (c*(u2 + v2) - w*(a*u + b*v) 
+  m34 = (c*(u2 + v2) - w*(a*u + b*v)
       + (w*(a*u + b*v) - c*(u2 + v2))*cosT + (a*v - b*u)*l*sinT)/l2;
   from transform3d import transform3d
   t = transform3d( [[m11,m12,m13,m14],[m21,m22,m23,m24],[m31,m32,m33,m34],[0,0,0,1]])
   return t
 
-
-  
-  
