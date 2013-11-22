@@ -23,12 +23,14 @@ graph implementation suitable for analysis of chemical problems"""
 
 from __future__ import print_function
 
-from edge import edge
-from vertex import vertex
-import warnings
 import copy
-import operator
 import time
+import operator
+import warnings
+
+from .edge import edge
+from .vertex import vertex
+
 
 
 class graph( object):
