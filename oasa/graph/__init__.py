@@ -17,10 +17,10 @@
 
 #--------------------------------------------------------------------------
 
-import graph
-import vertex
-import edge
-import digraph
+from . import graph
+from . import vertex
+from . import edge
+from . import digraph
 
 graph = graph.graph
 vertex = vertex.vertex
