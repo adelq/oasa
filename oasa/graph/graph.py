@@ -21,6 +21,8 @@
 """this module contains a graph class that provides a minimalistic
 graph implementation suitable for analysis of chemical problems"""
 
+from __future__ import print_function
+
 from edge import edge
 from vertex import vertex
 import warnings
@@ -1096,7 +1098,7 @@ class graph( object):
   def get_maximum_matching( self):
     mate, nrex = self.get_initial_matching()
     while nrex > 1:
-      #print "NREEEEEEX", nrex
+      #print("NREEEEEEX", nrex)
       #self._print_mate( mate)
       exposed = [v for v,m in mate.items() if m == 0]
       aug = self.find_augmenting_path_from( exposed[0], mate)
@@ -1105,13 +1107,13 @@ class graph( object):
       mate = self.update_matching_using_augmenting_path( aug, mate)
       nrex -= 2
     return mate, nrex
-    
+
   def _print_mate( self, mate):
-    print "MATE",
+    print("MATE", end='')
     for k,v in mate.items():
       if v:
-        print "%d-%d" % (self.vertices.index(k), self.vertices.index(v)),
-    print "END"
+        print("%d-%d" % (self.vertices.index(k), self.vertices.index(v)), end='')
+    print("END")
 
   ## STATIC METHODS
 
@@ -1365,7 +1367,7 @@ def filter_off_dependent_cycles( cycles):
 ##   cs = list( cycles)
 ##   level = 2
 ##   cs.sort( lambda a,b: -len( a) + len(b))
-##   print len( cs), map( len, cs)
+##   print(len( cs), map( len, cs))
 ##   while level < len( cs):
 ##     to_del = set()
 ##     for c in cs:
@@ -1374,7 +1376,7 @@ def filter_off_dependent_cycles( cycles):
 ##         comb = set( combl)
 ##         if not comb & to_del and (c <= reduce( operator.or_, comb)):
 ##           to_del.add( c)
-##           print "remove", len( c), map( len, comb)
+##           print("remove", len( c), map( len, comb))
 ##           break
 ##     [cs.remove( x) for x in to_del]
 ##     level += 1
@@ -1422,30 +1424,30 @@ class MyThread( Thread):
 
 ## g = graph()
 ## g._read_file()
-## print g
-## print [c for c in g.get_connected_components()]
+## print(g)
+## print([c for c in g.get_connected_components()])
 
 ## for e in g.edges:
-##   print g.is_edge_a_bridge( e),
+##   print(g.is_edge_a_bridge( e), end='')
 ## print
 
-## print len( [i for i in g.get_connected_components()])
+## print(len( [i for i in g.get_connected_components()]))
 ## for e in g.edges:
 ##   d1, d2 = [x.get_degree() for x in e.get_vertices()]
 ##   if d1 != 2 or d2 != 2:
 ##     v1, v2 = e.vertices
 ##     break
 ## g.disconnect( v1, v2)
-## print len( [i for i in g.get_connected_components()])
+## print(len( [i for i in g.get_connected_components()]))
 
 
 ## g = g.deep_copy()
-## print g
+## print(g)
 ## #profile.run( 'g.get_all_cycles()')
 ## c = g.get_smallest_independent_cycles()
-## print 'cycles %d, lengths %s' % (len( c), str( map( len, c)))
+## print('cycles %d, lengths %s' % (len( c), str( map( len, c))))
 ## c = g.get_all_cycles()
-## print 'cycles %d, lengths %s' % (len( c), str( map( len, c)))
+## print('cycles %d, lengths %s' % (len( c), str( map( len, c))))
 
 
 
