@@ -25,15 +25,14 @@
 
 import re
 import xml.dom.minidom as dom
-import operator
-#from __future__ import division
+
 
 
 def safe_indent( element, level=0, step=2):
   """indents DOM tree. Does not add any extra whitespaces to text elements."""
   if not element.childNodes:
     pass
-  elif reduce( operator.add, [isinstance( child, dom.Text) for child in element.childNodes], 0):
+  elif sum(isinstance(child, dom.Text) for child in element.childNodes):
     pass
   elif element.nodeName == 'ftext' or element.nodeName == 'text':
     pass
@@ -133,7 +132,7 @@ def simpleXPathSearch( element, path):
   out = [element]
   for atomic_path in atomic_paths:
     search_with_path = lambda x: _atomicXPathSearch( x, atomic_path)
-    out =  reduce( operator.add, map( search_with_path, out), [])
+    out =  [j for i in map(search_with_path, out) for j in i]
   return out
 
 
