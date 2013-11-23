@@ -27,7 +27,10 @@ from molecule import molecule
 from atom import atom
 from bond import bond
 from periodic_table import periodic_table as PT
-num2symbol = dict( [(v['ord'],k) for k,v in PT.iteritems()])
+
+
+
+num2symbol = dict((v['ord'], k) for k, v in PT.items())
 
 
 class PybelConverter( object):
