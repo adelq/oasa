@@ -75,7 +75,7 @@ class cis_trans_stereochemistry( stereochemistry):
 
   def get_other_end( self, ref):
     if not ref in self.references:
-      raise ValueError, "submitted object is not referenced in this stereochemistry object."
+      raise ValueError("Submitted object is not referenced in this stereochemistry object.")
     ref1, _r1, _r2, ref2 = self.references
     return ref is ref1 and ref2 or ref1
 
@@ -85,7 +85,7 @@ class tetrahedral_stereochemistry( stereochemistry):
   UNDEFINED = 0
   # as in CIP - put the last atom behind the reference and observer the first 3
   # this should create the same result as SMILES notation - put firts in front and observe the rest
-  CLOCKWISE = 1  
+  CLOCKWISE = 1
   ANTICLOCKWISE = 2
 
   # override of value
