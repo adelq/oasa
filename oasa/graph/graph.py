@@ -630,7 +630,7 @@ class graph( object):
         gens.append( self._get_smallest_cycle_for_vertex( neigh, to_reach=to_reach, came_from=e, went_through=w))
     while 1:
       for i, gen in enumerate( gens):
-        ret = gen.next()
+        ret = next(gen)
         if ret:
           if came_from:
             yield set( [came_from]) | ret
