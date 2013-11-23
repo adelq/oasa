@@ -63,7 +63,7 @@ class molecule( graph.graph):
 
   def remove_stereochemistry( self, stereo):
     if not stereo in self.stereochemistry:
-      raise ValueError, "cannot remove non-existent stereochemistry information"
+      raise ValueError("cannot remove non-existent stereochemistry information")
     self.stereochemistry.remove( stereo)
 
   def get_stereochemistry_by_center( self, center):
