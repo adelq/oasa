@@ -18,25 +18,25 @@
 #--------------------------------------------------------------------------
 
 from __future__ import print_function
-from plugin import plugin
-from molecule import molecule
-import periodic_table as pt
-import molfile
-import misc
 
 import re
-
-import operator
-import time
-import xml.dom.minidom as dom
-import dom_extensions
-import string
 import os
-import coords_generator
-from oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
-import select
 import sys
-from stereochemistry import cis_trans_stereochemistry
+import string
+import select
+import dom_extensions
+import xml.dom.minidom as dom
+
+from . import misc
+from . import molfile
+from . import coords_generator
+from . import periodic_table as pt
+from .plugin import plugin
+from .molecule import molecule
+from .stereochemistry import cis_trans_stereochemistry
+from .oasa_exceptions import oasa_not_implemented_error, oasa_inchi_error, oasa_unsupported_inchi_version_error
+
+
 
 class inchi( plugin):
 
@@ -784,7 +784,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_erro
   """ignore the case when InChIKey cannot be generated for some reason
   (no mhash library and old InChI program)"""
   if not program:
-    import config
+    from . import config
     program = config.Config.inchi_binary_path
   mf = molfile.mol_to_text( m)
   if os.name == 'nt':
@@ -814,7 +814,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_erro
   if not key:
     # probably old version of the InChI software
     try:
-      import inchi_key
+      from . import inchi_key
     except ImportError:
       if ignore_key_error:
         key = None
@@ -886,6 +886,7 @@ def mol_to_file( mol, f):
 # DEMO
 
 if __name__ == '__main__':
+  import time
 
   from . import smiles
 
