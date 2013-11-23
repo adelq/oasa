@@ -233,7 +233,7 @@ class svg_out:
 def mol_to_svg( mol, filename):
   c = svg_out()
   tree = c.mol_to_svg( mol)
-  f = file( filename, "w")
+  f = open(filename, "w")
   f.write( tree.toxml())
   f.close()
 
@@ -245,7 +245,6 @@ if __name__ == "__main__":
   #from . import smiles
   #mol = smiles.text_to_mol( "CC[CH]", calc_coords=40)
   from . import molfile
-  mol = molfile.file_to_mol( file( "/home/beda/bkchem/bkchem/untitled0.mol", "r"))
+  mol = molfile.file_to_mol(open("/home/beda/bkchem/bkchem/untitled0.mol", "r"))
   mol_to_svg( mol, "output.svg")
-
 
