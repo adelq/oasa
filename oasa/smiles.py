@@ -390,7 +390,7 @@ class smiles( plugin):
     for e in mol.edges:
       e.disconnected = False
     # here tetrahedral stereochemistry is added
-    for v, st in self._stereo_centers.iteritems():
+    for v, st in self._stereo_centers.items():
       processed_neighbors = []
       for n in self._processed_atoms:
         if n in v.neighbors:
