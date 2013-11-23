@@ -58,7 +58,7 @@ class vertex( object):
   def remove_neighbor( self, v):
     self._clean_cache()
     to_del = None
-    for k, vv in self._neighbors.iteritems():
+    for k, vv in self._neighbors.items():
       if v == vv:
         to_del = k
         break
@@ -76,8 +76,9 @@ class vertex( object):
 
 
   def get_neighbors( self):
-    return [v for (e,v) in self._neighbors.iteritems() if not e.disconnected]
-    #for i in self._neighbors.itervalues():
+    return [v for (e,v) in self._neighbors.items()
+                  if not e.disconnected]
+    #for i in self._neighbors.values():
     #  yield i
 
 
@@ -85,7 +86,7 @@ class vertex( object):
     return self._neighbors[ e]
 
   def get_edge_leading_to( self, a):
-    for b, at in self._neighbors.iteritems():
+    for b, at in self._neighbors.items():
       if a == at:
         return b
     return None
@@ -103,7 +104,7 @@ class vertex( object):
 
 
   def get_neighbor_edge_pairs( self):
-    for e,v in self._neighbors.iteritems():
+    for e, v in self._neighbors.items():
       if not e.disconnected:
         yield e,v
 
