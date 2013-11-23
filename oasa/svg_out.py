@@ -23,7 +23,6 @@ import transform
 import geometry
 import math
 import misc
-import operator
 import copy
 
 
@@ -106,7 +105,7 @@ class svg_out:
     else:
       parent = self.top
     return parent
-      
+
 
   def _draw_edge( self, e):
     v1, v2 = e.vertices
@@ -123,7 +122,9 @@ class svg_out:
       # rings have higher priority in setting the positioning
       for ring in self.molecule.get_smallest_independent_cycles():
         if v1 in ring and v2 in ring:
-          side += reduce( operator.add, [geometry.on_which_side_is_point( start+end, (self.transformer.transform_xy( a.x,a.y))) for a in ring if a!=v1 and a!=v2])
+          side += sum(geometry.on_which_side_is_point(start + end, self.transformer.transform_xy(a.x, a.y))
+                          for a in ring
+                              if a != v1 and a != v2)
       # if rings did not decide, use the other neigbors
       if not side:
         for v in v1.neighbors + v2.neighbors:
@@ -137,14 +138,14 @@ class svg_out:
         for i in (1,-1):
           x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.5)
           self._draw_line( parent, (x1, y1), (x2, y2), line_width=self.line_width)
-        
-        
+
+
     elif e.order == 3:
       self._draw_line( parent, start, end, line_width=self.line_width)
       for i in (1,-1):
         x1, y1, x2, y2 = geometry.find_parallel( start[0], start[1], end[0], end[1], i*self.bond_width*0.7)
         self._draw_line( parent, (x1, y1), (x2, y2), line_width=self.line_width)
-    
+
 
   def _draw_vertex( self, v):
     parent = self._create_parent( v, self.top)
