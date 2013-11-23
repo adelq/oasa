@@ -261,7 +261,7 @@ class inchi( plugin):
         try:
           i = int( c)
         except:
-          raise ValueError, "unexpected character %s in the connectivity layer" % c 
+          raise ValueError("unexpected character %s in the connectivity layer" % c)
         # atom
         if last_atom:
           self.structure.add_edge( last_atom-1, i-1)
@@ -634,7 +634,7 @@ class inchi( plugin):
     for chunk in chunks:
       try:
         head, tail = chunk.split( 'H')
-      except Exception, e:
+      except Exception as e:
         raise oasa_inchi_error( "error in hydrogen layer - missing H symbol")
       num_h = tail and int( tail) or 1
       vertices = []
@@ -642,13 +642,13 @@ class inchi( plugin):
         if "-" in p:
           try:
             a, b = map( int, p.split("-"))
-          except Exception, e:
+          except Exception as e:
             raise oasa_inchi_error( "error in hydrogen layer - non-number character(s) present in atom range specification")
           vertices.extend( range( a, b+1))
         else:
           try:
             vertices.append( int( p))
-          except Exception, e:
+          except Exception as e:
             raise oasa_inchi_error( "error in hydrogen layer - non-number character(s) present in atom specification")
 
       yield vertices, num_h
