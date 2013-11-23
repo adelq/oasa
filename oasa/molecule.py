@@ -19,17 +19,18 @@
 
 from __future__ import print_function
 
-import graph
-from atom import atom
-from query_atom import query_atom
-from bond import bond
 import copy
-import common
-import operator
-import misc
-import periodic_table as PT
 import math
-import transform3d
+import misc
+
+from . import graph
+from . import common
+from . import transform3d
+from . import periodic_table as PT
+from .atom import atom
+from .bond import bond
+from .query_atom import query_atom
+
 
 
 class molecule( graph.graph):
@@ -55,7 +56,7 @@ class molecule( graph.graph):
     return bond()
 
   def create_graph( self):
-    import config
+    from . import config
     return config.Config.molecule_class()
 
   def add_stereochemistry( self, stereo):
@@ -834,7 +835,7 @@ class molecule( graph.graph):
   # // --- end of the fragment matching routines ---
 
   def detect_stereochemistry_from_coords( self, omit_rings=True):
-    import stereochemistry,geometry
+    from .  import stereochemistry, geometry
     def add_neighbor_double_bonds( bond, path):
       for _e in bond.get_neighbor_edges():
         if _e.order == 2 and _e not in path:
@@ -975,7 +976,7 @@ class molecule( graph.graph):
   def create_CIP_digraph( self, center):
     """creates a digraph according to rules described in CIP paper."""
     assert center in self.vertices
-    from graph.digraph import digraph
+    from .graph.digraph import digraph
     dg = digraph()
     dg.add_vertex( center.copy())
     return dg
