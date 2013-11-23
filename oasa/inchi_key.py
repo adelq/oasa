@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 import sys
 
 ver = sys.version_info
@@ -1339,8 +1340,8 @@ if __name__ == "__main__":
   inp = "InChI=1S/C6H10/c1-3-5-6-4-2/h3-6H,1-2H3/b5-3+,6-4+"
   out = "APPOKADJQUIAHP-GGWOSOGESA-N"
   ret = key_from_inchi( inp)
-  print ret
-  print ret == out
+  print(ret)
+  print(ret == out)
 
   if False:
     f = file( "test_inchi_key.txt","r")
@@ -1351,8 +1352,8 @@ if __name__ == "__main__":
       else:
         key = line.strip()
         if not key == "InChIKey="+key_from_inchi( inchi):
-          print inchi
-          print key
+          print(inchi)
+          print(key)
         
       odd = not odd
     f.close()
