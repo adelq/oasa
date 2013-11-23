@@ -168,8 +168,7 @@ class composition_dict( dict):
         if ret:
           ret += ', '
         ret += "%s: %2.3f%%" % (n, self[n])
-    k = self.keys()
-    k.sort()
+    k = sorted(self.keys())
     for n in self:
       if n not in ('C','H'):
         if ret:
@@ -263,12 +262,9 @@ class formula_dict( dict):
         if a in k:
           ret.append( a)
           k.remove( a)
-      k.sort()
-      return ret+k
+      return ret + sorted(k)
     else:
-      k.sort()
-      return k
-    
+      return sorted(k)
 
   def read_formula_string( self, form):
     is_formula = re.compile("^([A-Z][a-z]?[0-9]*)*$")
