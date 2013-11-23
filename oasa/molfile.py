@@ -236,13 +236,16 @@ def read_molfile_value( file, length, strip=1, conversion=None):
     str = conversion( str)
   return str
 
-  
+
 
 
 ##################################################
 # MODULE INTERFACE
 
-from cStringIO import StringIO
+try:
+  from io import StringIO
+except ImportError:
+  from cStringIO import StringIO
 
 reads_text = 1
 reads_files = 1
