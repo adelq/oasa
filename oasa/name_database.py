@@ -19,8 +19,6 @@
 
 from __future__ import print_function
 
-import inchi as inchimod
-import inchi_key
 import os
 
 try:
@@ -28,6 +26,8 @@ try:
 except ImportError:
   import anydbm
 
+from . import inchi_key
+from . import inchi as inchimod
 
 
 
