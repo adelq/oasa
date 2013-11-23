@@ -177,7 +177,7 @@ class composition_dict( dict):
     return ret
 
 
-def _myisustr(self, obj):
+def _myisustr(obj):
   if sys.version_info[0] > 2:
     return isinstance(obj, str)
   else:
