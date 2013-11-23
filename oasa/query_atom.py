@@ -17,21 +17,17 @@
 
 #--------------------------------------------------------------------------
 
-import sys
-sys.path.append( '../')
-
-import graph
-import periodic_table as PT
-from common import is_uniquely_sorted
-
+import re
 import copy
+
 from warnings import warn
 
-import re
-from atom import atom
-
-from chem_vertex import chem_vertex
-from oasa_exceptions import oasa_invalid_atom_symbol
+from . import graph
+from . import periodic_table as PT
+from .atom import atom
+from .chem_vertex import chem_vertex
+from .common import is_uniquely_sorted
+from .oasa_exceptions import oasa_invalid_atom_symbol
 
 
 
@@ -106,14 +102,8 @@ class query_atom( chem_vertex):
 
   free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
 
-
-
-      
   def __str__( self):
     return "query atom '%s'" % str( self.symbol)
-
-
-
 
   def is_query_definition( self, text):
     matcher = re.compile( "\[([A-Z][a-z]?,)*[A-Z][a-z]?\]")
