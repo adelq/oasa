@@ -191,8 +191,8 @@ class formula_dict( dict):
         if key in periodic_table and type( val) == types.IntType:
           self[ key] = val
         else:
-          raise ValueError, "some of the dictionary entries are not valid for formula_dict (%s => %s)" % (str( key), str( val))
-  
+          raise ValueError("some of the dictionary entries are not valid for formula_dict (%s => %s)" % (str(key), str(val)))
+
   def __str__( self, reverse=0):
     sum = ''
     k = self.sorted_keys()
@@ -226,7 +226,7 @@ class formula_dict( dict):
 
   def __mul__( self, other):
     if not type( other) == types.IntType:
-      raise TypeError, "formula_dict can be only multiplied by an integer"
+      raise TypeError("formula_dict can be only multiplied by an integer")
     res = formula_dict()
     for key in self.keys():
       res[key] = other * self[key]
