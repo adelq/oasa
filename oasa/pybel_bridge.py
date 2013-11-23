@@ -123,7 +123,7 @@ class PybelConverter( object):
     """returns a list of OASA molecules from a string"""
     obc = openbabel.OBConversion()
     if not obc.SetInFormat( format):
-        raise ValueError, "invalid format %s" % format
+        raise ValueError("invalid format %s" % format)
     obmol = openbabel.OBMol()
     ok = obc.ReadString( obmol, text)
     mols = []
