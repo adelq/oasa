@@ -18,10 +18,13 @@
 #--------------------------------------------------------------------------
 
 from __future__ import print_function
-import smiles
-from graph.digraph import digraph
 
 import os
+
+from . import smiles
+from .graph.digraph import digraph
+
+
 
 class substructure_search_manager( object):
 
@@ -35,7 +38,7 @@ class substructure_search_manager( object):
     self.fill_data()
 
   def fill_data( self):
-    import subsearch_data
+    from . import subsearch_data
     for struct in subsearch_data.structures:
       compound_type, name, smiles_string, to_ignore = struct
       sub = substructure( name, compound_type, smiles=smiles_string, atoms_to_ignore=to_ignore)
