@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 from config import Config
 
 import re
@@ -45,7 +46,7 @@ class linear_formula( object):
       # are there any atoms?
       if not mol.vertices:
         return None
-      
+
       # now we check if the structure is complete
       for v in mol.vertices:
         if v.free_valency:
@@ -158,11 +159,11 @@ class linear_formula( object):
                 last_atom = m.vertices[0]
 
     return mol
-        
+
 
 
   def chunk_to_atoms( self, chunk, mol):
-    m = re.match( "([A-Z][a-z]?)([0-9])?([+-])?", chunk)    
+    m = re.match( "([A-Z][a-z]?)([0-9])?([+-])?", chunk)
     if m:
       name = m.group( 1)
       number = m.group( 2) and int( m.group(2)) or 1
@@ -278,7 +279,7 @@ def split_number_and_text( txt):
     except ValueError:
       return last, txt[i:]
   return last, ""
-    
+
 
 
 def reverse_formula( text):
@@ -301,11 +302,11 @@ def reverse_formula( text):
 #        if count:
 #          all_chunks.append( str(count))
 
-  print all_chunks
+  print(all_chunks)
   #all_chunks.reverse()
   return all_chunks
-  
-  
+
+
 if __name__ == "__main__":
   form = 'CH3(CH2)7'
   #form = 'CH3((CH2)2)2O'
@@ -317,5 +318,5 @@ if __name__ == "__main__":
     coords_generator.calculate_coords( m)
     coords_generator.show_mol( m)
   else:
-    print "nothing"
+    print("nothing")
 
