@@ -126,7 +126,7 @@ class inchi( plugin):
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
     except:
       raise
-    
+
 
   def _read_inchi( self, text):
     if not text:
@@ -139,7 +139,7 @@ class inchi( plugin):
       raise oasa_unsupported_inchi_version_error( self.layers[0])
     elif str( self.version[0]) != '1' or str( self.version[1]) != '0':
       raise oasa_unsupported_inchi_version_error( self.layers[0])
-    
+
     self.hs_in_hydrogen_layer = self.get_number_of_hydrogens_in_hydrogen_layer()
     self.read_sum_layer()
     self.read_connectivity_layer()
@@ -193,7 +193,7 @@ class inchi( plugin):
             if not [v for v in self.structure.vertices if v.free_valency > 0]:
               # we fixed it
               repeat = False
-            
+
 
       if repeat and self._no_possibility_to_improve and self.charge:
         try:
@@ -242,7 +242,7 @@ class inchi( plugin):
   def read_connectivity_layer( self):
     layer = self.get_layer( "c")
     if not layer:
-      return 
+      return
     chunks = re.split( "([0-9]*)", layer)
     chunks = filter( None, chunks)
     chunks = filter( lambda x: x!='-', chunks)
@@ -286,7 +286,7 @@ class inchi( plugin):
     # we improve only in the _process_moving_hydrogen so if it was not called there is no possibility for improvement
     if not self._added_hs or fixed_layer:
       self._no_possibility_to_improve = True
-      
+
     self._read_simple_hydrogen_layer( layer)
 
 
@@ -488,9 +488,9 @@ class inchi( plugin):
           return neighs[0]
         else:
           raise oasa_inchi_error( "No neigbors on atom with stereo information!")
-        
 
-    
+
+
     layer = self.get_layer( "b")
     if not layer:
       return
@@ -518,7 +518,7 @@ class inchi( plugin):
       charge -= ch
       v.charge = ch
     return charge
-        
+
 
   def get_number_of_hydrogens_in_hydrogen_layer( self):
     # version check
@@ -548,13 +548,13 @@ class inchi( plugin):
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
       if chks[0][1:].endswith( "-"):
-        hs = int( chks[0][1:-1] or 1)  # number of atoms 
+        hs = int( chks[0][1:-1] or 1)  # number of atoms
       else:
         hs = int( chks[0][1:])  # number of atoms
     else:
       hs = 1
     return hs
-    
+
 
 
   def _check_version( self, ver):
@@ -572,7 +572,7 @@ class inchi( plugin):
     chks = chunk.split( ',')
     if len( chks[0]) > 1:
       if chks[0][1:].endswith("-"):
-        hs = int( chks[0][1:-1] or 1) + 1  # number of atoms 
+        hs = int( chks[0][1:-1] or 1) + 1  # number of atoms
         self._protonation_dealt_with_already += 1
       else:
         hs = int( chks[0][1:])  # number of atoms
@@ -595,7 +595,7 @@ class inchi( plugin):
     variations = misc.gen_variations( vs, take)
     for i in range( run):
       vs = variations.next()
-        
+
     while hs:
       for v in vs:
         h = self.structure.create_vertex()
@@ -690,8 +690,8 @@ class inchi( plugin):
 ##       if old_charge == charge:
 ##         print "AAAAA", self.layers
       assert old_charge != charge
-                
-        
+
+
   def deal_with_da_bonds( self):
     """deal with donor-acceptor bonds, this fixes mostly boron containing compounds"""
     for v in self.structure.vertices:
@@ -711,7 +711,7 @@ class inchi( plugin):
           v.charge = 1
           yield None
 
-          
+
   def _deal_with_notorious_groups( self):
     """some groups such as NO2, SO3H etc. need the valency of the central atom to be risen,
     this is done here"""
@@ -770,7 +770,7 @@ class inchi( plugin):
 #          break
 #        elif x == 0:
 #          break
-        
+
 import subprocess
 
 def _run_command( command, input):
@@ -833,7 +833,7 @@ def generate_inchi_key( m, program=None, fixed_hs=True):
   return key, warnings
 
 
-  
+
 ##################################################
 # MODULE INTERFACE
 
