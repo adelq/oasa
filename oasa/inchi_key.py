@@ -18,20 +18,11 @@
 #--------------------------------------------------------------------------
 
 from __future__ import print_function
-import sys
 
-ver = sys.version_info
-ver2 = ver[0] * 10  + ver[1]
-if ver2 < 25:
-  try:
-    import mhash
-  except:
-    raise Exception( "python-mhash library was not found, make sure it is installed")
-else:
-  import hashlib
-
-import operator
 import re
+import hashlib
+import operator
+
 
 
 triplets = [ 
@@ -1122,11 +1113,8 @@ doublets = [
 
 
 def get_sha256( text):
-  if ver2 < 25:
-    hasher = mhash.MHASH(mhash.MHASH_SHA256)
-  else:
-    # standard library hashlib since Python 2.5
-    hasher = hashlib.sha256()
+  # standard library hashlib since Python 2.5
+  hasher = hashlib.sha256()
 
   hasher.update( text)
   return hasher.digest()
