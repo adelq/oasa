@@ -120,7 +120,7 @@ def file_to_mol( f):
 def text_to_mol( text):
   gen = read_cdml( text)
   try:
-    mol = gen.next()
+    mol = next(gen)
   except StopIteration:
     return None
   calculate_coords( mol, bond_length=-1)
