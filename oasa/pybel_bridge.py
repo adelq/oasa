@@ -171,7 +171,7 @@ class ForceFieldOptimizer( object):
   def __init__( self, mol, forcefield_name="Ghemical"):
     self.mol = mol
     self._amol, self._oatom2patom_idx = PybelConverter.oasa_to_pybel_molecule_with_atom_map( self.mol)
-    self._patom_idx2oatom = dict( [(v,k) for k,v in self._oatom2patom_idx.iteritems()])
+    self._patom_idx2oatom = dict((v, k) for k, v in self._oatom2patom_idx.items())
     self.forcefield_name = forcefield_name
     self.ff = openbabel.OBForceField.FindForceField( self.forcefield_name)
     self.ff.Setup( self._amol.OBMol)
