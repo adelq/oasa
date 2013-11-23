@@ -337,7 +337,7 @@ class molecule( graph.graph):
           ok = True
           if not nrex:
             # there are no exposed vertices
-            for work_v,work_n in mate.iteritems():
+            for work_v, work_n in mate.items():
               if work_n != 0:
                 work_e = work_v.get_edge_leading_to( work_n)
                 work_e.properties_['original'].order = 2
