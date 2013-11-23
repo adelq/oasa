@@ -318,7 +318,8 @@ class graph( object):
     if not_processed:
       recent = set() # [not_processed.pop()])
     while not_processed:
-      recent = set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
+      recent = set(j for i in [a.get_neighbors() for a in recent]
+                         for j in i) & not_processed
       if not recent:
         if comp:
           yield comp
@@ -449,7 +450,8 @@ class graph( object):
       v = to_go.pop()
       cycles = self._get_cycles_for_vertex( v, to_reach=v)
       all_cycles += cycles
-      to_go -= set( [ver for ver in reduce( operator.or_, map( self.edge_subgraph_to_vertex_subgraph, cycles), set()) if ver.degree == 2])
+      to_go -= set(ver for ver in set().union(*map(self.edge_subgraph_to_vertex_subgraph, cycles))
+                           if ver.degree == 2)
     all_cycles = set( map( frozenset, all_cycles))
 
     self.reconnect_temporarily_disconnected_edges()
@@ -468,7 +470,8 @@ class graph( object):
       v = to_go.pop()
       cycles = self._get_cycles_for_vertex( v, to_reach=v)
       all_cycles += cycles
-      to_go -= set( [ver for ver in reduce( operator.or_, map( self.edge_subgraph_to_vertex_subgraph, cycles), set()) if ver.degree == 2])
+      to_go -= set(ver for ver in set().union(*map(self.edge_subgraph_to_vertex_subgraph, cycles))
+                           if ver.degree == 2)
     all_cycles = set( map( frozenset, all_cycles))
     return all_cycles
 
@@ -558,7 +561,7 @@ class graph( object):
             now = set( [to_go.pop()])
             path = set( now)
             while now:
-              now = reduce( operator.or_, [set( [n for n in v.neighbors if n.degree == 2]) for v in now])
+              now = set().union(*(set(n for n in v.neighbors if n.degree == 2) for v in now))
               now &= to_go
               to_go -= now
               path.update( now)
@@ -597,7 +600,7 @@ class graph( object):
       # now try to remove the biggest ones
       while len( cs) - ncycles > 0:
         c = set( cs.pop( -1))
-        if not c <= reduce( operator.or_, map( set, cs)):
+        if not c <= set().union(*map(set, cs)):
           cs.insert( 0, c)
       cycles = set( [frozenset( _c) for _c in cs])
 
@@ -816,7 +819,8 @@ class graph( object):
     while to_mark:
       marked_before = marked
       marked = to_mark
-      to_mark_next = set( reduce( operator.add, [i.get_neighbors() for i in to_mark], []))
+      to_mark_next = set(j for i in [i.get_neighbors() for i in to_mark]
+                               for j in i)
       to_mark = to_mark_next - marked - marked_before
       d += 1
     return d-1
@@ -1312,7 +1316,7 @@ def is_there_a_ring_between( start, end):
     final.append( p1)
   if len( final) >= 2:
     final.append( end | start)
-    ret = set( reduce( operator.or_, final))
+    ret = set().union(*final)
     return ret
   return False
 
@@ -1356,7 +1360,7 @@ def filter_off_dependent_cycles( cycles):
       combs = gen_variations( [x for x in cs if x != c and x not in to_del and x & c], level)
       for combl in combs:
         comb = set( combl)
-        if not comb & to_del and (c <= reduce( operator.or_, comb)) and reduce( operator.and_, comb):
+        if not comb & to_del and (c <= set().union(*comb)) and set().intersection(*comb):
           to_del.add( c)
           break
     [cs.remove( x) for x in to_del]
