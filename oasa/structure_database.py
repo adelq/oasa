@@ -20,13 +20,15 @@
 from __future__ import print_function
 
 import os, sys, re
-import oasa_exceptions
 try:
     from pysqlite2 import dbapi2 as sqlite
 except ImportError as e:
     raise Exception( "The required pysqlite module could not be loaded. More info here: '%s'" % e)
 
-import inchi
+from . import inchi
+from . import oasa_exceptions
+
+
 
 class Config:
     database_file = os.path.abspath( os.path.join( os.path.dirname( __file__), "structures.db"))
@@ -117,7 +119,7 @@ def get_compounds_from_database( database_file=None, **kw):
 
     if 'inchi' in kw:
         if not 'inchikey' in kw:
-            import inchi_key
+            from . import inchi_key
             kw['inchikey'] = inchi_key.key_from_inchi( kw['inchi'])
         del kw['inchi']
     search = ["%s=?" % k for k in kw.keys()]
@@ -297,9 +299,9 @@ if __name__ == "__main__":
     (options, args) = op.parse_args()
 
     if options.command == "test":
-        import smiles
         print(get_compounds_from_database(inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3"))
         print(get_compounds_from_database(smiles="O"))
+        from . import smiles
         print(find_molecule_in_database(smiles.text_to_mol("C1CCC=CC1")))
         print(find_molecule_in_database(smiles.text_to_mol("c1ccccc1C")))
         print(get_compounds_from_database(synonym="toluene"))
