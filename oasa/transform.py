@@ -24,8 +24,11 @@
 """this module provides basic coordinate transformations based on matrix algebra"""
 
 from __future__ import division
+
 from math import cos, sin, pi
-import geometry
+
+from . import geometry
+
 
 class transform:
   """this class provides basic higher-level interface for coordinate transforms"""
@@ -102,7 +105,7 @@ class transform:
     x01, y01, x02, y02 = [0, 0, 100, 100]
     x11, y11, x12, y12 = self.transform_4( (x01, y01, x02, y02))
     return (x12-x11)/(x02-x01), (y12-y11)/(y02-y01)
- 
+
 
 class matrix:
   "this class provides common operations for matrix of 3x3 elements"
@@ -155,4 +158,4 @@ class matrix:
     m = self.mat
     return (((m[0][0] * m[1][1] * m[2][2]) + (m[0][1] * m[1][2] * m[2][0]) + (m[0][2] * m[1][0] * m[2][1])) -
             ((m[2][1] * m[1][2] * m[0][0]) + (m[2][2] * m[1][0] * m[0][1]) + (m[2][0] * m[1][1] * m[0][2])))
-                                                                                         
+
