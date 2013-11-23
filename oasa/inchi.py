@@ -24,11 +24,11 @@ import os
 import sys
 import string
 import select
-import dom_extensions
 import xml.dom.minidom as dom
 
 from . import misc
 from . import molfile
+from . import dom_extensions
 from . import coords_generator
 from . import periodic_table as pt
 from .plugin import plugin
