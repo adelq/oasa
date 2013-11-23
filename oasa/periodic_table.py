@@ -195,7 +195,7 @@ class formula_dict( dict):
     if _myisustr(form):
       self.read_formula_string( form)
     elif isinstance(form, dict):
-      for key, val in form.iteritems():
+      for key, val in form.items():
         if key in periodic_table and isinstance(val, int):
           self[ key] = val
         else:
