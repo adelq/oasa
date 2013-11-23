@@ -533,9 +533,7 @@ class molecule( graph.graph):
             out2 += a.get_hydrogen_count() * [1]
         out += out2
       if out:
-        out.sort()
-        # out.reverse()
-        big_out.append( tuple( out))
+        big_out.append(tuple(sorted(out)))
       else:
         return big_out
       i += 1
@@ -574,9 +572,8 @@ class molecule( graph.graph):
     for v in self.vertices:
       out[v] = [i for i in self._get_atom_distance_matrix( v)]
       v.properties_['distance_matrix'] = out[v]
-    ms = out.values()
+    ms = sorted(out.values())
     #self.remove_all_hydrogens()
-    ms.sort()
     i = 1
     ret = []
     for m in ms:
@@ -1013,10 +1010,8 @@ def equals( mol1, mol2, level=0):
       return False
   # level 2
   if not level or level >= 2:
-    symbols1 = [v.symbol for v in mol1.vertices]
-    symbols1.sort()
-    symbols2 = [v.symbol for v in mol2.vertices]
-    symbols2.sort()
+    symbols1 = sorted(v.symbol for v in mol1.vertices)
+    symbols2 = sorted(v.symbol for v in mol2.vertices)
     if symbols2 != symbols1:
       return False
   # level 3
