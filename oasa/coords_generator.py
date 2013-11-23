@@ -113,7 +113,7 @@ class coords_generator:
         backbone = self.rings.pop(imax)
         gcoords = gen_ring_coords( len( backbone), side_length=self.bond_length)
         for v in mol.sort_vertices_in_path( backbone):
-          v.x, v.y = gcoords.next()
+          v.x, v.y = next(gcoords)
         processed += backbone
         processed += self.process_all_anelated_rings( backbone)
       elif len( mol.vertices) == 1:
@@ -275,7 +275,7 @@ class coords_generator:
       gcoords = gen_coords_from_stream( gen_angle_stream( angle, start_from=angles[i+1]+angle),
                                         length = self.bond_length)
       for a in to_go:
-        dx, dy = gcoords.next()
+        dx, dy = next(gcoords)
         a.x = v.x + dx
         a.y = v.y + dy
     return to_go
@@ -285,7 +285,7 @@ class coords_generator:
     bl = bond_length or self.bond_length
     x, y = start.x, start.y
     for v in atoms:
-      a = gen.next()
+      a = next(gen)
       x += bl*cos( a)
       y += bl*sin( a)
       v.x, v.y = x, y
@@ -388,7 +388,7 @@ class coords_generator:
       gcoords = gen_angle_stream( deg_to_rad( da), start_from= ca)
       x, y = v1.x, v1.y
       for i in range( len( to_go) +1):
-        a = gcoords.next()
+        a = next(gcoords)
         x += self.bond_length*cos( a)
         y += self.bond_length*sin( a)
       # end of dry run, we can scale the bond_length now
@@ -412,7 +412,7 @@ def gen_ring_coords( size, side_length=1):
                                        length=side_length)
   x , y = 0, 0
   for i in range( size):
-    dx, dy = coords.next()
+    dx, dy = next(coords)
     x += dx
     y += dy
     yield x,y
