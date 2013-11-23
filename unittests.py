@@ -48,7 +48,7 @@ class TestLinearFormula(unittest.TestCase):
     linear, smile, start_valency, end_valency = self.formulas[num]
     m1 = l.parse_text( linear, start_valency=start_valency, end_valency=end_valency)
     m2 = smiles.text_to_mol( smile)
-    self.assert_(molecule.equals(m1,m2,level=3))
+    self.assertTrue(equals(m1, m2, level=3))
 
 # this creates individual test for formulas
 for i in range( len( TestLinearFormula.formulas)):
@@ -88,7 +88,7 @@ class TestSubstructure(unittest.TestCase):
     smile1, smile2, result = self.formulas[num]
     m1 = smiles.text_to_mol( smile1)
     m2 = smiles.text_to_mol( smile2)
-    self.assert_(m1.contains_substructure(m2)==result)
+    self.assertTrue(m1.contains_substructure(m2) == result)
 
 # this creates individual test for substructures
 for i in range( len( TestSubstructure.formulas)):
@@ -123,7 +123,7 @@ class TestEqualSMILES(unittest.TestCase):
     smile1, smile2, result = self.formulas[num]
     m1 = smiles.text_to_mol( smile1)
     m2 = smiles.text_to_mol( smile2)
-    self.assert_(molecule.equals(m1,m2,level=3)==result)
+    self.assertTrue(equals(m1, m2, level=3) == result)
 
 # this creates individual test for substructures
 for i in range( len( TestEqualSMILES.formulas)):
@@ -151,7 +151,7 @@ class TestSMILESReading(unittest.TestCase):
     conv = smiles.converter()
     mols = conv.read_text( smile1)
     for i,mol in enumerate( mols):
-      self.assert_( i < len( sum_forms))
+      self.assertTrue(i < len(sum_forms))
       self.assertEqual( str( mol.get_formula_dict()), sum_forms[i])
 
   def test_empty_smiles( self):
