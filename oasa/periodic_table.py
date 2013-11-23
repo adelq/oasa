@@ -263,7 +263,7 @@ class formula_dict( dict):
     return self.sorted_keys()
 
   def sorted_keys( self):
-    k = self.keys()
+    k = list(self.keys())
     ret = []
     if 'C' in k:
       for a in ('C','H'):
