@@ -17,6 +17,8 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
+
 from plugin import plugin
 from molecule import molecule
 
@@ -63,7 +65,7 @@ class molfile( plugin):
         break
       if line.strip().startswith( "M  "):
         self._read_property( line.strip())
-      #print line.strip()
+      #print(line.strip())
 
   def _read_atom( self, file):
     x = read_molfile_value( file, 10, conversion=float)
@@ -108,7 +110,7 @@ class molfile( plugin):
         index = int( at)
         charge = int( chg)
         self.structure.vertices[index-1].charge = charge
-    
+
 
   def write_file( self, file):
     """file should be a writable file object"""
@@ -321,20 +323,20 @@ class molfile_converter( converter_base):
       m.write_file( f)
     self.last_status = self.STATUS_OK
 
-    
+
 converter = molfile_converter
 
 
 #
 ##################################################
-  
+
 
 if __name__ == "__main__":
 
   import sys
 
   if len( sys.argv) < 1:
-    print "you must supply a filename"
+    print("you must supply a filename")
     sys.exit()
 
   # parsing of the file
@@ -345,14 +347,14 @@ if __name__ == "__main__":
   f.close()
 
   for a in  mol.atoms:
-    print a.x, a.y
+    print(a.x, a.y)
 
   import time
 
   t = time.time()
   lens = map( len, mol.get_smallest_independent_cycles())
   lens.sort()
-  print lens
-  print time.time() -t 
-  print "total %d rings" % len( lens)
-  print mol
+  print(lens)
+  print(time.time() - t)
+  print("total %d rings" % len( lens))
+  print(mol)
