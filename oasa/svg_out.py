@@ -19,12 +19,12 @@
 
 import copy
 import math
-import dom_extensions
 import xml.dom.minidom as dom
 
 from . import misc
-from . import transform
 from . import geometry
+from . import transform
+from . import dom_extensions
 
 
 
