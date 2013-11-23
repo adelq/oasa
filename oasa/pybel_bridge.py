@@ -212,7 +212,7 @@ if __name__ == "__main__":
 
   if False:
     import molfile
-    f = file( "tbu-benzen.mol", "r")
+    f = open("tbu-benzen.mol", "r")
     mol = molfile.file_to_mol( f)
     f.close()
 
@@ -233,7 +233,7 @@ if __name__ == "__main__":
     print(mol)
 
   print("AAAA")
-  t = file( "/zaloha/temp/3-chlorbenzoic_acid.cdx", "r").read()
+  t = open("/zaloha/temp/3-chlorbenzoic_acid.cdx", "r").read()
   pmol = pybel.readstring( "cdx", t)
   print("XXX", pmol)
 
