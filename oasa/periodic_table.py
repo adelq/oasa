@@ -22,8 +22,8 @@
 #--------------------------------------------------------------------------
 
 import re
-import operator
-import types
+import sys
+
 
 
 """periodic table as a dictionary, plus functions for molecular
@@ -176,6 +176,14 @@ class composition_dict( dict):
         ret += "%s: %2.3f%%" % (n, self[n])
     return ret
 
+
+def _myisustr(self, obj):
+  if sys.version_info[0] > 2:
+    return isinstance(obj, str)
+  else:
+    return isinstance(obj, basestring) or isinstance(obj, unicode)
+
+
 class formula_dict( dict):
   """special dict that automatically converts itself to human readable
   formula on str(). Implements += for convenient formula concatenation"""
@@ -184,11 +192,11 @@ class formula_dict( dict):
     dict.__init__( self)
     ## incomplete means that there were some problems to fully convert a formula to this dict
     self.incomplete = 0
-    if type( form) in (types.StringType, types.UnicodeType):
+    if _myisustr(form):
       self.read_formula_string( form)
-    elif type( form) == types.DictType:
+    elif isinstance(form, dict):
       for key, val in form.iteritems():
-        if key in periodic_table and type( val) == types.IntType:
+        if key in periodic_table and isinstance(val, int):
           self[ key] = val
         else:
           raise ValueError("some of the dictionary entries are not valid for formula_dict (%s => %s)" % (str(key), str(val)))
@@ -225,7 +233,7 @@ class formula_dict( dict):
     return ret
 
   def __mul__( self, other):
-    if not type( other) == types.IntType:
+    if not isinstance(other, int):
       raise TypeError("formula_dict can be only multiplied by an integer")
     res = formula_dict()
     for key in self.keys():
