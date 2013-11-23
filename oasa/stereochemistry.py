@@ -17,7 +17,8 @@
 
 #--------------------------------------------------------------------------
 
-import oasa_exceptions
+from . import oasa_exceptions
+
 
 
 class stereochemistry( object):
