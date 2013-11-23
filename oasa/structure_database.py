@@ -17,6 +17,8 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
+
 import os, sys, re
 import oasa_exceptions
 try:
@@ -79,10 +81,10 @@ def fill_database( infilename, name_cutoff=26, atom_count_cutoff=100):
     i = 0
     for line in f:
         if i % 10000 == 0:
-            print "done %8d, added %8d, ignored %8d" % (i,added,ignored)
+            print("done %8d, added %8d, ignored %8d" % (i,added,ignored))
         values = [x.strip() for x in line.strip().split("\t")]
         if len( values) != 4:
-            print >> sys.stderr, "Ignoring line:", line,
+            print("Ignoring line:", line, file=sys.stderr, end='')
             continue
         cid, inchikey, smiles, name = [x.strip() for x in line.strip().split("\t")]
         c.execute( "DELETE FROM structures WHERE id=?", (cid,))
@@ -105,7 +107,7 @@ def get_compounds_from_database( database_file=None, **kw):
     corresponding SQL commands.
     Examples:
     get_compounds_from_database( smiles='C1CCCCC1')
-    get_compounds_from_database( inchi='1/C4H10/c1-3-4-2/h3-4H2,1-2H3')    
+    get_compounds_from_database( inchi='1/C4H10/c1-3-4-2/h3-4H2,1-2H3')
     """
     for fname in (database_file, Config.database_file):
         if fname and os.path.exists(fname):
@@ -172,7 +174,7 @@ def _allow_molecule( name, smile):
 ##     except oasa_exceptions.oasa_invalid_atom_symbol, e:
 ##         return False
     return True
-    
+
 def filter_src_file( infilename, name_cutoff=26, atom_count_cutoff=1000):
     """print only those lines in infilename that would be allowed
     in structure_database using current settings"""
@@ -185,11 +187,11 @@ def filter_src_file( infilename, name_cutoff=26, atom_count_cutoff=1000):
     for line in f:
         values = [x.strip() for x in line.strip().split("\t")]
         if len( values) != 4:
-            print >> sys.stderr, "Ignoring line:", line,
+            print("Ignoring line:", line, file=sys.stderr, end='')
             continue
         cid, inchikey, smiles, name = [x.strip() for x in line.strip().split("\t")]
         if len( name) <= name_cutoff and len( [x for x in smiles if x.isupper()]) <= atom_count_cutoff and _allow_molecule( name, smiles):
-            print line[:-1]
+            print(line[:-1])
             added += 1
         else:
             ignored += 1
@@ -230,13 +232,13 @@ def add_synonyms_old( fname, only_first=3):
             if i % 500 == 0:
                 connection.commit()
             if i % 10000 == 0:
-                print "Added %d" % i
+                print("Added %d" % i)
         if line_count % 100000 == 0:
-            print "-- %dk lines --" % (line_count // 1000)
+            print("-- %dk lines --" % (line_count // 1000))
         if line_count % 1000000 == 0:
             break
     connection.commit()
-    return i    
+    return i
 
 
 def add_synonyms( fname, only_first=3):
@@ -268,20 +270,19 @@ def add_synonyms( fname, only_first=3):
             if i % 500 == 0:
                 connection.commit()
             if i % 10000 == 0:
-                print "Added %d" % i
+                print("Added %d" % i)
         if line_count % 1000000 == 0:
-            print "-- %dk lines --" % (line_count // 1000)
+            print("-- %dk lines --" % (line_count // 1000))
         #if line_count % 1000000 == 0:
         #    break
     connection.commit()
-    return i    
+    return i
 
 
 
 if __name__ == "__main__":
-    import sys
 ##     a,i = filter_src_file( 'selected_names_name50_inchi100.clean.txt')
-##     print >> sys.stderr, a, i
+##     print(a, i, file=sys.stderr)
 ##     sys.exit()
 
     from optparse import OptionParser
@@ -296,37 +297,37 @@ if __name__ == "__main__":
     (options, args) = op.parse_args()
 
     if options.command == "test":
-        print get_compounds_from_database( inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3")
-        print get_compounds_from_database( smiles="O")
         import smiles
-        print find_molecule_in_database( smiles.text_to_mol("C1CCC=CC1"))
-        print find_molecule_in_database( smiles.text_to_mol("c1ccccc1C"))
-        print get_compounds_from_database( synonym="toluene")
+        print(get_compounds_from_database(inchi="1/C4H10/c1-3-4-2/h3-4H2,1-2H3"))
+        print(get_compounds_from_database(smiles="O"))
+        print(find_molecule_in_database(smiles.text_to_mol("C1CCC=CC1")))
+        print(find_molecule_in_database(smiles.text_to_mol("c1ccccc1C")))
+        print(get_compounds_from_database(synonym="toluene"))
     elif options.command in ('update','rebuild','synonyms'):
         if not options.command == 'synonyms':
             if len( args) >= 1:
                 fname = args[0]
             else:
-                print >> sys.stderr, "You must supply a valid filename of a file containing structures to be read."
+                print("You must supply a valid filename of a file containing structures to be read.", file=sys.stderr)
                 sys.exit()
             if options.command == 'rebuild':
                 if os.path.exists( Config.database_file):
                     try:
                         os.remove( Config.database_file)
-                    except Exception, e:
-                        print >> sys.stderr, "Old database file could not be removed. Reason: %s" % e
-                        print >> sys.stderr, "Quitting.."
+                    except Exception as e:
+                        print("Old database file could not be removed. Reason: %s" % e, file=sys.stderr)
+                        print("Quitting..", file=sys.stderr)
                         sys.exit()
                 create_database()
             added, ignored = fill_database( fname)
-            print "Added: %d, Ignored: %d" % (added, ignored)
+            print("Added: %d, Ignored: %d" % (added, ignored))
         if options.synonyms:
-            print "Adding synonyms"
+            print("Adding synonyms")
             #import profile
             #profile.run( 'add_synonyms( options.synonyms)')
             i = add_synonyms( options.synonyms)
             #i = 0
-            print "Added %d synonyms" % i
+            print("Added %d synonyms" % i)
     else:
         if options.command not in ("test","rebuild","update"):
-            print >> sys.argv, "Invalid action '%s'" % options.command
+            print("Invalid action '%s'" % options.command, file=sys.argv)
