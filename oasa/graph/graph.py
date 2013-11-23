@@ -660,7 +660,7 @@ class graph( object):
 
       all_rets = []
       for gen in gens:
-        rets = gen.next()
+        rets = next(gen)
         new_rets = []
         if rets:
           for ret in rets:
