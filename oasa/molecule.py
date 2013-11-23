@@ -577,7 +577,7 @@ class molecule( graph.graph):
     i = 1
     ret = []
     for m in ms:
-      ret.append( out.keys()[ out.values().index( m)])
+      ret.append(list(out.keys())[list(out.values()).index(m)])
       #if ret.symbol != 'H':
       #  print("%3d: " % i, ret, ret.free_valency)
       i += 1
