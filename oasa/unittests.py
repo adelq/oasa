@@ -282,12 +282,12 @@ for i in range( len( TestCharge.formulas)):
 
 class TestStereo(unittest.TestCase):
 
-  formulas = [("c1ccccc1",()),
-              ("C\C=C/C", (1,)),
-              ("C\C=C/C=C/C=C\C", (-1,1,1)),
-              ("C\C(\O)=C/C=C/C=C\C", (-1,-1,1,1)),
-              ("O\C=C=C=C/N=C/Br", (-1,1)),
-              ("O\C(\N)=C/C=C\C=C\Cl", (-1,-1,1,1))
+  formulas = [(r"c1ccccc1",()),
+              (r"C\C=C/C", (1,)),
+              (r"C\C=C/C=C/C=C\C", (-1,1,1)),
+              (r"C\C(\O)=C/C=C/C=C\C", (-1,-1,1,1)),
+              (r"O\C=C=C=C/N=C/Br", (-1,1)),
+              (r"O\C(\N)=C/C=C\C=C\Cl", (-1,-1,1,1))
               ]
 
   def _testformula(self, num):
@@ -349,11 +349,11 @@ class TestStereo3(unittest.TestCase):
   remains the same when coordinates are calculates, stereo information
   thrown away and recalculated from the coords."""
 
-  formulas = ["C\C=C/C",
-              "N\C=C/C=C/Cl",
-              "O\C(\N)=C/C=C\C=C\Cl",
-              "O\C=C=C=C/N=C/Br",
-              "C/C(Cl)=C(\O)N",
+  formulas = [r"C\C=C/C",
+              r"N\C=C/C=C/Cl",
+              r"O\C(\N)=C/C=C\C=C\Cl",
+              r"O\C=C=C=C/N=C/Br",
+              r"C/C(Cl)=C(\O)N",
               ]
 
   def _testformula(self, num):
