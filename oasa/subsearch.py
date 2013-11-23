@@ -47,12 +47,11 @@ class substructure_search_manager( object):
       self.rings[ ring_hash] = rng
     # the following takes some time
     self._analyze_structure_dependencies()
-    
 
   def _read_structure_file( self, name=""):
     """may be used to read data directly from source txt files.
     is deprecated in favor of automatically build subsearch_data.py module"""
-    f = file( name or self.substructure_def_file, "r")
+    f = open(name or self.substructure_def_file, "r")
     for line in f:
       l = line.strip()
       if l and not l.startswith( "#"):
@@ -72,11 +71,12 @@ class substructure_search_manager( object):
         v.value = sub
         self.structures.add_vertex( v)
     self._analyze_structure_dependencies()
+    f.close()
 
   def _read_ring_file( self, name=""):
     """may be used to read data directly from source txt files.
     is deprecated in favor of automatically build subsearch_data.py module"""
-    f = file( name or self.ring_def_file, "r")
+    f = open(name or self.ring_def_file, "r")
     for line in f:
       l = line.strip()
       if l and not l.startswith( "#"):
@@ -86,6 +86,7 @@ class substructure_search_manager( object):
         name, smiles_string, ring_hash = parts
         rng = ring( name, smiles_string, ring_hash=ring_hash)
         self.rings[ ring_hash] = rng
+    f.close()
 
   def _analyze_structure_dependencies( self):
     for v1 in self.structures.vertices:
@@ -108,7 +109,7 @@ class substructure_search_manager( object):
         # we have got a top of the tree
         heads.append( v)
     return heads
-  
+
   def _compute_search_trees( self):
     heads = self._find_head_structures()
     assert heads
@@ -225,8 +226,8 @@ class substructure_search_manager( object):
 
   @classmethod
   def _data_files_to_python_module( self, structure_file=None, ring_file=None):
-    out = file( "subsearch_data.py", "w")
-    f = file( structure_file or self.substructure_def_file, "r")
+    out = open("subsearch_data.py", "w")
+    f = open(structure_file or self.substructure_def_file, "r")
     print >> out, """#--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
 #     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
@@ -264,7 +265,7 @@ class substructure_search_manager( object):
         print >> out, tuple(parts), ","
     print >> out, "]"
     f.close()
-    f = file( ring_file or self.ring_def_file, "r")
+    f = open(ring_file or self.ring_def_file, "r")
     print >> out, "rings = ["
     for line in f:
       l = line.strip()
@@ -360,7 +361,7 @@ class ring_match( object):
     return self.atoms_found
 
 
-  
+
 if __name__ == "__main__":
   # update the subsearch_data.py module
   substructure_search_manager._data_files_to_python_module()
