@@ -17,13 +17,15 @@
 
 #--------------------------------------------------------------------------
 
-import xml.dom.minidom as dom
-import dom_extensions
-import transform
-import geometry
-import math
-import misc
 import copy
+import math
+import dom_extensions
+import xml.dom.minidom as dom
+
+from . import misc
+from . import transform
+from . import geometry
+
 
 
 class svg_out:
@@ -176,7 +178,7 @@ class svg_out:
       if v.multiplicity in (2,3):
         self._draw_circle( parent, self.transformer.transform_xy((x2+x1)/2,y-17), fill_color="#000", opacity=1, radius=3)
         if v.multiplicity == 3:
-          self._draw_circle( parent, self.transformer.transform_xy((x2+x1)/2,y+5), fill_color="#000", opacity=1, radius=3)  
+          self._draw_circle( parent, self.transformer.transform_xy((x2+x1)/2,y+5), fill_color="#000", opacity=1, radius=3)
       self._draw_rectangle( parent, self.transformer.transform_4( (x1, y1, x2, y2)), fill_color="#fff")
       self._draw_text( parent, self.transformer.transform_xy(x,y), text)
 
@@ -238,11 +240,11 @@ def mol_to_svg( mol, filename):
 
 if __name__ == "__main__":
 
-  #import inchi
+  #from . import inchi
   #mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
-  #import smiles
+  #from . import smiles
   #mol = smiles.text_to_mol( "CC[CH]", calc_coords=40)
-  import molfile
+  from . import molfile
   mol = molfile.file_to_mol( file( "/home/beda/bkchem/bkchem/untitled0.mol", "r"))
   mol_to_svg( mol, "output.svg")
 
