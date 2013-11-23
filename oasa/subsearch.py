@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 import smiles
 from graph.digraph import digraph
 
@@ -228,7 +229,7 @@ class substructure_search_manager( object):
   def _data_files_to_python_module( self, structure_file=None, ring_file=None):
     out = open("subsearch_data.py", "w")
     f = open(structure_file or self.substructure_def_file, "r")
-    print >> out, """#--------------------------------------------------------------------------
+    print("""#--------------------------------------------------------------------------
 #     This file is part of OASA - a free chemical python library
 #     Copyright (C) 2003-2008 Beda Kosata <beda@zirael.org>
 
@@ -247,32 +248,32 @@ class substructure_search_manager( object):
 
 #--------------------------------------------------------------------------
 
-"""
-    print >> out, "## automatically generated file - may be overwritten at any time"
-    print >> out, "structures = ["
+""", file=out)
+    print("## automatically generated file - may be overwritten at any time", file=out)
+    print("structures = [", file=out)
     for line in f:
       l = line.strip()
       if l and not l.startswith( "#"):
         parts = [x.strip() for x in l.split(";")]
         if len( parts) < 3:
-          print >> sys.stderr, "Invalid line in src file:", line[:-1]
+          print("Invalid line in src file:", line[:-1], file=sys.stderr)
         elif len( parts) == 3:
           parts.append( "")
         to_ignore = map( int, filter( None, parts[3].split(",")))
         parts[3] = to_ignore
         if not parts[1]:
           parts[1] = parts[0]
-        print >> out, tuple(parts), ","
-    print >> out, "]"
+        print(tuple(parts), ",", file=out)
+    print("]", file=out)
     f.close()
     f = open(ring_file or self.ring_def_file, "r")
-    print >> out, "rings = ["
+    print("rings = [", file=out)
     for line in f:
       l = line.strip()
       if l and not l.startswith( "#"):
         parts = [x.strip() for x in l.split(";")]
-        print >> out, tuple(parts), ","
-    print >> out, "]"
+        print(tuple(parts), ",", file=out)
+    print("]", file=out)
     f.close()
     out.close()
 
@@ -370,25 +371,25 @@ if __name__ == "__main__":
   ssm = substructure_search_manager()
   #ssm._read_structure_file()
   #ssm._read_ring_file()
-  
-  print "Read_structure_file: %.1fms" % (1000*(time.time() - t))
+
+  print("Read_structure_file: %.1fms" % (1000*(time.time() - t)))
   t = time.time()
-  
-  print ssm.structures
-  #print ssm.structures.is_connected()
+
+  print(ssm.structures)
+  #print(ssm.structures.is_connected())
   dump = ssm.structures.get_graphviz_text_dump()
   f = file( "dump.dot", "w")
   f.write( dump)
   f.close()
 
-  print "Graphviz dump: %.1fms" % (1000*(time.time() - t))
+  print("Graphviz dump: %.1fms" % (1000*(time.time() - t)))
   t = time.time()
 
   def print_tree( x, l):
-    print l*" ", x #, x.children
+    print(l*" ", x) #, x.children
     for ch in x.children:
       print_tree( ch, l+2)
-  
+
   #for tree in ssm._compute_search_trees():
   #  print_tree( tree, 0)
 
@@ -398,11 +399,11 @@ if __name__ == "__main__":
   #text2 = 'C(=O)[O-]'
   mol = smiles.text_to_mol( text, calc_coords=False)
   #m2 = smiles.text_to_mol( text2, calc_coords=False)
-  #print "XXXX", mol.contains_substructure( m2)
+  #print("XXXX", mol.contains_substructure( m2))
 
   subs = ssm.find_substructures_in_mol( mol)
   for sub in subs:
-    print sub
+    print(sub)
 
-  print "Substructure search: %.1fms" % (1000*(time.time() - t))
+  print("Substructure search: %.1fms" % (1000*(time.time() - t)))
   t = time.time()
