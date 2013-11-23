@@ -381,7 +381,7 @@ if __name__ == "__main__":
   print(ssm.structures)
   #print(ssm.structures.is_connected())
   dump = ssm.structures.get_graphviz_text_dump()
-  f = file( "dump.dot", "w")
+  f = open("dump.dot", "w")
   f.write( dump)
   f.close()
 
