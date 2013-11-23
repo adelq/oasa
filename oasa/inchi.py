@@ -198,7 +198,7 @@ class inchi( plugin):
 
       if repeat and self._no_possibility_to_improve and self.charge:
         try:
-          self._charge_mover.next()
+          next(self._charge_mover)
         except StopIteration:
           pass
         else:
@@ -595,7 +595,7 @@ class inchi( plugin):
       return []
     variations = misc.gen_variations( vs, take)
     for i in range( run):
-      vs = variations.next()
+      vs = next(variations)
 
     while hs:
       for v in vs:
