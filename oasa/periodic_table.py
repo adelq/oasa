@@ -312,10 +312,10 @@ class formula_dict( dict):
       return 0
 
   def to_tuple( self):
-    return tuple( reduce( operator.add, [[k,self[k]] for k in self.sorted_keys()], []))
+    return tuple(j for i in ((k, self[k]) for k in self.sorted_keys())
+                       for j in i)
 
 
-    
 def dict_to_composition( form):
   w = form.get_molecular_weight()
   ret = composition_dict()
