@@ -17,6 +17,8 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
+
 import os, sys
 import anydbm
 import inchi as inchimod
@@ -33,7 +35,7 @@ def normalize_inchi( inchi):
         return inchi[6:]
     else:
         return inchi
-    
+
 
 def compound_to_database_string( c):
     c['inchi'] = normalize_inchi( c['inchi'])
@@ -46,7 +48,7 @@ def database_string_to_compound( line):
     inchi, cid = a.split()
     inchikey = inchi_key.key_from_inchi( inchi)
     return {'inchikey':inchikey.strip(), 'cid':cid.strip(), 'name':name.strip()}
-    
+
 
 def mydb_to_gdbm( infilename, outfilename):
     import gdbm
@@ -55,8 +57,8 @@ def mydb_to_gdbm( infilename, outfilename):
     for line in infile:
         rec = database_string_to_compound( line)
         base[ rec['inchikey']] = rec['cid'] + " " + rec['name']
-        
-    
+
+
 
 def get_compound_from_database( inchikey, database_file=None):
     #inchi = normalize_inchi( inchi)
@@ -88,8 +90,8 @@ if __name__ == "__main__":
             try:
                 mydb_to_gdbm( fname, Config.database_file)
             except:
-                print "given file must be a text file with one compound per line in format 'InChI CID ### name'"
+                print("given file must be a text file with one compound per line in format 'InChI CID ### name'")
         else:
-            print "you must supply a valid filename to update the database or no argument for a test to run"
+            print("you must supply a valid filename to update the database or no argument for a test to run")
     else:
-        print get_compound_from_database( "IJDNQMDRQITEOD-UHFFFAOYSA-N")
+        print(get_compound_from_database( "IJDNQMDRQITEOD-UHFFFAOYSA-N"))
