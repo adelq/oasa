@@ -23,10 +23,11 @@ It provides functionality for translation of OASA molecules into Pybel molecules
 from __future__ import print_function
 
 import pybel, openbabel
-from molecule import molecule
-from atom import atom
-from bond import bond
-from periodic_table import periodic_table as PT
+
+from .atom import atom
+from .bond import bond
+from .molecule import molecule
+from .periodic_table import periodic_table as PT
 
 
 
