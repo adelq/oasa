@@ -1332,7 +1332,7 @@ if __name__ == "__main__":
   print(ret == out)
 
   if False:
-    f = file( "test_inchi_key.txt","r")
+    f = open("test_inchi_key.txt", "r")
     odd = True
     for line in f:
       if odd:
