@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 from plugin import plugin
 from molecule import molecule, equals
 import periodic_table as PT
@@ -436,7 +437,7 @@ class smiles( plugin):
     try:
       start, end = filter( lambda x: x.get_degree() == 1, mol.vertices)
     except:
-      #print filter( lambda x: x.get_degree() == 1, mol.vertices)
+      #print(filter( lambda x: x.get_degree() == 1, mol.vertices))
       raise Exception("shit")
     if start_from == end:
       start, end = end, start
@@ -547,7 +548,7 @@ class smiles( plugin):
       if d1 > 2 or d2 > 2:
         ps = mol.get_pieces_after_edge_removal( e)
         if len( ps) == 1:
-          print "impossible"
+          print("impossible")
           continue
         lenghts = map( len, ps)
         ms = min( lenghts)
@@ -573,7 +574,7 @@ class smiles( plugin):
               the_right_mol,
               the_right_branch_atom,
               the_right_branch)
-    #print mol, mol.is_connected()
+    #print(mol, mol.is_connected())
     raise Exception("fuck, how comes!?")
 
 
@@ -583,7 +584,7 @@ class smiles( plugin):
     """returns (broken edge, resulting mol, atom where mol was disconnected, disconnected branch)"""
     # we cannot do much about this part
     if not mol.is_connected():
-      print "unconnected ", mol
+      print("unconnected ", mol)
     if start_from and start_from.get_degree() > 1:
       e = start_from._neighbors.keys()[0]
       mol.disconnect_edge( e)
@@ -618,7 +619,7 @@ class smiles( plugin):
 
           v = (v1 in p1.vertices) and v1 or v2
           return e, p1, v, p2
-    print mol, mol.is_connected(), ',', map( len, mol.get_connected_components()), ',', start_from
+    print(mol, mol.is_connected(), ',', map( len, mol.get_connected_components()), ',', start_from)
     raise Exception("fuck, how comes!?")
 
   @staticmethod
@@ -824,12 +825,12 @@ if __name__ == '__main__':
       mols = conv.read_text( text)
       for mol in mols:
         #mol.remove_unimportant_hydrogens()
-        print "  summary formula:   ", mol.get_formula_dict()        
+        print("  summary formula:   ", mol.get_formula_dict())
       text = conv.mols_to_text( mols)
-      print "  generated SMILES:   %s" % text
-      print "  --"
+      print("  generated SMILES:   %s" % text)
+      print("  --")
     t = time.time()-t
-    print 'time per cycle', round( 1000*t/cycles, 2), 'ms'
+    print('time per cycle', round( 1000*t/cycles, 2), 'ms')
 
   repeat = 3
 
@@ -840,10 +841,10 @@ if __name__ == '__main__':
   else:
     text = sys.argv[1]
 
-  print "oasa::SMILES DEMO"
-  print "converting following smiles to smiles (%d times)" % repeat
-  print "  starting with:      %s" % text
-  print "  --------------------"
+  print("oasa::SMILES DEMO")
+  print("converting following smiles to smiles (%d times)" % repeat)
+  print("  starting with:      %s" % text)
+  print("  --------------------")
   main( text, repeat)
 
 # DEMO END
@@ -862,7 +863,7 @@ if __name__ == '__main__':
 # at first get rid of the edges common to two or more rings, not critical
 # handling of the start_from in disconnect_something as in disconnect_something_simple
 # could in disconnect_something happen that a start_from will be returned in a branch?
-# if I do "print m.get_smiles( m.structure)" the ring counting does not work after that
+# if I do "print(m.get_smiles( m.structure))" the ring counting does not work after that
 ## the transformation can be destructive!!!  - check
 
 ## THIS IS A PROBLEM : C=1ccC=2C=1C=CC=CC=2  (should be azulene)
