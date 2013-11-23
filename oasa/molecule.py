@@ -592,7 +592,7 @@ class molecule( graph.graph):
   def _read_file( self, name="/home/beda/oasa/oasa/mol.graph"):
     self.vertices = []
     self.edges = set()
-    f = file( name, 'r')
+    f = open(name, 'r')
     vs = f.readline()
     for i in vs.split(' '):
       if i != '\n':
