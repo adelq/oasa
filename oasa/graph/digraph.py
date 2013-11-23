@@ -97,7 +97,8 @@ class digraph( graph.graph):
     processed = set()
 
     while not_processed:
-      recent = set( reduce( operator.add, [a.get_neighbors() for a in recent], [])) & not_processed
+      recent = set(j for i in [a.get_neighbors() for a in recent]
+                         for j in i) & not_processed
       processed = recent | comp
       for e in self.edges:
         v1, v2 = e.get_vertices()
