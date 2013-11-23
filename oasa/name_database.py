@@ -19,10 +19,15 @@
 
 from __future__ import print_function
 
-import os, sys
-import anydbm
 import inchi as inchimod
 import inchi_key
+import os
+
+try:
+  import dbm
+except ImportError:
+  import anydbm
+
 
 
 
