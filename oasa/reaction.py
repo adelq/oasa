@@ -17,7 +17,7 @@
 
 #--------------------------------------------------------------------------
 
-from molecule import molecule
+from .molecule import molecule
 
 
 class reaction( object):
