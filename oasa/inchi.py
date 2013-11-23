@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 from plugin import plugin
 from molecule import molecule
 import periodic_table as pt
@@ -207,12 +208,12 @@ class inchi( plugin):
     if repeat and self._no_possibility_to_improve:
 ##       if len( filter( None, [v.free_valency for v in self.structure.vertices])) == 1:
 ##         print
-##         print [(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text
+##         print([(v.symbol, v.valency, v.free_valency)  for v in self.structure.vertices if v.free_valency], filter( None, [not v.order for v in self.structure.edges]), text)
 ##       if sum( [v.charge for v in self.structure.vertices]) != self.charge:
-##         print "Charge problem", sum( [v.charge for v in self.structure.vertices]), self.charge
+##         print("Charge problem", sum( [v.charge for v in self.structure.vertices]), self.charge)
       #pass
       raise oasa_inchi_error( "Localization of bonds, charges or movable hydrogens failed")
-#    print >> sys.stderr, "run:", run
+#    print("run:", run, file=sys.stderr)
 
 
 
@@ -688,7 +689,7 @@ class inchi( plugin):
             if not charge:
               return
 ##       if old_charge == charge:
-##         print "AAAAA", self.layers
+##         print("AAAAA", self.layers)
       assert old_charge != charge
 
 
@@ -733,7 +734,7 @@ class inchi( plugin):
     while go:
       i += 1
       if i> 100:
-        print "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         break
       go = False
       # set all valency_raise to zero
@@ -741,7 +742,7 @@ class inchi( plugin):
         v.properties_['valency_raise'] = 0
       # mark vertices with the demands to raise valency
       for comp in self.structure._gen_free_valency_connected_components():
-#        print map( str, comp)
+#        print(map( str, comp))
         if sum( [v.free_valency for v in comp]) % 2:
           go = True
           for v in comp:
@@ -753,7 +754,7 @@ class inchi( plugin):
       vs.sort()
       vs.reverse()
       for (x, v) in vs:
-#        print x, v, v.valency, v.free_valency
+#        print(x, v, v.valency, v.free_valency)
         if x and v.raise_valency():
           break
 ##           if v.free_valency == 0 and v.symbol in self.proton_acceptors:
@@ -765,8 +766,8 @@ class inchi( plugin):
 ##                 break
 ##           elif v.raise_valency():
 ##             break
-#          print x, v, v.symbol, v.degree, v.valency, v.free_valency
-#          print [e.order for e in v.neighbor_edges]
+#          print(x, v, v.symbol, v.degree, v.valency, v.free_valency)
+#          print([e.order for e in v.neighbor_edges])
 #          break
 #        elif x == 0:
 #          break
@@ -790,7 +791,7 @@ def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_erro
     options = "/AUXNONE /STDIO /Key" + (fixed_hs and " /FixedH" or "")
   else:
     options = "-AUXNONE -STDIO -Key" + (fixed_hs and " -FixedH" or "")
-  #print options
+  #print(options)
   command = [os.path.abspath( program)] + options.split()
   text = _run_command( command, mf)
   inchi = ""
@@ -886,30 +887,30 @@ def mol_to_file( mol, f):
 
 if __name__ == '__main__':
 
-  import smiles
+  from . import smiles
 
   def main( text, cycles):
     t1 = time.time()
     for jj in range( cycles):
       mol = text_to_mol( text, calc_coords=True, include_hydrogens=False)
-      print map( str, [b for b in mol.bonds if b.order == 0])
-      print "  smiles: ", smiles.mol_to_text( mol)
-      print "  inchi:  ", generate_inchi( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
-      print "  charge: ", sum( [a.charge for a in mol.vertices])
-      print "  mw:     ", mol.weight
-    print generate_inchi_and_inchikey( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1")
+      print(map( str, [b for b in mol.bonds if b.order == 0]))
+      print("  smiles: ", smiles.mol_to_text( mol))
+      print("  inchi:  ", generate_inchi( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1"))
+      print("  charge: ", sum( [a.charge for a in mol.vertices]))
+      print("  mw:     ", mol.weight)
+    print(generate_inchi_and_inchikey( mol, fixed_hs=False, program="/home/beda/bin/stdinchi-1"))
     t1 = time.time() - t1
-    print 'time per cycle', round( 1000*t1/cycles, 2), 'ms'
+    print('time per cycle', round( 1000*t1/cycles, 2), 'ms')
 
   repeat = 3
   inch = "InChI=1S/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
 
   #"InChI=1/C34H16O2/c35-33-25-7-3-1-5-17(25)19-9-11-21-24-14-16-28-32-20(18-6-2-4-8-26(18)34(28)36)10-12-22(30(24)32)23-13-15-27(33)31(19)29(21)23/h1-16H"
   #inch = "InChI=1S/CO/c1-2"
-  print "oasa::INCHI DEMO"
-  print "converting following inchi into smiles (%d times)" % repeat
-  print "  inchi:   %s" % inch
-  
+  print("oasa::INCHI DEMO")
+  print("converting following inchi into smiles (%d times)" % repeat)
+  print("  inchi:   %s" % inch)
+
   #import profile
   #profile.run( 'main( inch, repeat)')
   main( inch, repeat)
