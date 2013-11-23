@@ -73,7 +73,7 @@ def get_compound_from_database( inchikey, database_file=None):
     else:
         raise Exception("Name database not found")
     base = anydbm.open( fname)
-    if base.has_key( inchikey):
+    if inchikey in base:
         cid, name = base[ inchikey].split( " ", 1)
         return {'inchikey': inchikey, 'cid': cid, 'name': name}
     else:
