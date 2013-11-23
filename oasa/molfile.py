@@ -19,8 +19,8 @@
 
 from __future__ import print_function
 
-from plugin import plugin
-from molecule import molecule
+from .plugin import plugin
+from .molecule import molecule
 
 
 
@@ -272,7 +272,7 @@ def text_to_mol( text):
 
 # NEW MODULE INTERFACE
 
-from converter_base import converter_base
+from .converter_base import converter_base
 
 class molfile_converter( converter_base):
 
