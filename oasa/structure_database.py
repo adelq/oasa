@@ -64,7 +64,7 @@ def _open_infile( infilename):
             import gzip
             f = gzip.open( infilename, "r")
         else:
-            f = file( infilename, "r")
+            f = open(infilename, "r")
         return f
     else:
         return None
