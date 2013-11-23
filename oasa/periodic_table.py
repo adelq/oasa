@@ -21,8 +21,6 @@
 #
 #--------------------------------------------------------------------------
 
-from __future__ import generators
-#from generators import lazy_map, take
 import re
 import operator
 import types
@@ -153,11 +151,11 @@ periodic_table = {
 }
 
 # elements that accept cations and raise their valency; for each element a valency is specified
-# because this property is valency (oxidation state) specific 
+# because this property is valency (oxidation state) specific
 accept_cation = {'N': 3, 'P': 3, 'O': 2, 'S': 2, 'Se': 2}
 
 # elements that accept anions and raise their valency; for each element a valency is specified
-# because this property is valency (oxidation state) specific 
+# because this property is valency (oxidation state) specific
 accept_anion = {'B': 3, 'Al': 3, 'P': 5}
 
 
@@ -253,7 +251,7 @@ class formula_dict( dict):
       tot += self[i]* periodic_table[i]['exact_mass']
     return tot
 
-  
+
   def keys_in_order( self):
     return self.sorted_keys()
 
@@ -310,7 +308,7 @@ class formula_dict( dict):
     if outer_element:
       return '<%s>%s</%s>' % (outer_element, sum, outer_element)
     return sum
-    
+
   def is_saturated_alkyl_chain( self):
     if (self.sorted_keys() == ['C','H']) and (self['H'] == 2*self['C']+1):
       return 1
@@ -382,5 +380,4 @@ def gen_bit_masks( length):
       else:
         break
     yield ret
-  
 
