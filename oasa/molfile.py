@@ -345,7 +345,7 @@ if __name__ == "__main__":
   # parsing of the file
 
   file_name = sys.argv[1]
-  f = file( file_name, 'r')
+  f = open(file_name, 'r')
   mol = file_to_mol( f)
   f.close()
 
