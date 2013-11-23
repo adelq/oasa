@@ -22,7 +22,6 @@ import cairo
 import geometry
 import math
 import misc
-import operator
 import copy
 import sys
 import transform3d
@@ -390,7 +389,9 @@ class cairo_out:
           double_bonds = len( [b for b in self.molecule.vertex_subgraph_to_edge_subgraph(ring) if b.order == 2])
           if v1 in ring and v2 in ring:
             in_ring = True
-            side += double_bonds * reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y)) for a in ring if a!=v1 and a!=v2])
+            side += double_bonds * sum(geometry.on_which_side_is_point(start + end, (a.x, a.y))
+                                           for a in ring
+                                               if a != v1 and a != v2)
         # if rings did not decide, use the other neigbors
         if not side:
           for v in v1.neighbors + v2.neighbors:
@@ -408,8 +409,9 @@ class cairo_out:
               side = 0
             elif len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
               # try to figure out which side is more towards the center of the molecule
-              side = reduce( operator.add, [geometry.on_which_side_is_point( start+end, (a.x,a.y))
-                                            for a in self.molecule.vertices if a!=v1 and a!=v2], 0)
+              side = sum(geometry.on_which_side_is_point(start + end, (a.x,a.y))
+                             for a in self.molecule.vertices
+                                 if a != v1 and a != v2)
               if not side:
                 side = 1 # we choose arbitrary value, we don't want centering
         if side:
