@@ -542,7 +542,8 @@ class smiles( plugin):
     the_right_branch = None
     the_right_branch_atom = None
     ring_joints_in_branch = 1000
-    ring_join_vertices = set( reduce( operator.add, [e.vertices for e in self.ring_joins], []))
+    ring_join_vertices = set(j for i in (e.vertices for e in self.ring_joins)
+                                   for j in i)
     for e in mol.edges:
       d1, d2 = [x.get_degree() for x in e.get_vertices()]
       if d1 > 2 or d2 > 2:
