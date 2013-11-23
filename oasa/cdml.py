@@ -19,10 +19,10 @@
 
 from __future__ import print_function
 
-import dom_extensions as dom_ext
 import xml.dom.minidom as dom
 
 from . import smiles
+from . import dom_extensions as dom_ext
 from .plugin import plugin
 from .atom import atom
 from .bond import bond
