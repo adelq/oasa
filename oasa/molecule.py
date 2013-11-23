@@ -17,6 +17,7 @@
 
 #--------------------------------------------------------------------------
 
+from __future__ import print_function
 
 import graph
 from atom import atom
@@ -136,7 +137,7 @@ class molecule( graph.graph):
       hs.add( h)
     v.explicit_hydrogens = 0
     return hs
-  
+
 
   def add_missing_bond_orders( self, retry=False):
     """retry means to try a different approach because the last one was not successful"""
@@ -144,10 +145,10 @@ class molecule( graph.graph):
     # NO2 is a typical example
     [v.raise_valency_to_senseful_value() for v in self.vertices if v.free_valency < 0]
 
-    #print [sum( [xxx.free_valency for xxx in x]) for x in self._gen_free_valency_connected_components()]
+    #print([sum( [xxx.free_valency for xxx in x]) for x in self._gen_free_valency_connected_components()])
 
-##     print [map( str, n) for n in [v.neighbors for v in self.vertices if v.symbol == "N"]]
-##     print [v.charge for v in self.vertices if v.symbol == "N"]
+##     print([map( str, n) for n in [v.neighbors for v in self.vertices if v.symbol == "N"]])
+##     print([v.charge for v in self.vertices if v.symbol == "N"])
 
     fix = True
     while fix:
@@ -161,7 +162,7 @@ class molecule( graph.graph):
         if fix:
           break
 
-    #print [v.valency for v in self.vertices if v.symbol == "N"]
+    #print([v.valency for v in self.vertices if v.symbol == "N"])
 
 ##     if retry:
 ##       for ring in self.get_smallest_independent_cycles_e():
@@ -239,7 +240,7 @@ class molecule( graph.graph):
     else:
       rings = self.get_all_cycles()   #self.get_smallest_independent_cycles()
     solved = [1]
-    # we need to repeat it to mark such things as 'badly' drawn naphtalene (no double bond in the centre) 
+    # we need to repeat it to mark such things as 'badly' drawn naphtalene (no double bond in the centre)
     while solved:
       solved = []
       for aring in rings:
@@ -369,7 +370,7 @@ class molecule( graph.graph):
         raise ValueError( "Localization of aromatic bonds failed")
     self.reconnect_temporarily_disconnected_edges()
     self.localize_fake_aromatic_bonds()
-    
+
 
 
 
@@ -450,7 +451,7 @@ class molecule( graph.graph):
 ##           if sum( comb) == 2*sum( [b.order-1 for b in self.vertex_subgraph_to_edge_subgraph( aring[:-1])]):
 ##             break
 ##           else:
-##             print "AAAA"
+##             print("AAAA")
 
     self.localize_fake_aromatic_bonds()
 
@@ -580,7 +581,7 @@ class molecule( graph.graph):
     for m in ms:
       ret.append( out.keys()[ out.values().index( m)])
       #if ret.symbol != 'H':
-      #  print "%3d: " % i, ret, ret.free_valency
+      #  print("%3d: " % i, ret, ret.free_valency)
       i += 1
     return ret
 
@@ -642,7 +643,7 @@ class molecule( graph.graph):
     as lists of atoms in the order of other.vertices; however when other has
     explicit hydrogens that match implicit hydrogens on self the length of the
     returned fragment might be shorter of the matched implicit hydrogens;
-    
+
     IF YOU DON'T LET THE GENERATOR RUN TO THE END OR SET THE auto_cleanup TO FALSE, YOU HAVE TO
     RUN clean_after_search MANUALLY NOT TO CLUTTER THE STRUCTURE"""
 
@@ -677,7 +678,7 @@ class molecule( graph.graph):
         v.free_sites = v.free_valency
 
     # then we create the dicts for storing threads in each of the atoms
-    i = 0 
+    i = 0
     for a in other.vertices:
       a.properties_['subsearch'] = {}
     for e in other.edges | self.edges:
@@ -733,8 +734,8 @@ class molecule( graph.graph):
       del v.properties_['subsearch']
     for e in self.edges | other.edges:
       del e.properties_['subsearch']
-    
-      
+
+
   def _mark_matching_threads( self, v, other):
     """v is other vertex, other is the other molecule"""
     thread = 0
@@ -774,7 +775,7 @@ class molecule( graph.graph):
             break
         # for proper handling of rings we have to check also the ones that are in this thread already
         elif thread not in e.properties_['subsearch']:
-          me = self.get_edge_between( mirror, n.properties_['subsearch'][thread]) 
+          me = self.get_edge_between( mirror, n.properties_['subsearch'][thread])
           if me and e.matches( me):
             e.properties_['subsearch'][thread] = me
             me.properties_['subsearch'][thread] = e
@@ -783,12 +784,11 @@ class molecule( graph.graph):
             break
         else:
           pass
-         
+
       threads = [i for i in v.properties_['subsearch'].keys() if i >= thread]
       if thread in threads:
         threads.remove( thread)
         yield thread
-          
 
 
   def _spawn_thread( self, other, thread, number):
@@ -906,14 +906,14 @@ class molecule( graph.graph):
 
     while new_morgs > old_morgs:
       for v in self.vertices:
-        v.properties_['morgan'] = v.properties_['new_morgan'] 
+        v.properties_['morgan'] = v.properties_['new_morgan']
 
       for v in self.vertices:
         v.properties_['new_morgan'] = v.properties_['morgan'] + sum( [n.properties_['morgan'] for n in v.neighbors])
       old_morgs = new_morgs
       new_morgs = len( set( [v.properties_['new_morgan'] for v in self.vertices]))
-      
-    print "morgan", old_morgs, [v.properties_['morgan'] for v in self.vertices]
+
+    print("morgan", old_morgs, [v.properties_['morgan'] for v in self.vertices])
 
 
   ## some geometry related things
@@ -1041,24 +1041,24 @@ if __name__ == '__main__':
     g._read_file()
 
     for b in g.edges:
-      print g.is_edge_a_bridge( b),
+      print(g.is_edge_a_bridge( b), end='')
 
 ##     g.add_missing_hydrogens()
 
 ##     for v in g.vertices:
-##   #    print v.symbol, v.is_chiral()
+##   #    print(v.symbol, v.is_chiral())
 ##       if v.symbol:
 ##         ## for a in v.get_neighbors_CIP_sorted():
-##         ##   print a, [na.symbol for na in a.get_neighbors()]
+##         ##   print(a, [na.symbol for na in a.get_neighbors()])
 ##         if v.is_chiral():
-##           print v.symbol, [na.symbol for na in v.get_neighbors_CIP_sorted()]
+##           print(v.symbol, [na.symbol for na in v.get_neighbors_CIP_sorted()])
 
 
 
   import time
   t = time.time()
   main()
-  print round( 1000*(time.time()-t), 2), 'ms'
+  print(round( 1000*(time.time()-t), 2), 'ms')
 
 # DEMO END
 ##################################################
