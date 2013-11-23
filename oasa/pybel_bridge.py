@@ -20,6 +20,8 @@
 """This module is intended for integration of OpenBabel/Pybel into OASA.
 It provides functionality for translation of OASA molecules into Pybel molecules."""
 
+from __future__ import print_function
+
 import pybel, openbabel
 from molecule import molecule
 from atom import atom
@@ -138,7 +140,7 @@ class PybelConverter( object):
 
   ## -------------------- conversion support --------------------
   ## not needed - pybel provides this functionality, I just overlooked it
-  
+
   @classmethod
   def get_supported_input_formats( self):
     conv = openbabel.OBConversion()
@@ -161,7 +163,7 @@ class PybelConverter( object):
 
 class ForceFieldOptimizer( object):
   """provides the forcefield interface for oasa molecules"""
-  
+
   def __init__( self, mol, forcefield_name="Ghemical"):
     self.mol = mol
     self._amol, self._oatom2patom_idx = PybelConverter.oasa_to_pybel_molecule_with_atom_map( self.mol)
@@ -169,7 +171,7 @@ class ForceFieldOptimizer( object):
     self.forcefield_name = forcefield_name
     self.ff = openbabel.OBForceField.FindForceField( self.forcefield_name)
     self.ff.Setup( self._amol.OBMol)
-    
+
   def conjugate_gradients( self, step_size=10, max_steps=100):
     """partial result will be yielded after the 'step_size' number of iteration has
     been performed. When false is yielded, we did not reach convergence criteria yet.
@@ -188,21 +190,21 @@ class ForceFieldOptimizer( object):
     for patom in self._amol:
       oatom = self._patom_idx2oatom[ patom.idx]
       oatom.coords = patom.coords
-    
+
 
 
 if __name__ == "__main__":
   import time
-  
+
   pmol = pybel.readstring("smi", "CC(=O)O")
   omol = PybelConverter.pybel_to_oasa_molecule( pmol)
-  print omol
+  print(omol)
   import smiles
   c = smiles.converter()
-  print c.mols_to_text( [omol])
+  print(c.mols_to_text([omol]))
 
-  #print get_supported_input_formats()
-  #print get_supported_output_formats()
+  #print(get_supported_input_formats())
+  #print(get_supported_output_formats())
 
   if False:
     import molfile
@@ -210,27 +212,27 @@ if __name__ == "__main__":
     mol = molfile.file_to_mol( f)
     f.close()
 
-    print PybelConverter.oasa_to_pybel_molecule( mol)
+    print(PybelConverter.oasa_to_pybel_molecule(mol))
 
     t = time.time()
     ff = ForceFieldOptimizer( mol)
     gen = ff.conjugate_gradients()
     for step in gen:
-      print step, ff.ff.Energy()
+      print(step, ff.ff.Energy())
       ff.update_coords()
-      print [a.coords for a in mol.atoms]
-    print time.time() - t
+      print([a.coords for a in mol.atoms])
+    print(time.time() - t)
 
   a = pybel.readstring( "smi", "CCCC\nCCC")
 
   for mol in PybelConverter.read_text( "smi", "CCCC\nCCC"):
-    print mol
+    print(mol)
 
-  print "AAAA"
+  print("AAAA")
   t = file( "/zaloha/temp/3-chlorbenzoic_acid.cdx", "r").read()
   pmol = pybel.readstring( "cdx", t)
-  print "XXX", pmol
+  print("XXX", pmol)
 
   for mol in PybelConverter.read_text( "cdx", t):
-    print mol
+    print(mol)
 
