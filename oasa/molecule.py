@@ -740,7 +740,7 @@ class molecule( graph.graph):
   def _mark_matching_threads( self, v, other):
     """v is other vertex, other is the other molecule"""
     thread = 0
-    threads = v.properties_['subsearch'].keys()
+    threads = list(v.properties_['subsearch'].keys())
     while threads:
       thread = min( threads)
       threads.remove( thread)
@@ -801,7 +801,7 @@ class molecule( graph.graph):
     for i in range( max_thread +1, max_thread +number +1, 1):
       for v in my_vs + my_es + other_vs + other_es:
         v.properties_['subsearch'][ i] = v.properties_['subsearch'][thread]
-    return range( max_thread +1, max_thread +number +1, 1)
+    return list(range(max_thread + 1, max_thread + number + 1, 1))
 
 
 
