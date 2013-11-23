@@ -403,7 +403,7 @@ class graph( object):
   def get_smallest_independent_cycles( self):
     """returns a set of smallest possible independent cycles,
     other cycles in graph are guaranteed to be combinations of them"""
-    return map( self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e())
+    return list(map(self.edge_subgraph_to_vertex_subgraph, self.get_smallest_independent_cycles_e()))
 
 
   def get_smallest_independent_cycles_dangerous_and_cached( self):
