@@ -258,7 +258,7 @@ class atom( chem_vertex):
     while not is_uniquely_sorted( cips, cip_sorting_function):
       for cip in cips:
         try:
-          cip[0].append( cip[2].next().symbol_number)
+          cip[0].append(next(cip[2]).symbol_number)
         except StopIteration:
           cip[0].append( None)
         except AttributeError:
@@ -281,7 +281,7 @@ class atom( chem_vertex):
     while not is_uniquely_sorted( cips, cip_sorting_function):
       for cip in cips:
         try:
-          cip[0].append( cip[2].next().symbol_number)
+          cip[0].append(next(cip[2]).symbol_number)
         except StopIteration:
           cip[0].append( None)
         except AttributeError:
