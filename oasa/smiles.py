@@ -18,20 +18,18 @@
 #--------------------------------------------------------------------------
 
 from __future__ import print_function
-from plugin import plugin
-from molecule import molecule, equals
-import periodic_table as PT
-import oasa_exceptions
-import reaction
-import stereochemistry
-
-
-from config import Config
 
 import re
 
-import operator
-import time
+from . import reaction
+from . import oasa_exceptions
+from . import stereochemistry
+from . import periodic_table as PT
+from .config import Config
+from .plugin import plugin
+from .molecule import molecule, equals
+
+
 
 class smiles( plugin):
 
@@ -671,7 +669,7 @@ def match_atom_lists( l1, l2):
 ##################################################
 ## MODULE INTERFACE - newstyle
 
-from converter_base import converter_base
+from .converter_base import converter_base
 
 class smiles_converter( converter_base):
 
@@ -775,7 +773,7 @@ converter = smiles_converter
 ##################################################
 ## MODULE INTERFACE - oldstyle
 
-import coords_generator
+from . import coords_generator
 
 reads_text = True
 writes_text = True
@@ -815,8 +813,8 @@ def file_to_mol( f):
 # DEMO
 
 if __name__ == '__main__':
-
   import sys
+  import time
 
   def main( text, cycles):
     t = time.time()
