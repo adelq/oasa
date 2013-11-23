@@ -23,7 +23,7 @@ import os, sys, re
 import oasa_exceptions
 try:
     from pysqlite2 import dbapi2 as sqlite
-except ImportError, e:
+except ImportError as e:
     raise Exception( "The required pysqlite module could not be loaded. More info here: '%s'" % e)
 
 import inchi
@@ -134,7 +134,7 @@ def get_compounds_from_database( database_file=None, **kw):
     c = connection.cursor()
     try:
         c.execute( sql, values)
-    except sqlite.OperationalError, e:
+    except sqlite.OperationalError as e:
         raise oasa_exceptions.oasa_error( "Error reading from structure database: '%s'" % e)
     ret = []
     c2 = connection.cursor()
