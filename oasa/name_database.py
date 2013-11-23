@@ -57,12 +57,12 @@ def database_string_to_compound( line):
 
 def mydb_to_gdbm( infilename, outfilename):
     import gdbm
-    infile = file( infilename, "r")
+    infile = open(infilename, "r")
     base = gdbm.open( outfilename, "n")
     for line in infile:
         rec = database_string_to_compound( line)
         base[ rec['inchikey']] = rec['cid'] + " " + rec['name']
-
+    infile.close()
 
 
 def get_compound_from_database( inchikey, database_file=None):
