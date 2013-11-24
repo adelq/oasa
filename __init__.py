@@ -17,11 +17,11 @@
 
 #--------------------------------------------------------------------------
 
-#import sys
-from .oasa import *
+import sys
 
-#print dir( oasa)
+from . import oasa
 
-#sys.modules['oasa'] = oasa
-
+# Allows to import oasa in BKChem normally even if it is in subdirectory and
+# otherwise would need to import oasa.oasa
+sys.modules['oasa'] = oasa
 
