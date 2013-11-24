@@ -44,10 +44,11 @@ from . import stereochemistry
 from . import geometry
 from . import transform3d
 from . import transform
+from . import known_groups
 
 atom = atom.atom
-molecule = molecule.molecule
 bond = bond.bond
+molecule = molecule.molecule
 query_atom = query_atom.query_atom
 chem_vertex = chem_vertex.chem_vertex
 
