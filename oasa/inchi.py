@@ -774,10 +774,13 @@ class inchi( plugin):
 
 import subprocess
 
-def _run_command( command, input):
-  p = subprocess.Popen( command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-  o, er = p.communicate( str( input))
-  return o
+def _run_command(command, inputs):
+  p = subprocess.Popen(command,
+                       stdin=subprocess.PIPE,
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.STDOUT)
+  o, er = p.communicate(inputs.encode('utf-8'))
+  return o.decode('utf-8')
 
 
 def generate_inchi_and_inchikey( m, program=None, fixed_hs=True, ignore_key_error=False):
