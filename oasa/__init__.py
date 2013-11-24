@@ -52,17 +52,19 @@ molecule = molecule.molecule
 query_atom = query_atom.query_atom
 chem_vertex = chem_vertex.chem_vertex
 
-all = ['atom','bond','molecule','smiles','coords_generator','molfile','inchi','graph',
-       "linear_formula",'periodic_table','config','coords_optimizer','chem_vertex',
-       'query_atom','oasa_exceptions','name_database',"subsearch", "svg_out",
-       'stereochemistry','geometry','transform','transform3d']
+allNames = ['atom', 'bond', 'chem_vertex', 'coords_generator', 'config',
+            'coords_optimizer', 'geometry', 'graph', 'inchi', 'known_groups',
+            'linear_formula', 'molecule', 'molfile', 'name_database',
+            'oasa_exceptions', 'periodic_table', 'query_atom', 'smiles',
+            'stereochemistry', 'subsearch', 'svg_out', 'transform',
+            'transform3d']
 
 try:
   from . import cairo_out
 except:
   CAIRO_AVAILABLE = False
 else:
-  all.append( "cairo_out")
+  allNames.append("cairo_out")
   CAIRO_AVAILABLE = True
 
 # inchi_key
@@ -72,7 +74,7 @@ except Exception as e:
   #print >> sys.stderr, "Module inchi_key could not be loaded - inchi_key related features will be disabled\nSee the error message for more info:\n  %s" % e
   INCHI_KEY_AVAILABLE = False
 else:
-  all.append( "inchi_key")
+  allNames.append("inchi_key")
   INCHI_KEY_AVAILABLE = True
 
 # name_database (requires inchi_key which requires mhash in Python 2.4)
@@ -81,7 +83,7 @@ try:
 except Exception as e:
   NAME_DATABASE_AVAILABLE = False
 else:
-  all.append( "name_database")
+  allNames.append("name_database")
   NAME_DATABASE_AVAILABLE = True
 
 # structure_database requires sqlite
@@ -91,7 +93,7 @@ except Exception as e:
   #print >> sys.stderr, "Module structure_database could not be loaded - structure_database related features will be disabled\nSee the error message for more info:\n  %s" % e
   STRUCTURE_DATABASE_AVAILABLE = False
 else:
-  all.append( "structure_database")
+  allNames.append("structure_database")
   STRUCTURE_DATABASE_AVAILABLE = True
 
 # pybel
@@ -101,9 +103,9 @@ except Exception as e:
   #print >> sys.stderr, "The 'pybel_bridge' python module could not be loaded - oasa-pybel integration will be disabled\nSee the error message for more info:\n  %s" % e
   PYBEL_AVAILABLE = False
 else:
-  all.append( "pybel_bridge")
+  allNames.append("pybel_bridge")
   PYBEL_AVAILABLE = True
 
 
-__all__ = all
+__all__ = allNames
 
