@@ -76,7 +76,7 @@ def read_cdml( text):
 
     for bond_el in dom_ext.simpleXPathSearch( mol_el, "bond"):
       type = bond_el.getAttribute( 'type')
-      if type[1] == u'0':
+      if type[1] == '0':
         # we ignore bonds with order 0
         continue
       v1 = atom_id_remap[ bond_el.getAttribute( 'start')]
