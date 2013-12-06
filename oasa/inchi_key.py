@@ -20,6 +20,7 @@
 from __future__ import print_function
 
 import re
+import misc
 import hashlib
 import operator
 
@@ -1179,7 +1180,7 @@ def minor_digest( minor):
 
 def compute_inchi_check( key):
   """this is not used in new InChIKey - starting from 1.02 version of InChI software"""
-  assert type( key) == type( "") or type( key) == type( u"")
+  assert misc.myisstr(key)
   if key.startswith( "InChIKey="):
     key = key[9:]
   m = re.match( "^([A-Z]{14})-([A-Z]{9})$", key)
@@ -1210,7 +1211,7 @@ def flag_old( version, parts):
 
 def key_from_inchi_old( inp):
   """this code is for InChIKey from 1.02Beta version of InChI software"""
-  assert type( inp) == type( "") or type( inp) == type( u"")
+  assert misc.myisstr(inp)
   if inp.startswith("InChI="):
     inp = inp[6:]
   parts = inp.split( "/")
@@ -1248,7 +1249,7 @@ def key_from_inchi_old( inp):
 def check_inchi_key( key):
   """checks the InChIKey using the algorithm described in the manual to InChI 1.02beta;
   check character is not used in 1.02 final"""
-  assert type( key) == type( "") or type( key) == type( u"")
+  assert myisstr(key)
   if key.startswith( "InChIKey="):
     key = key[9:]
   m = re.match( "^([A-Z]{14})-([A-Z]{9})([A-Z])$", key)
@@ -1267,7 +1268,7 @@ import string
 
 def key_from_inchi( inp):
   """this is for new InChIKey starting with 1.02 release"""
-  assert type( inp) == type( "") or type( inp) == type( u"")
+  assert myisstr(inp)
   if inp.startswith("InChI="):
     inp = inp[6:]
   parts = inp.split( "/")
