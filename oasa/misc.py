@@ -22,15 +22,26 @@
 #--------------------------------------------------------------------------
 
 """Module containing miscelanous functions used in BKChem that don't
-fit anywhere else. Does not contain any objects."""
+fit anywhere else. Does not contain any objects.
+"""
 
+import re
+import sys
 import math
 import time
-import string
-from warnings import warn
-import re
 import types
+import string
 import base64
+
+from warnings import warn
+
+
+
+def myisstr(obj):
+  if sys.version_info[0] > 2:
+    return isinstance(obj, str)
+  else:
+    return isinstance(obj, basestring)
 
 
 def intersection( a, b):
@@ -227,6 +238,3 @@ def gen_variations_and_one( items, length):
     for vs in vars:
       yield vs + [i]
 
-
-#print x_over_y( 11, 7)
-#print len( list( gen_variations( [1,2,3,4,5,6,7,8,9,10,11,12], 8)))
