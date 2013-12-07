@@ -69,11 +69,16 @@ class query_atom( chem_vertex):
     return False
 
 
-  ## PROPERTIES
+  @property
+  def symbol(self):
+    """Atom symbol.
+
+    """
+    return self._symbol
 
 
-  # symbol
-  def _set_symbol( self, symbol):
+  @symbol.setter
+  def symbol(self, symbol):
     if symbol in PT.periodic_table.keys():
       if not "query" in PT.periodic_table[ symbol]:
         warn( "Setting normal atom symbol to a query_atom instance, do you mean it?")
@@ -84,35 +89,31 @@ class query_atom( chem_vertex):
     self._symbol = symbol
 
 
-  def _get_symbol( self):
-    return self._symbol
+  @property
+  def free_sites(self):
+    """Atom's free sites.
 
-  symbol = property( _get_symbol, _set_symbol, None, "atom symbol")
-
-
-
-
-
-  # free_sites
-  def _set_free_sites( self, free_sites):
-    self._free_sites = free_sites
-
-  def _get_free_sites( self):
+    """
     return self._free_sites
 
-  free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
+
+  @free_sites.setter
+  def free_sites(self, free_sites):
+    self._free_sites = free_sites
+
 
   def __str__( self):
     return "query atom '%s'" % str( self.symbol)
 
-  def is_query_definition( self, text):
+
+  @classmethod
+  def is_query_definition(self, text):
     matcher = re.compile( "\[([A-Z][a-z]?,)*[A-Z][a-z]?\]")
     return matcher.match( text) and True or False
 
-  is_query_definition = classmethod( is_query_definition)
 
-
-  def parse_query_definition( self, text):
+  @classmethod
+  def parse_query_definition(self, text):
     if self.is_query_definition( text):
       syms = set( map( str, text[1:-1].split(",")))
       for sym in syms:
@@ -122,8 +123,3 @@ class query_atom( chem_vertex):
     else:
       raise oasa_invalid_atom_symbol( "not valid query definition", text)
 
-  parse_query_definition = classmethod( parse_query_definition)
-
-
-
-#print query_atom.parse_query_definition( "[Ar,Cl,X]")
