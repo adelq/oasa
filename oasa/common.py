@@ -19,7 +19,6 @@
 
 
 
-
 def gen_combinations_of_series( series):
   """series is a list of lists (tuples), the generator yields
   lists by combining each element of each list with each other"""
@@ -36,15 +35,19 @@ def gen_combinations_of_series( series):
     yield [s[ counter[ j]] for j,s in enumerate( series)]
 
 
-def is_uniquely_sorted( series, sorting_function=None):
-  """you put a *sorted* series inside and get the information whether all the items
-  are unique (there are no two same items)"""
-  sf = sorting_function or cmp
-  for i in range( len( series)-1):
-    if sf( series[i], series[i+1]) == 0:
-      return False
-  return True
+def is_uniquely_sorted(series, sorting_function=None):
+  """Take a *sorted* series and tell if all the items are unique.
 
+  """
+  if sorting_function is None:
+    for i in range(len(series) - 1):
+      if series[i] == series[i+1]:
+        return False
+  else:
+    for i in range(len(series) - 1):
+      if sorting_function(series[i], series[i+1]) == 0:
+        return False
+  return True
 
 
 def least_common_item( series):
