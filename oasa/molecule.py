@@ -90,7 +90,12 @@ class molecule(graph.graph):
           part.add_stereochemistry( st)
     return out
 
-  def get_mol_weight( self):
+
+  @property
+  def weight(self):
+    """Molecular weight.
+
+    """
     w = 0
     for v in self.vertices:
       w += v.weight
@@ -98,13 +103,13 @@ class molecule(graph.graph):
         w += v.free_valency * PT.periodic_table['H']['weight']
     return w
 
-  weight = property( get_mol_weight, None, None, "molecular weight")
 
+  @property
+  def charge(self):
+    """Net charge of the molecule.
 
-  def get_charge( self):
-    return sum( [a.charge for a in self.vertices])
-
-  charge = property( get_charge, None, None, "Net charge of the molecule")
+    """
+    return sum([a.charge for a in self.vertices])
 
 
   def get_formula_dict( self):
