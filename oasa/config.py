@@ -29,7 +29,7 @@ class Config (object):
 
   molecule_class = molecule.molecule
 
-  def create_molecule( self):
+  @classmethod
+  def create_molecule(self):
     return self.molecule_class()
-  create_molecule = classmethod( create_molecule)
 
