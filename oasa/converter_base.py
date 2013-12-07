@@ -17,11 +17,13 @@
 
 #--------------------------------------------------------------------------
 
+"""Abstract parent class for all converters.
 
-"""Here resides the abstract parent class for all converters"""
+"""
 
 
-class converter_base( object):
+
+class converter_base(object):
 
   STATUS_OK = 1
   STATUS_CRITICAL_ERROR = 2
@@ -40,29 +42,36 @@ class converter_base( object):
       self.configuration[k] = v
     self.cleanup()
 
+
   def clean_logs( self):
     # here all warnings for the last run should be stored
     self.warnings = []
     # here error messages for the last run will be stored
     self.errors = []
 
+
   def mols_to_text( self, structures):
     self.clean_logs()
     pass
+
 
   def read_text( self, text):
     self.clean_logs()
     pass
 
+
   def mols_to_file( self, structures, f):
     self.clean_logs()
     pass
+
 
   def read_file( self, f):
     self.clean_logs()
     pass
 
+
   def cleanup( self):
     self.clean_logs()
     self.result = []
     self.last_status = None
+
