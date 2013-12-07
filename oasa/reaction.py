@@ -20,10 +20,11 @@
 from .molecule import molecule
 
 
-class reaction( object):
-  """Reaction representation"""
 
+class reaction(object):
+  """Reaction representation.
 
+  """
   def __init__( self, reactants=None, products=None, reagents=None):
     self.reactants = reactants or []
     self.products = products or []
@@ -31,30 +32,37 @@ class reaction( object):
 
 
 
-class reaction_component( object):
-  """Represents one component of a reaction"""
+class reaction_component(object):
+  """Represents one component of a reaction.
 
+  """
   def __init__( self, mol=None, stoichiometry=1):
     self.stoichiometry = stoichiometry
     self.molecule = mol
 
-  def _set_molecule( self, mol):
-    assert isinstance( mol, molecule)
-    self._molecule = mol
 
-  def _get_molecule( self):
+  @property
+  def molecule(self):
     return self._molecule
 
-  molecule = property( _get_molecule, _set_molecule)
 
-  def _set_stoichiometry( self, stoich):
-    assert type( stoich) in (int, float)
-    self._stoichiometry = stoich
+  @molecule.setter
+  def molecule(self, mol):
+    assert isinstance(mol, molecule)
+    self._molecule = mol
 
-  def _get_stoichiometry( self):
+
+  @property
+  def stoichiometry(self):
     return self._stoichiometry
 
-  stoichiometry = property( _get_stoichiometry, _set_stoichiometry)
+
+  @stoichiometry.setter
+  def stoichiometry(self, stoich):
+    assert isinstance(stoich, (int, float))
+    self._stoichiometry = stoich
+
 
   def __str__( self):
     return "%s * (%s)" % (self.stoichiometry, self.molecule)
+
