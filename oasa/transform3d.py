@@ -17,13 +17,18 @@
 
 #--------------------------------------------------------------------------
 
+"""Provide basic coordinate transformations in 3D based on matrix algebra.
 
-"""this module provides basic coordinate transformations in 3D based on matrix algebra"""
+"""
 
 from math import cos, sin, pi
 
-class transform3d:
-  """this class provides basic higher-level interface for coordinate transforms"""
+
+
+class transform3d(object):
+  """Provide basic higher-level interface for coordinate transforms.
+
+  """
   def __init__( self, mat = None):
     if not mat:
       self.mat = matrix( [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
@@ -111,9 +116,11 @@ class transform3d:
     return transform3d( mat=self.mat.get_inverse())
 
 
-class matrix:
-  "this class provides common operations for matrix of 3x3 elements"
 
+class matrix(object):
+  """Provide common operations for matrix of 3x3 elements.
+
+  """
   def __init__( self, mat):
     self.mat = mat
 
