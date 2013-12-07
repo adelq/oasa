@@ -55,8 +55,7 @@ def rad_to_deg( rad):
 
 
 
-
-class coords_optimizer:
+class coords_optimizer(object):
 
   def __init__( self):
     self.cutoff_rms_grad = 1e-5
