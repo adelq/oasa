@@ -53,7 +53,7 @@ class bond(graph.edge, object):
     graph.edge.__init__( self, vs=vs)
     self.set_vertices( vs)
     self.aromatic = None  # None means it was not set
-    self.set_order( order)
+    self.order = order
     self.type = type
     self.properties_ = {}
     self.stereochemistry = None
@@ -72,18 +72,41 @@ class bond(graph.edge, object):
     return False
 
 
+  @property
+  def vertices(self):
+    """Tuple of 2 vertices (start, end).
 
-  def set_vertices( self, vs=[]):
-    """sets the vertices this edge connects"""
+    """
+    return self._vertices
+
+
+  @vertices.setter
+  def vertices(self, vs=[]):
+    """Sets the vertices this edge connects.
+
+    """
     assert len( vs) == 2 or len( vs) == 0
     #if len( vs) == 2 and vs[0] == vs[1]:
     #  warn( "creating bond with both ends equal", UserWarning, 2)
     self._vertices = list( vs)
 
-  def get_vertices( self):
-    return self._vertices
 
-  def set_order( self, order):
+  @property
+  def order(self):
+    """Bond order.
+
+    1-3 for normal bonds,
+    4   for aromatic bonds for which localized order is not available,
+    for localized aromatic bonds check the bond.aromatic boolean attribute.
+    """
+    if self._order is None and self.aromatic:
+      return 4
+    else:
+      return self._order
+
+
+  @order.setter
+  def order(self, order):
     [a.bond_order_changed() for a in self.vertices]
     if order == 4:
       self._order = None
@@ -92,36 +115,18 @@ class bond(graph.edge, object):
       self._order = order
       #self.aromatic = None
 
-  def get_order( self):
-    if self._order == None and self.aromatic:
-      return 4
-    else:
-      return self._order
 
+  @property
+  def length(self):
+    """Bond length.
 
-  def get_length( self):
+    """
     if len( self.vertices) == 2:
       v1, v2 = self.vertices
       return math.sqrt( (v1.x-v2.x)**2 + (v1.y-v2.y)**2)
     else:
       return 0
 
-
-
-  ## PROPERTIES
-
-  vertices = property( get_vertices, set_vertices, None,
-                       "property, the tuple of 2 vertices (start,end)")
-
-  order = property( get_order, set_order, None,
-                    """property, 1-3 for normal bonds, 4 for aromatic bonds for which
-                    localized order is not available, for localized aromatic bonds
-                    check the bond.aromatic boolean attribute""")
-
-  length = property( get_length, None, None,
-                     """the bond length""")
-
-  ## END OF PROPERTIES
 
 ### TODO
 
