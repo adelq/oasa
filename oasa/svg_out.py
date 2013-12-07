@@ -28,7 +28,7 @@ from . import dom_extensions
 
 
 
-class svg_out:
+class svg_out(object):
 
   show_hydrogens_on_hetero = False
   margin = 15
