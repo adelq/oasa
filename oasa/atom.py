@@ -172,7 +172,7 @@ class atom( chem_vertex):
 
   @isotope.setter
   def isotope(self, isotope):
-    if isotope is not None and type( isotope) != type( 1):
+    if isotope is not None and not isinstance(isotope, int):
       # isotope must be a number or None
       raise oasa_exceptions.oasa_invalid_value( "isotope", isotope)
     self._isotope = isotope
