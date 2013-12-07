@@ -17,12 +17,13 @@
 
 #--------------------------------------------------------------------------
 
-
-
-from warnings import warn
 import copy
 
-class edge:
+from warnings import warn
+
+
+
+class edge(object):
 
   attrs_to_copy = ("disconnected",)
 
