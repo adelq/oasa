@@ -28,7 +28,7 @@ from . import geometry
 
 
 
-class coords_generator:
+class coords_generator(object):
 
   def __init__( self, bond_length=1):
     self.bond_length = bond_length
