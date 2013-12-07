@@ -17,12 +17,14 @@
 
 #--------------------------------------------------------------------------
 
-
 from . import molecule
 
 
+
 class Config (object):
-  """this is a singleton class for library wide configuration"""
+  """Singleton class for library wide configuration.
+
+  """
 
   molecule_class = molecule.molecule
 
