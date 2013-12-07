@@ -1225,17 +1225,17 @@ def key_from_inchi_old( inp):
     raise Exception( "Unsupported InChI version '%s' in '%s'" % (version, inp))
   del parts[0]
   i = 1
-  next = True
+  n = True
   parts_major = [parts[0]]
   # sort the layers into a major and minor part - these are hashed separately
-  while next:
+  while n:
     if i >= len( parts):
       break
     if parts[i][0] in "chq":
       parts_major.append( parts[i])
       i += 1
     else:
-      next = False
+      n = False
   major = "/".join( parts_major)
   parts_minor = parts[i:]
   minor = "/".join( parts_minor)
