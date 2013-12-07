@@ -28,8 +28,10 @@ from math import pi, sqrt, sin, cos, atan2
 from . import geometry
 
 
+
 def sum_of_ring_internal_angles( size):
   return (size-2)*180
+
 
 def optimal_ring_iternal_angle( size, angle_shift=0):
   return sum_of_ring_internal_angles( size)/size
@@ -46,6 +48,7 @@ def gen_variations(items, n):
 
 def deg_to_rad( deg):
   return pi*deg/180
+
 
 def rad_to_deg( rad):
   return 180*rad/pi
@@ -126,7 +129,6 @@ class coords_optimizer:
         mdd = d
 
     return sqrt( dd), sqrt( mdd)
-
 
 
   def set_gradient( self, vertex):
