@@ -324,7 +324,7 @@ class atom( chem_vertex):
       to_remove = []
       for cip in cips:
         try:
-          cs = itertools.takewhile( lambda x: x!=None, cip[2])
+          cs = itertools.takewhile(lambda x: x is not None, cip[2])
         except StopIteration:
           to_remove.append( cip)
           continue
