@@ -17,18 +17,21 @@
 
 #--------------------------------------------------------------------------
 
-"""implements the vertex class"""
+"""Vertex class.
 
-#import basic
+"""
 
 import copy
 
 
-class vertex( object):
-  """simple vertex class, normaly would not be needed but it can speed up many analytical tasks
-  to store data directly in vertex and not get them from the graph connectivity matrix.
-  vertex has a value attribute used to store arbitrary object"""
+class vertex(object):
+  """Simple vertex class.
 
+  Normaly would not be needed but it can speed up many analytical tasks
+  to store data directly in vertex and not get them from the graph
+  connectivity matrix.
+  Vertex has a value attribute used to store arbitrary objects.
+  """
   attrs_to_copy = ("value",)
 
   def __init__( self):
@@ -36,24 +39,28 @@ class vertex( object):
     self.value = None  # used to store any object associated with the vertex
     self._neighbors = {} # set of all neighbors
     self._clean_cache()
-    
-    
+
+
   def __str__( self):
     return ("vertex, value=%s, degree=%d, " % (str( self.value), self.get_degree()) )+str(self.properties_)
 
+
   def _clean_cache( self):
     self._cache = {}
+
 
   def copy( self):
     other = self.__class__()
     for attr in self.attrs_to_copy:
       setattr( other, attr, copy.copy( getattr( self, attr)))
     return other
-  
+
+
   def add_neighbor( self, v, e):
     """adds a neighbor connected via e"""
     self._clean_cache()
     self._neighbors[ e] = v
+
 
   def remove_neighbor( self, v):
     self._clean_cache()
@@ -66,6 +73,7 @@ class vertex( object):
       del self._neighbors[ to_del]
     else:
       raise Exception("cannot remove non-existing neighbor")
+
 
   def remove_edge_and_neighbor( self, e):
     self._clean_cache()
