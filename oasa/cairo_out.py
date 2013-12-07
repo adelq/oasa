@@ -17,23 +17,24 @@
 
 #--------------------------------------------------------------------------
 
-
-import cairo
-import geometry
+import sys
 import math
+import cairo
+
 import misc
 import copy
-import sys
+import geometry
 import transform3d
 
-class cairo_out:
 
-  """
-  This object is used to draw OASA molecules using cairo. Cairo supports different
-  'surfaces' which represent different file formats.
-  This object implements PNG file drawing, but should be general enough to work with other
-  formats, provided modified version of create_surface and write_surface methods are provided
-  when this class is subclassed.
+
+class cairo_out(object):
+  """Draw OASA molecules using cairo.
+
+  Cairo supports different 'surfaces' which represent different file formats.
+  This object implements PNG file drawing, but should be general enough
+  to work with other formats, provided modified version of create_surface and
+  write_surface methods are provided when this class is subclassed.
 
   Usage:
 
