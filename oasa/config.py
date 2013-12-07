@@ -25,6 +25,7 @@ class Config (object):
   """Singleton class for library wide configuration.
 
   """
+  inchi_binary_path = "/usr/bin/inchi-1"
 
   molecule_class = molecule.molecule
 
@@ -32,5 +33,3 @@ class Config (object):
     return self.molecule_class()
   create_molecule = classmethod( create_molecule)
 
-
-  inchi_binary_path = "/home/beda/bin/cInChI-1-102b"
