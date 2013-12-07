@@ -459,7 +459,10 @@ def rad_to_deg( rad):
 
 
 def show_mol( mol):
-  from Tkinter import Tk, Canvas, Frame
+  try:
+    from tkinter import Tk, Canvas, Frame
+  except ImportError:
+    from Tkinter import Tk, Canvas, Frame
 
   app = Tk()
   app.title( "oasa")
