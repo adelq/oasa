@@ -110,7 +110,7 @@ class cairo_out(object):
     'align_coords': True,
     # the following also draws hydrogens on shown carbons
     'show_hydrogens_on_hetero': False,
-    'show_carbon_symbol': False, 
+    'show_carbon_symbol': False,
     'margin': 15,
     'line_width': 1.0,
     # how far second bond is drawn
@@ -163,6 +163,7 @@ class cairo_out(object):
     for e in copy.copy( mol.edges):
       self._draw_edge( e)
 
+
   def create_surface( self, w, h, format):
     """currently implements PNG writting, but might be overriden to write other types;
     w and h are minimal estimated width and height"""
@@ -176,14 +177,16 @@ class cairo_out(object):
     else:
       raise Exception( "unknown format '%s'" % format)
 
+
   def init_surface( self):
     """make all necessary operations to prepare a surface for drawing:
     set antialiasing as requested, create background, etc."""
     pass
 
+
   def create_dummy_surface( self, w, h):
     self.surface = cairo.ImageSurface( cairo.FORMAT_A1, w, h)
-    
+
 
   def write_surface( self):
     """finishes the surface and write it to the file if necessary"""
@@ -251,17 +254,19 @@ class cairo_out(object):
     # flip y coordinates back
     for v in mol.vertices:
       v.y = -v.y
-    
+
 
   def mol_to_cairo( self, mol, filename, format="png"):
     """This is a convenience method kept for backward compatibility,
     it just calls mols_to_cairo internally"""
     return self.mols_to_cairo( [mol], filename, format=format)
 
+
   def _round( self, x):
     if self.line_width % 2:
       return round( x) + 0.5
     return round( x)
+
 
   def _draw_edge( self, e):
     def draw_plain_or_colored_line( _start, _end, second=False):
@@ -274,11 +279,12 @@ class cairo_out(object):
       else:
         self._draw_colored_line( _start, _end, line_width=self.line_width, start_color=color1, end_color=color2)
 
+
     def draw_plain_or_colored_wedge( _start, _end):
       x1, y1 = _start
       x2, y2 = _end
       x, y, x0, y0 = geometry.find_parallel( x1, y1, x2, y2, self.wedge_width/2.0)
-      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0) 
+      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0)
       # no coloring now
       if not has_shown_vertex or not self.color_bonds:
         self._create_cairo_path( [(xa, ya), (x0, y0), (2*x2-x0, 2*y2-y0), (2*x1-xa, 2*y1-ya)], closed=True)
@@ -288,7 +294,7 @@ class cairo_out(object):
         # ratio 0.4 looks better than 0.5 because the area difference
         # is percieved more than length difference
         ratio = 0.4
-        xm1 = ratio*xa + (1-ratio)*x0 
+        xm1 = ratio*xa + (1-ratio)*x0
         ym1 = ratio*ya + (1-ratio)*y0
         xm2 = (1-ratio)*(2*x2-x0) + ratio*(2*x1-xa)
         ym2 = (1-ratio)*(2*y2-y0) + ratio*(2*y1-ya)
@@ -299,19 +305,20 @@ class cairo_out(object):
         self._create_cairo_path( [(xm1,ym1), (x0, y0), (2*x2-x0, 2*y2-y0), (xm2,ym2)], closed=True)
         self.context.fill()
 
+
     def draw_plain_or_colored_hatch( _start, _end):
       x1, y1 = _start
       x2, y2 = _end
       # no coloring now
       x, y, x0, y0 = geometry.find_parallel( x1, y1, x2, y2, self.wedge_width/2.0)
-      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0) 
+      xa, ya, xb, yb = geometry.find_parallel( x1, y1, x2, y2, self.line_width/2.0)
       d = math.sqrt( (x1-x2)**2 + (y1-y2)**2) # length of the bond
-      if d == 0:  
+      if d == 0:
         return  # to prevent division by zero
-      dx1 = (x0 - xa)/d 
-      dy1 = (y0 - ya)/d 
-      dx2 = (2*x2 -x0 -2*x1 +xa)/d 
-      dy2 = (2*y2 -y0 -2*y1 +ya)/d 
+      dx1 = (x0 - xa)/d
+      dy1 = (y0 - ya)/d
+      dx2 = (2*x2 -x0 -2*x1 +xa)/d
+      dy2 = (2*y2 -y0 -2*y1 +ya)/d
       # we have to decide if the first line should be at the position of the first atom
       draw_start = 1  # is index not boolean
       if not v1 in self._vertex_to_bbox and v1.occupied_valency > 1:
@@ -328,9 +335,9 @@ class cairo_out(object):
       self.context.set_source_rgb( *color1)
       middle = 0.5 * (draw_start + int( round( d/ step_size)) + draw_end - 2)
       for i in range( draw_start, int( round( d/ step_size)) +draw_end):
-        coords = [xa+dx1*i*step_size, ya+dy1*i*step_size, 2*x1-xa+dx2*i*step_size, 2*y1-ya+dy2*i*step_size] 
+        coords = [xa+dx1*i*step_size, ya+dy1*i*step_size, 2*x1-xa+dx2*i*step_size, 2*y1-ya+dy2*i*step_size]
         if coords[0] == coords[2] and coords[1] == coords[3]:
-          if (dx1+dx2) > (dy1+dy2): 
+          if (dx1+dx2) > (dy1+dy2):
             coords[0] += 1
           else:
             coords[1] += 1
@@ -406,7 +413,7 @@ class cairo_out(object):
           else:
             # bond between two unshown atoms - we want to center them only in some cases
             if len( v1.neighbors) == 1 and len( v2.neighbors) == 1:
-              # both atoms have only one neighbor 
+              # both atoms have only one neighbor
               side = 0
             elif len( v1.neighbors) < 3 and len( v2.neighbors) < 3:
               # try to figure out which side is more towards the center of the molecule
@@ -440,7 +447,7 @@ class cairo_out(object):
       # if transform was used, we need to transform back
       for n in atom1.neighbors + atom2.neighbors:
         n.coords = self._invtransform.transform_xyz( *n.coords)
-    
+
 
   def _where_to_draw_from_and_to( self, b):
     def fix_bbox( a):
@@ -471,6 +478,7 @@ class cairo_out(object):
     else:
       return (x1, y1, x2, y2)
 
+
   def _is_there_place( self, atom, x, y):
     x1, y1 = atom.x, atom.y
     angle1 = geometry.clockwise_angle_from_east( x-x1, y-y1)
@@ -493,6 +501,7 @@ class cairo_out(object):
     i = diffs.index( max( diffs))
     angle = (angles[i] +angles[i+1]) / 2
     return angle
+
 
   def _draw_vertex( self, v):
     pos = sum( [(a.x < v.x) and -1 or 1 for a in v.neighbors if abs(a.x-v.x)>0.2])
@@ -535,7 +544,7 @@ class cairo_out(object):
           # otherwise minus might be mistaken for a bond
           text += charge
           charge = ""
-      
+
       # coloring
       if self.color_atoms:
         color = self.atom_colors.get( v.symbol, (0,0,0))
@@ -576,6 +585,7 @@ class cairo_out(object):
         else:
           self.context.show_text( charge)
 
+
   def _get_3dtransform_for_drawing( self, b):
     """this is a helper method that returns a transform3d which rotates
     a bond and its neighbors to coincide with the x-axis and rotates neighbors to be in (x,y)
@@ -601,7 +611,6 @@ class cairo_out(object):
 
 
   ## ------------------------------ lowlevel drawing methods ------------------------------
-
   def _draw_colored_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT,
                           start_color=(0,0,0), end_color=(0,0,0)):
     x1,y1 = start
@@ -617,7 +626,7 @@ class cairo_out(object):
       self.context.set_source_rgb( *color)
       self._create_cairo_path( line, closed=False)
       self.context.stroke()
-    
+
 
   def _draw_line( self, start, end, line_width=1, capstyle=cairo.LINE_CAP_BUTT, color=(0,0,0)):
     self.context.set_source_rgb( *color)
@@ -625,7 +634,7 @@ class cairo_out(object):
     self.context.set_line_cap( capstyle)
     # line width
     self.context.set_line_width( line_width)
-    # the path itself 
+    # the path itself
     cs = [start, end]
     self._create_cairo_path( cs, closed=False)
     # stroke it
@@ -697,10 +706,10 @@ class cairo_out(object):
         xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text)
         _dx += x_advance
       # last letter
-      xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text[-1])      
+      xbearing, ybearing, width, height, x_advance, y_advance = self.context.text_extents( chunk.text[-1])
       x -= _dx - 0.5*x_advance
       y += 0.5*height
-      
+
     self.context.new_path()
     x1 = round( x)
     bbox = None
@@ -752,8 +761,7 @@ class cairo_out(object):
     #self.set_cairo_color( outline)
     self.context.stroke()
 
-    
-    
+
   def _create_cairo_path( self, points, closed=False):
     points = [self._invtransform.transform_xyz( p[0],p[1],0)[:2] for p in points]
     x, y = points[0]
@@ -762,6 +770,7 @@ class cairo_out(object):
       self.context.line_to( x, y)
     if closed:
       self.context.close_path()
+
 
   def _get_bbox( self):
     bbox = list( self._bboxes[0])
@@ -777,6 +786,7 @@ class cairo_out(object):
         bbox[3] = y2
     return bbox
 
+
   def _set_source_color( self, color):
     """depending on the value of color uses the proper method,
     either set_source_rgb or set_source_rgba"""
@@ -786,23 +796,28 @@ class cairo_out(object):
       self.context.set_source_rgba( *color)
     else:
       raise ValueError( "wrong specification of color '%s'" % color)
-    
+
+
 
 def mol_to_png( mol, filename, **kw):
   c = cairo_out( **kw)
   c.mol_to_cairo( mol, filename)
 
+
 def mols_to_png( mols, filename, **kw):
   c = cairo_out( **kw)
   c.mols_to_cairo( mols, filename)
+
 
 def mol_to_cairo( mol, filename, format, **kw):
   c = cairo_out( **kw)
   c.mol_to_cairo( mol, filename, format=format)
 
+
 def mols_to_cairo( mols, filename, format, **kw):
   c = cairo_out( **kw)
   c.mols_to_cairo( mols, filename, format=format)
+
 
 
 if __name__ == "__main__":
@@ -818,5 +833,4 @@ if __name__ == "__main__":
 ##   import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
 ##   mol_to_png( mol, "output.png")
-
 
