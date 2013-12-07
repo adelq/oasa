@@ -18,25 +18,31 @@
 #--------------------------------------------------------------------------
 
 
-class plugin:
-  """the basic plugin interface"""
 
+class plugin(object):
+  """Basic plugin interface.
+
+  """
   name = "plugin"
   read = 0
   write = 0
 
-  def __init__( self):
+  def __init__(self):
     pass
 
-  def set_structure( self, structure):
+
+  def set_structure(self, structure):
     pass
 
-  def get_structure( self, structure):
+
+  def get_structure(self, structure):
     pass
 
-  def read_file( self, file):
+
+  def read_file(self, file):
     pass
 
-  def write_file( self, file):
+
+  def write_file(self, file):
     pass
 
