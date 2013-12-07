@@ -31,8 +31,9 @@ from . import inchi as inchimod
 
 
 
-class Config:
-    database_file = os.path.abspath( os.path.join( os.path.dirname( __file__), "names.db"))
+class Config(object):
+    database_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "names.db"))
+
 
 
 def normalize_inchi( inchi):
