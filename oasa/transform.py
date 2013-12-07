@@ -16,12 +16,10 @@
 #     main directory of the program
 
 #--------------------------------------------------------------------------
-#
-#
-#
-#--------------------------------------------------------------------------
 
-"""this module provides basic coordinate transformations based on matrix algebra"""
+"""Provide basic coordinate transformations based on matrix algebra.
+
+"""
 
 from __future__ import division
 
@@ -30,8 +28,11 @@ from math import cos, sin, pi
 from . import geometry
 
 
-class transform:
-  """this class provides basic higher-level interface for coordinate transforms"""
+
+class transform(object):
+  """Provide basic higher-level interface for coordinate transforms.
+
+  """
   def __init__( self, mat = None):
     if not mat:
       self.mat = matrix( [[1,0,0],[0,1,0],[0,0,1]])
@@ -107,9 +108,11 @@ class transform:
     return (x12-x11)/(x02-x01), (y12-y11)/(y02-y01)
 
 
-class matrix:
-  "this class provides common operations for matrix of 3x3 elements"
 
+class matrix(object):
+  """Provide common operations for matrix of 3x3 elements.
+
+  """
   def __init__( self, mat):
     self.mat = mat
 
