@@ -33,8 +33,7 @@ from .query_atom import query_atom
 
 
 
-class molecule( graph.graph):
-
+class molecule(graph.graph):
 
   def __init__( self, vertices =[]):
     graph.graph.__init__( self, vertices=vertices)
@@ -43,8 +42,10 @@ class molecule( graph.graph):
     self.bonds = self.edges
     self.stereochemistry = []
 
+
   def __str__( self):
     return "molecule, %d atoms, %d bonds" % (len( self.vertices), len( self.edges))
+
 
   def create_vertex( self, vertex_class=None):
     if not vertex_class:
@@ -52,20 +53,25 @@ class molecule( graph.graph):
     else:
       return vertex_class()
 
+
   def create_edge( self):
     return bond()
+
 
   def create_graph( self):
     from . import config
     return config.Config.molecule_class()
 
+
   def add_stereochemistry( self, stereo):
     self.stereochemistry.append( stereo)
+
 
   def remove_stereochemistry( self, stereo):
     if not stereo in self.stereochemistry:
       raise ValueError("cannot remove non-existent stereochemistry information")
     self.stereochemistry.remove( stereo)
+
 
   def get_stereochemistry_by_center( self, center):
     for st in self.stereochemistry:
@@ -107,7 +113,6 @@ class molecule( graph.graph):
     for a in self.atoms:
       comp += a.get_formula_dict()
     return comp
-
 
 
   def add_missing_hydrogens( self):
@@ -231,8 +236,6 @@ class molecule( graph.graph):
         done.add( v)
 
 
-
-
   def mark_aromatic_bonds( self):
     sssr = self.get_smallest_independent_cycles()
     if len( sssr) > 10:
@@ -260,8 +263,6 @@ class molecule( graph.graph):
         rings.remove( r)
 
 
-
-
   def _get_atoms_possible_aromatic_electrons( self, at, ring):
     out = set()
     if at.charge > 0 and at.symbol not in PT.accept_cation:
@@ -287,7 +288,6 @@ class molecule( graph.graph):
       elif b.order == 2 and not (a in ring):
         out.add( 0)
     return tuple( out)
-
 
 
   def localize_aromatic_bonds( self):
@@ -373,8 +373,6 @@ class molecule( graph.graph):
     self.localize_fake_aromatic_bonds()
 
 
-
-
   def localize_aromatic_bonds_old( self):
     """localizes aromatic bonds (does not relocalize already localized ones),
     for those that are not aromatic but marked so
@@ -457,8 +455,6 @@ class molecule( graph.graph):
     self.localize_fake_aromatic_bonds()
 
 
-
-
   def localize_fake_aromatic_bonds( self):
     to_go = [b for b in self.bonds if b.order == 4]
 
@@ -511,13 +507,11 @@ class molecule( graph.graph):
           self.remove_vertex( v)
 
 
-
   def remove_all_hydrogens( self):
     """removes all H atoms"""
     for v in copy.copy( self.vertices):
       if v.symbol == 'H' and v.degree <= 1:
         self.remove_vertex( v)
-
 
 
   def _get_atom_distance_matrix( self, a):
@@ -537,8 +531,6 @@ class molecule( graph.graph):
       else:
         return big_out
       i += 1
-
-
 
 
   def get_symmetry_unique_atoms( self):
@@ -565,8 +557,6 @@ class molecule( graph.graph):
       vs = proc_vs
 
 
-
-
   def number_atoms_uniquely( self):
     out = {}
     for v in self.vertices:
@@ -582,8 +572,6 @@ class molecule( graph.graph):
       #  print("%3d: " % i, ret, ret.free_valency)
       i += 1
     return ret
-
-
 
 
   def _read_file( self, name="/home/beda/oasa/oasa/mol.graph"):
@@ -602,8 +590,6 @@ class molecule( graph.graph):
       e.order = int( o)
       self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=e)
     f.close()
-
-
 
 
   def find_longest_mostly_carbon_chain( self):
@@ -633,9 +619,7 @@ class molecule( graph.graph):
       self.disconnect_edge( b)
 
 
-
   # --- the fragment matching routines ---
-
   def select_matching_substructures( self, other, implicit_freesites=False, auto_cleanup=True):
     """select fragments that match the complete molecule 'other' and yield them
     as lists of atoms in the order of other.vertices; however when other has
@@ -705,7 +689,6 @@ class molecule( graph.graph):
 
     if auto_cleanup:
       self.clean_after_search( other)
-
 
 
   def clean_after_search( self, other):
@@ -801,7 +784,6 @@ class molecule( graph.graph):
     return list(range(max_thread + 1, max_thread + number + 1, 1))
 
 
-
   def _delete_thread( self, other, thread):
     for v in self.vertices + other.vertices:
       try:
@@ -830,7 +812,6 @@ class molecule( graph.graph):
 
 
   # // --- end of the fragment matching routines ---
-
   def detect_stereochemistry_from_coords( self, omit_rings=True):
     from .  import stereochemistry, geometry
     def add_neighbor_double_bonds( bond, path):
@@ -915,7 +896,6 @@ class molecule( graph.graph):
 
 
   ## some geometry related things
-
   def normalize_bond_length( self, bond_length=30):
     """make the average bond-length be bond_length by scaling the structure up"""
     if not self.edges or len( self.vertices) < 2:
@@ -959,6 +939,7 @@ class molecule( graph.graph):
     bl = bond_length / len( self.edges)
     return bl
 
+
   def get_structure_hash( self):
     vs = self.number_atoms_uniquely()
     ret = []
@@ -994,8 +975,6 @@ def the_right_sorting_function( t1, t2):
   return 0
 
 
-
-
 def equals( mol1, mol2, level=0):
   """don't forget to put all hydrogens and bond orders to the bonds
      level 1 - number of atoms and bonds,
@@ -1023,6 +1002,8 @@ def equals( mol1, mol2, level=0):
       if v1.properties_['distance_matrix'] != v2.properties_['distance_matrix']:
         return False
   return True
+
+
 
 #import psyco
 #psyco.profile()
@@ -1070,5 +1051,4 @@ if __name__ == '__main__':
 # test the equals function
 
 ##################################################
-
 
