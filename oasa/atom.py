@@ -53,10 +53,16 @@ class atom( chem_vertex):
     return False
 
 
-  ## PROPERTIES
+  @property
+  def symbol(self):
+    """Atom symbol.
 
-  # symbol
-  def _set_symbol( self, symbol):
+    """
+    return self._symbol
+
+
+  @symbol.setter
+  def symbol(self, symbol):
     self._clean_cache()
     try:
       self.valency = PT.periodic_table[ symbol]['valency'][0]
@@ -65,17 +71,13 @@ class atom( chem_vertex):
       raise oasa_invalid_atom_symbol( "invalid atom symbol", symbol)
     self._symbol = symbol
 
-  def _get_symbol( self):
-    return self._symbol
 
-  symbol = property( _get_symbol, _set_symbol, None, "atom symbol")
+  # Overrides chem_vertex occupied_valency
+  @property
+  def occupied_valency(self):
+    """Atoms occupied valency.
 
-
-
-
-
-  # occupied_valency (overrides chem_vertex occupied_valency)
-  def _get_occupied_valency( self):
+    """
     try:
       return self._cache['occupied_valency']
     except KeyError:
@@ -126,62 +128,70 @@ class atom( chem_vertex):
     #self._cache['occupied_valency'] = x
     return x
 
-  occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
+
+  # Overrides chem_vertex multiplicity
+  @property
+  def multiplicity(self):
+    """Atom multiplicity.
+
+    """
+    return self._multiplicity
 
 
-
-  # multiplicity (overrides chem_vertex multiplicity)
-  def _set_multiplicity( self, multiplicity):
+  @multiplicity.setter
+  def multiplicity(self, multiplicity):
     chem_vertex._set_multiplicity( self, multiplicity)
     if self.free_valency < 0:
       self.raise_valency_to_senseful_value()
 
-  def _get_multiplicity( self):
-    return self._multiplicity
 
-  multiplicity = property( _get_multiplicity, _set_multiplicity, None, "atom multiplicity")
+  @property
+  def free_sites(self):
+    """Atoms free_sites.
 
-
-
-  # free_sites
-  def _set_free_sites( self, free_sites):
-    self._free_sites = free_sites
-
-  def _get_free_sites( self):
+    """
     if self._free_sites > self.free_valency:
       return self.free_valency
     return self._free_sites
 
-  free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
+
+  @free_sites.setter
+  def free_sites(self, free_sites):
+    self._free_sites = free_sites
 
 
-  # isotope
-  def _set_isotope( self, isotope):
-    if isotope != None and type( isotope) != type( 1):
+  @property
+  def isotope(self):
+    """Isotope.
+
+    """
+    return self._isotope
+
+
+  @isotope.setter
+  def isotope(self, isotope):
+    if isotope is not None and type( isotope) != type( 1):
       # isotope must be a number or None
       raise oasa_exceptions.oasa_invalid_value( "isotope", isotope)
     self._isotope = isotope
 
-  def _get_isotope( self):
-    return self._isotope
 
-  isotope = property( _get_isotope, _set_isotope, None, "isotope")
+  @property
+  def electronegativity(self):
+    """Atom's electronegativity.
 
-
-
-  # electronegativity
-  def _get_electronegativity( self):
+    """
     try:
       return PT.periodic_table[self.symbol]['en']
     except KeyError:
       return None
 
-  electronegativity = property( _get_electronegativity, None, None, "atoms electronegativity")
 
+  @property
+  def oxidation_number(self):
+    """Atom's oxidation number.
 
-
-  # oxidation number
-  def _get_oxidation_number( self):
+    """
     en = self.charge
     for e, n in self.get_neighbor_edge_pairs():
       if isinstance( n, atom) and n.symbol != self.symbol:
@@ -190,22 +200,17 @@ class atom( chem_vertex):
     en += self.free_valency * (hen > self.electronegativity and 1 or -1)
     return en
 
-  oxidation_number = property( _get_oxidation_number, None, None, "atoms oxidation number")
 
+  @property
+  def electron_pairs(self):
+    """Number of electron pairs on the atom.
 
-  # electron pairs
-  def _get_electron_pairs( self):
-    return (PT.periodic_table[ self.symbol][ 'els'] - sum( [b.order for b in self.neighbor_edges]) -self.charge -self.free_valency -self.multiplicity+1) / 2.0
-
-  electron_pairs = property( _get_electron_pairs, None, None, "get number of atoms electron pairs")
-
-
-
+    """
+    return (PT.periodic_table[self.symbol]['els'] - sum([b.order for b in self.neighbor_edges]) - self.charge - self.free_valency - self.multiplicity + 1) / 2.0
 
 
   def __str__( self):
     return "atom '%s'" % str( self.symbol)
-
 
 
   def get_formula_dict( self):
