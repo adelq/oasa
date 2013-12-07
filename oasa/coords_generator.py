@@ -48,7 +48,7 @@ class coords_generator(object):
         for a in (st.references[0],st.references[-1]):
           self.stereo[a] = self.stereo.get( a, []) + [st]
     # at first we have a look if there is already something with coords
-    atms = set( [a for a in mol.vertices if a.x != None and a.y != None])
+    atms = set([a for a in mol.vertices if a.x is not None and a.y is not None])
     # then we check if they are in a continuos block but not the whole molecule
     # (in this case we regenerate all the coords if force, otherwise exit)
     if len( atms) == len( mol.vertices) and not force:
@@ -132,7 +132,7 @@ class coords_generator(object):
     processed += backbone
     self._continue_with_the_coords( mol, processed=processed)
     for v in mol.vertices:
-      if v.z == None:
+      if v.z is None:
         v.z = 0
 
 
@@ -141,7 +141,7 @@ class coords_generator(object):
     while processed:
       new_processed = []
       for v in processed:
-        if len( [o for o in self.mol.vertices if o.x == None]) == 0:
+        if len([o for o in self.mol.vertices if o.x is None]) == 0:
           # its all done
           return
         # look if v is part of a ring
@@ -161,7 +161,7 @@ class coords_generator(object):
             self.rings.remove( ring)
             ring = mol.sort_vertices_in_path( ring, start_from=v)
             ring.remove( v)
-            d = [a for a in v.get_neighbors() if a.x != None and a.y != None][0] # should always work
+            d = [a for a in v.get_neighbors() if a.x is not None and a.y is not None][0] # should always work
             ca = geometry.clockwise_angle_from_east( v.x-d.x, v.y-d.y)
             size = len( ring)+1
             da = deg_to_rad( 180 -180*(size-2)/size)
@@ -201,7 +201,7 @@ class coords_generator(object):
     if ring:
       self.rings.remove( ring)
       inter = b & ring
-      to_go = [a for a in ring if a.x == None or a.y == None]
+      to_go = [a for a in ring if a.x is None or a.y is None]
       if len( ring) - len( to_go) == len( inter):
         out += self._process_simply_anelated_ring( ring, base)
       else:
@@ -223,7 +223,7 @@ class coords_generator(object):
       else:
         return -attach_angle
 
-    to_go = [a for a in v.get_neighbors() if a.x == None or a.y == None]
+    to_go = [a for a in v.get_neighbors() if a.x is None or a.y is None]
     done = [a for a in v.get_neighbors() if a not in to_go]
     if len( done) == 1 and (len( to_go) == 1 or len( to_go) == 2 and [1 for _t in to_go if _t in self.stereo]):
       # only simple non-branched chain or branched with stereo
@@ -259,7 +259,7 @@ class coords_generator(object):
       if not placed and len( dns) == 2:
         # to support the all trans of simple chains without stereochemistry
         d2 = (dns[0] == v) and dns[1] or dns[0]
-        if d2.x != None and d2.y != None:
+        if d2.x is not None and d2.y is not None:
           angle_to_add = get_angle_at_side( v, d, d2, -1, angle_to_add)
       an = angle + deg_to_rad( angle_to_add)
       t.x = v.x + self.bond_length*cos( an)
@@ -296,7 +296,7 @@ class coords_generator(object):
 
   def _process_simply_anelated_ring( self, ring, base):
     out = []
-    inter = [v for v in ring if v.x != None and v.y != None]
+    inter = [v for v in ring if v.x is not None and v.y is not None]
     if len( inter) == 1:
       # rings are connected via one atom
       v = inter.pop() # the atom of concatenation
@@ -354,11 +354,11 @@ class coords_generator(object):
 
   def _process_multi_anelated_ring( self, ring, angle_shift=0):
     out = []
-    to_go = [v for v in ring if v.x == None or v.y == None]
+    to_go = [v for v in ring if v.x is None or v.y is None]
     if not to_go:
       # it was all already done
       return []
-    back = [v for v in ring if v.x != None and v.y != None]
+    back = [v for v in ring if v.x is not None and v.y is not None]
     sorted_back = self.mol.sort_vertices_in_path( back)
     if not sorted_back:
       # the already set atoms are not in one path - we have to process it "per partes"
@@ -475,13 +475,13 @@ def show_mol( mol):
 
   xmin, xmax, ymin, ymax = None,None,None,None
   for a in mol.vertices:
-    if xmin == None or a.x < xmin:
+    if xmin is None or a.x < xmin:
       xmin = a.x
-    if xmax == None or a.x > xmax:
+    if xmax is None or a.x > xmax:
       xmax = a.x
-    if ymin == None or a.y < ymin:
+    if ymin is None or a.y < ymin:
       ymin = a.y
-    if ymax == None or a.y > ymax:
+    if ymax is None or a.y > ymax:
       ymax = a.y
 
   dx = xmax-xmin
