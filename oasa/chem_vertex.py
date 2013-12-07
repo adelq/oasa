@@ -56,10 +56,16 @@ class chem_vertex(graph.vertex):
     return True
 
 
-  ## PROPERTIES
+  @property
+  def coords(self):
+    """Atom coordinates.
 
-  # coords
-  def _set_coords( self, coords):
+    """
+    return self.x, self.y, self.z
+
+
+  @coords.setter
+  def coords(self, coords):
     if len( coords) == 2:
       self.x, self.y = coords
       self.z = 0
@@ -68,51 +74,54 @@ class chem_vertex(graph.vertex):
     else:
       raise Exception("wrong number of coordinates")
 
-  def _get_coords( self):
-    return self.x, self.y, self.z
 
-  coords = property( _get_coords, _set_coords, None, "atom coords")
+  @property
+  def charge(self):
+    """Atom charge.
+
+    """
+    return self._charge
 
 
-
-
-  # charge
-  def _set_charge( self, charge):
+  @charge.setter
+  def charge(self, charge):
     self._clean_cache()
     self._charge = charge
 
-  def _get_charge( self):
-    return self._charge
 
-  charge = property( _get_charge, _set_charge, None, "atom charge")
+  @property
+  def multiplicity(self):
+    """Atom multiplicity.
+
+    """
+    return self._multiplicity
 
 
-
-  # multiplicity
-  def _set_multiplicity( self, multiplicity):
+  @multiplicity.setter
+  def multiplicity(self, multiplicity):
     self._clean_cache()
     self._multiplicity = multiplicity
 
-  def _get_multiplicity( self):
-    return self._multiplicity
 
-  multiplicity = property( _get_multiplicity, _set_multiplicity, None, "atom multiplicity")
+  @property
+  def valency(self):
+    """Atom valency.
+
+    """
+    return self._valency
 
 
-
-  # valency
-  def _set_valency( self, valency):
+  @valency.setter
+  def valency(self, valency):
     self._clean_cache()
     self._valency = valency
 
-  def _get_valency( self):
-    return self._valency
 
-  valency = property( _get_valency, _set_valency, None, "atoms valency")
+  @property
+  def occupied_valency(self):
+    """Atom's occupied valency.
 
-
-  # occupied_valency
-  def _get_occupied_valency( self):
+    """
     i = 0
     for b in self._neighbors.keys():
       ord = b.order
@@ -121,11 +130,12 @@ class chem_vertex(graph.vertex):
       i += ord
     return i
 
-  occupied_valency = property( _get_occupied_valency, None, None, "atoms occupied valency")
 
+  @property
+  def free_valency(self):
+    """Atom's free valency.
 
-  # free_valency
-  def _get_free_valency( self):
+    """
     try:
       return self._cache[ 'free_valency']
     except KeyError:
@@ -133,40 +143,46 @@ class chem_vertex(graph.vertex):
       self._cache[ 'free_valency'] = x
       return x
 
-  free_valency = property( _get_free_valency, None, None, "atoms free valency")
 
+  @property
+  def weight(self):
+    """Atom weight.
 
-  # weight
-  def _get_weight( self):
+    """
     try:
       return PT.periodic_table[self.symbol]['weight']
     except:
       return 0
 
-  weight = property( _get_weight, None, None, "atom weight")
 
-  # free_sites
-  def _set_free_sites( self, free_sites):
-    self._free_sites = free_sites
+  @property
+  def free_sites(self):
+    """Atom's free sites.
 
-  def _get_free_sites( self):
+    """
     really_free = self._free_sites - self.occupied_valency
     if really_free < 0:
       return 0
     else:
       return really_free
 
-  free_sites = property( _get_free_sites, _set_free_sites, None, "atoms free_sites")
+
+  @free_sites.setter
+  def free_sites(self, free_sites):
+    self._free_sites = free_sites
 
 
   def get_x( self):
     return self.x or 0
 
+
   def get_y( self):
     return self.y or 0
 
+
   def get_z( self):
     return self.z or 0
+
 
   def has_aromatic_bonds( self):
     for b in self._neighbors.keys():
@@ -174,9 +190,12 @@ class chem_vertex(graph.vertex):
         return 1
     return 0
 
+
   def bond_order_changed( self):
     """called by a bond when its order was changed"""
     self._clean_cache()
 
+
   def get_hydrogen_count( self):
     return 0
+
