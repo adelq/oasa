@@ -30,8 +30,9 @@ from . import oasa_exceptions
 
 
 
-class Config:
-    database_file = os.path.abspath( os.path.join( os.path.dirname( __file__), "structures.db"))
+class Config(object):
+    database_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "structures.db"))
+
 
 
 def create_database():
