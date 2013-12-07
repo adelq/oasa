@@ -269,7 +269,7 @@ class atom( chem_vertex):
           cip[0].append( None)  # None was yielded and it has no symbol_number :)
       # to test if we have already reached the end
       for i in range( len( cips)-1):
-        if cip_sorting_function( cips[i], cips[i+1]) == 0 and cips[i][0][-3:-1] == [None, None]:
+        if cips[i][0] == cips[i+1][0] and cips[i][0][-3:-1] == [None, None]:
           return False
       cips.sort(key=itemgetter(0), reverse=True)
     return True
