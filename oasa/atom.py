@@ -142,7 +142,7 @@ class atom( chem_vertex):
 
   @multiplicity.setter
   def multiplicity(self, multiplicity):
-    chem_vertex._set_multiplicity( self, multiplicity)
+    chem_vertex.multiplicity.__set__(self, multiplicity)
     if self.free_valency < 0:
       self.raise_valency_to_senseful_value()
 
