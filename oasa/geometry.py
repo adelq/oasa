@@ -17,8 +17,10 @@
 
 #--------------------------------------------------------------------------
 
+"""Support module for some geometric mesurements.
 
-"""support module for some geometric mesurements ( geometric tramforms are in transform.py)"""
+(Geometric tramforms are in transform.py.)
+"""
 
 from __future__ import division
 
@@ -49,6 +51,7 @@ def find_parallel( x1, y1, x2, y2, d):
     y = y1 - d
     y0 = y2 - d
   return (x, y, x0, y0)
+
 
 def get_parallel_distance( l1, l2):
   "returns distance of two parallels - does not check whether the two are really parallels"
@@ -83,6 +86,7 @@ def get_parallel_signum( l1, l2):
   else:
     return signum( -x2a+x2b)
 
+
 def on_which_side_is_point( line, point, threshold=0):
   """tells whether a point is on one side of a line or on the other (1,0,-1) - 0 is for point on line.
   line is given as sequence of four coordinates, point as sequence of two coords,
@@ -102,6 +106,7 @@ def on_which_side_is_point( line, point, threshold=0):
     return 1
   else:
     return -1
+
 
 def point_on_circle( center_x, center_y, radius, direction = (), resolution = 15):
   """finds point on circle in direction of (dx, dy), optionaly rounds the angle
@@ -133,7 +138,6 @@ def clockwise_angle_from_east( dx, dy):
   if angle < 0:
     angle = 2*pi + angle
   return angle
-
 
 
 def intersection_of_line_and_rect( line, rect, round_edges=0):
@@ -193,7 +197,6 @@ def intersection_of_line_and_rect( line, rect, round_edges=0):
     return (xx, xy)
 
 
-
 def point_distance( x1, y1, x2, y2):
   return sqrt( (x2-x1)**2 + (y2-y1)**2)
 
@@ -241,6 +244,7 @@ def is_point_inside_polygon( point, polygon):
   else:
     return True
 
+
 def tkspline_to_quadratic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
     if len(points) > 2:
       qbeziers = []
@@ -266,6 +270,7 @@ def tkspline_to_quadratic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
 
     return qbeziers
 
+
 def tkspline_to_cubic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
     qbeziers = tkspline_to_quadratic_bezier( points)
     cbeziers = []
@@ -279,7 +284,6 @@ def tkspline_to_cubic_bezier( points):   #points = ((x1,y1),(x2,y2),...)
       cbeziers.append( (startx, starty, ccurvexa, ccurveya, ccurvexb, ccurveyb, endx, endy))
     # http://fontforge.sourceforge.net/bezier.html
     return cbeziers
-
 
 
 def point_at_distance_from_line( x1, y1, x2, y2, d):
@@ -353,6 +357,7 @@ def mirror_point_on_line (xa,ya,x1,y1,x2,y2):
     xb = xbl*2-xa
     yb = ybl*2-ya
     return xb,yb
+
 
 def elongate_line (x1,y1,x2,y2,d):
   """line 1-2 will be elongatet at point 2 negative d will make it shorter"""
@@ -432,14 +437,12 @@ def find_parallel_polyline( coords, d):
   return res
 
 
-
 def point_on_quadratic_bezier( coords, t):
   """based on info from http://en.wikipedia.org/wiki/B%C3%A9zier_curve"""
   (x0,y0,x1,y1,x2,y2) = coords
   x = (1-t)**2*x0 + 2*t*(1-t)*x1 + t**2*x2
   y = (1-t)**2*y0 + 2*t*(1-t)*y1 + t**2*y2
   return x,y
-
 
 
 def quadratic_beziere_to_polyline( point, n=10):
@@ -482,11 +485,13 @@ def plane_normal_from_3_points( point1, point2, point3):
   c = d3 #/d0
   return a,b,c
 
+
 def angle_between_planes( plane1, plane2):
   a1,b1,c1 = plane1
   a2,b2,c2 = plane2
   cos = (a1*a2 + b1*b2 + c1*c2) / sqrt( a1**2+b1**2+c1**2) / sqrt( a2**2+b2**2+c2**2)
   return cos
+
 
 def same_or_oposite_side( plane1,plane2):
   a1,b1,c1 = plane1
