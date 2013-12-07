@@ -17,7 +17,9 @@
 
 #--------------------------------------------------------------------------
 
-"""the bond resides here"""
+"""The bond resides here.
+
+"""
 
 ##  the order 1,2,3 is self-evident, order=4 means aromatic bond for which no
 ##  localized bond order is available
@@ -25,17 +27,26 @@
 
 import sys
 sys.path.append( '../')
-
-from . import graph
-from warnings import warn
 import math
 
+from warnings import warn
 
-class bond( graph.edge, object):
-  """is based on edge, however the vertices are not a Set anymore,
-  we need to preserve the order (for instance for wedge bonds).
-  type is 'n'-normal, 'w'-wedge, 'h'-hatch, 'a'-adder, 'b'-bold, 'd'-dash"""
+from . import graph
 
+
+
+class bond(graph.edge, object):
+  """Based on edge, however the vertices are not a Set anymore.
+
+  We need to preserve the order (for instance for wedge bonds).
+  Type is:
+  'n' - normal
+  'w' - wedge
+  'h' - hatch
+  'a' - adder
+  'b' - bold
+  'd' - dash
+  """
   attrs_to_copy = graph.edge.attrs_to_copy + ("order","aromatic","type")
 
   def __init__( self, vs=[], order=1, type='n'):
