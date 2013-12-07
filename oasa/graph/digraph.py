@@ -17,9 +17,10 @@
 
 #--------------------------------------------------------------------------
 
+"""Minimalistic graph implementation.
 
-"""this module contains a graph class that provides a minimalistic
-graph implementation suitable for analysis of chemical problems"""
+Suitable for analysis of chemical problems.
+"""
 
 from __future__ import print_function
 
@@ -33,10 +34,13 @@ from .vertex import vertex
 
 
 
-class digraph( graph.graph):
-  """provides a minimalistic graph implementation suitable for analysis of chemical problems,
-  even if some care was taken to make the graph work with nonsimple graphs, there are cases where it won't!"""
+class digraph(graph.graph):
+  """Provide a minimalistic graph implementation.
 
+  Suitable for analysis of chemical problems,
+  even if some care was taken to make the graph work with nonsimple graphs,
+  there are cases where it won't!
+  """
   vertex_class = vertex
   edge_class = diedge
 
@@ -44,8 +48,6 @@ class digraph( graph.graph):
   def __str__( self):
     str = "digraph G(V,E), |V|=%d, |E|=%d" % ( len( self.vertices), len( self.edges))
     return str
-
-  ## MODIFICATION METHODS
 
 
   def add_edge( self, v1, v2, e=None):
@@ -65,7 +67,6 @@ class digraph( graph.graph):
     self.edges.add( e)
     v1.add_neighbor( v2, e)
     return e
-
 
 
   def get_diameter( self):
@@ -149,3 +150,4 @@ class digraph( graph.graph):
       ret += '"%s" [label="%s"];\n' % (v,v.value)
     ret += "}"
     return ret
+
