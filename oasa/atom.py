@@ -30,6 +30,7 @@ from .common import is_uniquely_sorted
 from .oasa_exceptions import oasa_invalid_atom_symbol
 
 
+
 class atom( chem_vertex):
   ## ("value","charge","x","y","z","multiplicity","valency","charge","free_sites")
   attrs_to_copy = chem_vertex.attrs_to_copy + ("symbol", "isotope","explicit_hydrogens")
@@ -222,8 +223,6 @@ class atom( chem_vertex):
     return ret
 
 
-
-
   def raise_valency_to_senseful_value( self):
     """set atoms valency to the lowest possible, so that free_valency
     if non-negative (when possible) or highest possible,
@@ -231,7 +230,6 @@ class atom( chem_vertex):
     while self.free_valency < 0:
       if not self.raise_valency():
         return
-
 
 
   def raise_valency( self):
@@ -276,7 +274,6 @@ class atom( chem_vertex):
     return True
 
 
-
   def get_neighbors_CIP_sorted( self):
     """return neighbors sorted according to the CIP rules"""
     neighs = self.get_neighbors()
@@ -301,9 +298,6 @@ class atom( chem_vertex):
         break # it can't be uniquely sorted, we are out of atoms
       cips.sort( cip_sorting_function)
     return [cip[1] for cip in cips]
-
-
-
 
 
   def gen_CIP_sequence( self, iter_over=None, came_from=None):
@@ -349,6 +343,7 @@ class atom( chem_vertex):
     """this is used in case of aromatic bonds - it takes all aromatic bonds as single,
     thus giving the maximum free valency that would be possible if all these localized to single"""
     return self.valency - chem_vertex._get_occupied_valency( self)
+
 
 
 def cip_sorting_function( a, b):
