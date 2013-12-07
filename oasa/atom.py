@@ -347,8 +347,13 @@ class atom( chem_vertex):
 
 
 
-def cip_sorting_function( a, b):
-  return -cmp( a[0], b[0])
+def cip_sorting_function(a, b):
+  if a[0] == b[0]:
+    return 0
+  elif a[0] < b[0]:
+    return 1
+  elif a[0] > b[0]:
+    return -1
 
 
 
