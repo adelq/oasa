@@ -22,6 +22,7 @@ import copy
 import itertools
 
 from warnings import warn
+from operator import itemgetter
 
 from . import graph
 from . import periodic_table as PT
@@ -270,7 +271,7 @@ class atom( chem_vertex):
       for i in range( len( cips)-1):
         if cip_sorting_function( cips[i], cips[i+1]) == 0 and cips[i][0][-3:-1] == [None, None]:
           return False
-      cips.sort( cip_sorting_function)
+      cips.sort(key=itemgetter(0), reverse=True)
     return True
 
 
@@ -296,7 +297,7 @@ class atom( chem_vertex):
             all_finished = 0
       if all_finished:
         break # it can't be uniquely sorted, we are out of atoms
-      cips.sort( cip_sorting_function)
+      cips.sort(key=itemgetter(0), reverse=True)
     return [cip[1] for cip in cips]
 
 
@@ -331,7 +332,7 @@ class atom( chem_vertex):
         cip[1] += cs
         cip[0] += [c.symbol_number for c in cs]
       [cips.remove( cip) for cip in to_remove]
-      cips.sort( cip_sorting_function)
+      cips.sort(key=itemgetter(0), reverse=True)
       for cip in cips:
         for i in range( cip[3], len( cip[1])):
           yield cip[1][i]
