@@ -28,12 +28,12 @@ from .common import is_uniquely_sorted
 
 
 
-class chem_vertex( graph.vertex):
+class chem_vertex(graph.vertex):
+  """Parent class of atoms, groups etc.
 
-  """this class is a parent class of atoms, groups etc., it defines common properties
-  for vertices used in chemical context. It should not be instantiated directly, but
-  rather inherited from."""
-
+  It defines common properties for vertices used in chemical context.
+  It should not be instantiated directly, but rather inherited from.
+  """
   attrs_to_copy = graph.vertex.attrs_to_copy + ("charge","x","y","z","multiplicity","valency","charge","free_sites")
 
   def __init__( self, coords=None):
