@@ -33,6 +33,7 @@ class coords_generator(object):
   def __init__( self, bond_length=1):
     self.bond_length = bond_length
 
+
   def calculate_coords( self, mol, bond_length=0, force=0):
     """the bond_length (when given) sets the self.bond_length,
     if bond_length == -1 we suppose that there is already part of the molecule containing
@@ -134,6 +135,7 @@ class coords_generator(object):
       if v.z == None:
         v.z = 0
 
+
   def _continue_with_the_coords( self, mol, processed=[]):
     """processes the atoms in circles around the backbone (processed) until all is done"""
     while processed:
@@ -170,6 +172,7 @@ class coords_generator(object):
             new_processed += ring
             new_processed += self.process_all_anelated_rings( ring)
       processed = new_processed
+
 
   def process_all_anelated_rings( self, base):
     out = []
@@ -348,6 +351,7 @@ class coords_generator(object):
         out += self._process_multi_anelated_ring( ring)
     return out
 
+
   def _process_multi_anelated_ring( self, ring, angle_shift=0):
     out = []
     to_go = [v for v in ring if v.x == None or v.y == None]
@@ -401,11 +405,15 @@ class coords_generator(object):
       out += to_go
     return out
 
+
+
 def sum_of_ring_internal_angles( size):
   return (size-2)*180
 
+
 def optimal_ring_iternal_angle( size, angle_shift=0):
   return sum_of_ring_internal_angles( size)/size
+
 
 def gen_ring_coords( size, side_length=1):
   coords = gen_coords_from_deg_stream( gen_angle_stream( 180 -180.0*(size-2)/size),
@@ -430,22 +438,24 @@ def gen_angle_stream( angle, start_from=0, alternate=0):
       a += angle
       yield a
 
+
 def gen_coords_from_deg_stream( stream, length=1):
   for a in stream:
     ang = deg_to_rad( a)
     yield ( length*cos( ang), length*sin( ang))
 
+
 def gen_coords_from_stream( stream, length=1):
   for a in stream:
     yield ( length*cos( a), length*sin( a))
 
+
 def deg_to_rad( deg):
   return pi*deg/180
 
+
 def rad_to_deg( rad):
   return 180*rad/pi
-
-
 
 
 def show_mol( mol):
