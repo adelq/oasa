@@ -83,15 +83,18 @@ class vertex(object):
       raise Exception("cannot remove non-existing edge", e)
 
 
-  def get_neighbors( self):
+  @property
+  def neighbors(self):
+    """Neighboring vertices.
+
+    """
     return [v for (e,v) in self._neighbors.items()
                   if not e.disconnected]
-    #for i in self._neighbors.values():
-    #  yield i
 
 
   def get_neighbor_connected_via( self, e):
     return self._neighbors[ e]
+
 
   def get_edge_leading_to( self, a):
     for b, at in self._neighbors.items():
@@ -99,8 +102,13 @@ class vertex(object):
         return b
     return None
 
-  def get_degree( self):
-    return len( self.neighbors)
+
+  @property
+  def degree(self):
+    """Degree of the vertex.
+
+    """
+    return len(self.neighbors)
 
 
   def get_neighbors_with_distance( self, d):
@@ -116,14 +124,12 @@ class vertex(object):
       if not e.disconnected:
         yield e,v
 
-  def get_neighbor_edges( self):
-    return [e for e in self._neighbors.keys() if not e.disconnected]
 
+  @property
+  def neighbor_edges(self):
+    """Neighboring edges.
 
+    """
+    return [e for e in self._neighbors.keys()
+                if not e.disconnected]
 
-  # PROPERTIES
-
-  neighbors = property( get_neighbors, None, None, "the neighboring vertices")
-  neighbor_edges = property( get_neighbor_edges, None, None, "the neighboring edges")
-  degree = property( get_degree, None, None, "the degree of the vertex")
-  
