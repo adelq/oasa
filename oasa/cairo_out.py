@@ -644,7 +644,7 @@ class cairo_out(object):
   def _draw_text( self, xy, text, font_name=None, font_size=None, center_letter=None,
                   color=(0,0,0)):
     import xml.sax
-    class text_chunk:
+    class text_chunk(object):
       def __init__( self, text, attrs=None):
         self.text = text
         self.attrs = attrs or set()
