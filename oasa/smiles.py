@@ -417,7 +417,7 @@ class smiles( plugin):
           yield self.recode_oasa_to_smiles_bond( e)
           yield self._create_ring_join_smiles( self.ring_joins.index( e))
       return
-    while not (is_line( mol) and (not start_from or start_from.get_degree() <= 1)):
+    while not (is_line(mol) and (not start_from or start_from.degree <= 1)):
       if is_pure_ring( mol):
         if start_from:
           self.ring_joins.append( mol.temporarily_disconnect_edge( start_from.neighbor_edges[0]))
@@ -433,9 +433,9 @@ class smiles( plugin):
         else:
           self.ring_joins.append( e)
     try:
-      start, end = filter( lambda x: x.get_degree() == 1, mol.vertices)
+      start, end = filter(lambda x: x.degree == 1, mol.vertices)
     except:
-      #print(filter( lambda x: x.get_degree() == 1, mol.vertices))
+      #print(filter(lambda x: x.degree == 1, mol.vertices))
       raise Exception("shit")
     if start_from == end:
       start, end = end, start
@@ -509,9 +509,9 @@ class smiles( plugin):
   def disconnect_something( self, mol, start_from=None):
     """returns (broken edge, resulting mol, atom where mol was disconnected, disconnected branch)"""
     # we cannot do much about this part
-    if start_from and start_from.get_degree() != 1:
+    if start_from and start_from.degree != 1:
       for e,n in start_from.get_neighbor_edge_pairs():
-        if n.get_degree() > 2:
+        if n.degree > 2:
           mol.temporarily_disconnect_edge( e)
           return e, mol, None, None
       mol.temporarily_disconnect_edge( e)
@@ -522,13 +522,13 @@ class smiles( plugin):
     #
     # the edges with crowded atoms
     for e in mol.edges:
-      d1, d2 = [x.get_degree() for x in e.get_vertices()]
+      d1, d2 = [x.degree for x in e.get_vertices()]
       if d1 > 2 and d2 > 2 and not mol.is_edge_a_bridge_fast_and_dangerous( e):
         mol.temporarily_disconnect_edge( e)
         return e, mol, None, None
     # the other valuable non-bridge edges
     for e in mol.edges:
-      d1, d2 = [x.get_degree() for x in e.get_vertices()]
+      d1, d2 = [x.degree for x in e.get_vertices()]
       if (d1 > 2 or d2 > 2) and not mol.is_edge_a_bridge_fast_and_dangerous( e):
         mol.temporarily_disconnect_edge( e)
         return e, mol, None, None
@@ -543,7 +543,7 @@ class smiles( plugin):
     ring_join_vertices = set(j for i in (e.vertices for e in self.ring_joins)
                                    for j in i)
     for e in mol.edges:
-      d1, d2 = [x.get_degree() for x in e.get_vertices()]
+      d1, d2 = [x.degree for x in e.get_vertices()]
       if d1 > 2 or d2 > 2:
         ps = mol.get_pieces_after_edge_removal( e)
         if len( ps) == 1:
@@ -584,7 +584,7 @@ class smiles( plugin):
     # we cannot do much about this part
     if not mol.is_connected():
       print("unconnected ", mol)
-    if start_from and start_from.get_degree() > 1:
+    if start_from and start_from.degree > 1:
       e = start_from._neighbors.keys()[0]
       mol.disconnect_edge( e)
       ps = [i for i in mol.get_connected_components()]
@@ -600,7 +600,7 @@ class smiles( plugin):
         return e, p, v, px
 
     for e in mol.edges:
-      d1, d2 = [x.get_degree() for x in e.get_vertices()]
+      d1, d2 = [x.degree for x in e.get_vertices()]
       if (d1 > 2 or d2 > 2):
         mol.disconnect_edge( e)
         ps = [i for i in mol.get_connected_components()]
@@ -637,7 +637,7 @@ def is_line( mol):
     return True
   ones = 0
   for v in mol.vertices:
-    d = v.get_degree() 
+    d = v.degree
     if d == 1:
       if ones == 2:
         return False
@@ -648,8 +648,8 @@ def is_line( mol):
     return True
   return False
 
-def is_pure_ring( mol):
-  return filter( lambda x: x.get_degree() != 2, mol.vertices) == []
+def is_pure_ring(mol):
+  return filter(lambda x: x.degree != 2, mol.vertices) == []
 
 def match_atom_lists( l1, l2):
   """sort of bubble sort with counter"""
