@@ -374,11 +374,13 @@ class graph(object):
     return c
 
 
-  def get_degrees( self):
-    """returns a generator of degrees, this is useful because for many properties
-    the whole list is not important"""
+  def get_degrees(self):
+    """Generator of degrees.
+
+    This is useful because for many properties the whole list is not important.
+    """
     for v in self.vertices:
-      yield v.get_degree()
+      yield v.degree
 
 
   def get_neighbors(self, v):
@@ -1424,7 +1426,7 @@ class MyThread(Thread):
 
 ## print(len( [i for i in g.get_connected_components()]))
 ## for e in g.edges:
-##   d1, d2 = [x.get_degree() for x in e.get_vertices()]
+##   d1, d2 = [x.degree for x in e.get_vertices()]
 ##   if d1 != 2 or d2 != 2:
 ##     v1, v2 = e.vertices
 ##     break
