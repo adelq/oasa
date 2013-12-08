@@ -443,8 +443,10 @@ class molecule(graph.graph):
               b = aring[i].get_edge_leading_to( aring[i+1])
               assert b != None # should be
               # to assure alternating bonds
-              bs1 = [bo for bo in aring[i].get_neighbor_edges() if bo.order == 2 and bo.aromatic and bo!=b]
-              bs2 = [bo for bo in aring[i+1].get_neighbor_edges() if bo.order == 2 and bo.aromatic and bo!=b]
+              bs1 = [bo for bo in aring[i].neighbor_edges
+                          if bo.order == 2 and bo.aromatic and bo != b]
+              bs2 = [bo for bo in aring[i+1].neighbor_edges
+                          if bo.order == 2 and bo.aromatic and bo != b]
               if len( bs1) == 0 and len( bs2) == 0:
                 b.order = 2
               else:
@@ -482,7 +484,7 @@ class molecule(graph.graph):
         # new start for iteration
       if not b:
         for bo in self.edges:
-          if not [e for e in bo.get_neighbor_edges() if e.order != 4]:
+          if not [e for e in bo.neighbor_edges if e.order != 4]:
             b = bo
             break
       if not b:
@@ -490,7 +492,7 @@ class molecule(graph.graph):
       # the code itself
       b.order = 2
       b.aromatic = 0
-      for bo in b.get_neighbor_edges():
+      for bo in b.neighbor_edges:
         if bo.order == 4:
           bo.order = 1
           bo.aromatic = 0
