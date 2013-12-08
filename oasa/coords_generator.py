@@ -161,7 +161,8 @@ class coords_generator(object):
             self.rings.remove( ring)
             ring = mol.sort_vertices_in_path( ring, start_from=v)
             ring.remove( v)
-            d = [a for a in v.get_neighbors() if a.x is not None and a.y is not None][0] # should always work
+            d = [a for a in v.neighbors
+                     if a.x is not None and a.y is not None][0] # should always work
             ca = geometry.clockwise_angle_from_east( v.x-d.x, v.y-d.y)
             size = len( ring)+1
             da = deg_to_rad( 180 -180*(size-2)/size)
@@ -223,8 +224,10 @@ class coords_generator(object):
       else:
         return -attach_angle
 
-    to_go = [a for a in v.get_neighbors() if a.x is None or a.y is None]
-    done = [a for a in v.get_neighbors() if a not in to_go]
+    to_go = [a for a in v.neighbors
+                 if a.x is None or a.y is None]
+    done = [a for a in v.neighbors
+                if a not in to_go]
     if len( done) == 1 and (len( to_go) == 1 or len( to_go) == 2 and [1 for _t in to_go if _t in self.stereo]):
       # only simple non-branched chain or branched with stereo
       d = done[0]
@@ -244,7 +247,7 @@ class coords_generator(object):
         if _b.order == 2:
           angle_to_add = 180
       angle = geometry.clockwise_angle_from_east( d.x-v.x, d.y-v.y)
-      dns = d.get_neighbors()
+      dns = d.neighbors
       placed = False
       # stereochemistry (E/Z)
       if t in self.stereo:
@@ -301,7 +304,8 @@ class coords_generator(object):
       # rings are connected via one atom
       v = inter.pop() # the atom of concatenation
       ring = self.mol.sort_vertices_in_path( ring, start_from=v)
-      base_neighs = [a for a in v.get_neighbors() if a in base]
+      base_neighs = [a for a in v.neighbors
+                         if a in base]
       if len( base_neighs) < 2:
         raise Exception("this should not happen")
       d1 = base_neighs[0]
@@ -327,7 +331,7 @@ class coords_generator(object):
       ring = self.mol.sort_vertices_in_path( ring, start_from=v1)
       ring.remove( v1)
       ring.remove( v2)
-      if not v1 in ring[0].get_neighbors():
+      if not v1 in ring[0].neighbors:
         v1, v2 = v2, v1
       side = sum( [geometry.on_which_side_is_point((v1.x,v1.y,v2.x,v2.y),(v.x,v.y)) for v in base])
       if not side:
@@ -370,7 +374,7 @@ class coords_generator(object):
       v2 = sorted_back[-1]
       v3 = sorted_back[1]
       to_go = self.mol.sort_vertices_in_path( to_go)
-      if v1 not in to_go[0].get_neighbors():
+      if v1 not in to_go[0].neighbors:
         v1, v2 = v2, v1
       blocked_angle = sum_of_ring_internal_angles( len( back))
       overall_angle = sum_of_ring_internal_angles( len( ring))
