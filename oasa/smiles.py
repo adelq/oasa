@@ -184,7 +184,7 @@ class smiles( plugin):
 
     if len(mol.vertices) == 0:
       mol = None
-    self.structure = mol 
+    self.structure = mol
 
 
   def _parse_atom_spec( self, c, a):
@@ -273,7 +273,7 @@ class smiles( plugin):
       if len( [e for e in a1.neighbor_edges if e in path]) == 1:
         return a1, a2
       return a2, a1
-    
+
     stereo_edges = [e for e in mol.edges if "stereo" in e.properties_]
     paths = []
     for i,e1 in enumerate( stereo_edges):
@@ -288,7 +288,7 @@ class smiles( plugin):
           else:
             # only stereo related to non-cyclic bonds
             paths.append( path)
-    
+
     for path in paths:
       bond1 = path[0]
       end_atom1,inside_atom1 = get_end_and_inside_vertex_from_edge_path( bond1, path)
@@ -382,7 +382,7 @@ class smiles( plugin):
         self._stereo_centers[st.center] = st
       else:
         pass # we cannot handle this
-        
+
     ret = ''.join( [i for i in self._get_smiles( mol)])
     mol.reconnect_temporarily_disconnected_edges()
     # this is needed because the way temporarily_disconnected edges are handled is not compatible with the way smiles
@@ -683,7 +683,7 @@ class smiles_converter( converter_base):
                            "R_BOND_LENGTH": 1,
                            "R_LOCALIZE_AROMATIC_BONDS": True,
                            "R_EXPLICIT_HYDROGENS_TO_REAL_ATOMS": False,
-                           
+
                            "W_AROMATIC_BOND_AUTODETECT": True,
                            "W_INDIVIDUAL_MOLECULE_SEPARATOR": ".",
                            "W_DETECT_STEREO_FROM_COORDS": True,
@@ -764,7 +764,7 @@ class smiles_converter( converter_base):
       mol = self.text_to_mols( line)
       mols.extend( mol)
     return mols
-    
+
 converter = smiles_converter
 
 # END OF MODULE INTERFACE
@@ -799,7 +799,7 @@ def text_to_mol( text, calc_coords=1, localize_aromatic_bonds=True):
 
 def mol_to_file( mol, f):
   f.write( mol_to_text( mol))
-  
+
 def file_to_mol( f):
   return text_to_mol( f.read())
 
