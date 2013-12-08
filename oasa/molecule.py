@@ -600,7 +600,8 @@ class molecule(graph.graph):
   def find_longest_mostly_carbon_chain( self):
     if len( self.vertices) < 2:
       return copy.copy( self.vertices)
-    ends = [v for v in self.vertices if v.get_degree() == 1]
+    ends = [v for v in self.vertices
+                if v.degree == 1]
     paths = []
     for e1 in ends:
       for e2 in ends:
