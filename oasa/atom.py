@@ -264,9 +264,8 @@ class atom(chem_vertex):
     if len( self._neighbors) < 4:
       # this is not true for N,P and similar !!!
       return False
-    neighs = self.get_neighbors()
     cips = []
-    for a in neighs:
+    for a in self.neighbors:
       cips.append( [[], a, a.gen_CIP_sequence( came_from = self)])
     while not is_uniquely_sorted( cips, cip_sorting_function):
       for cip in cips:
@@ -288,9 +287,8 @@ class atom(chem_vertex):
     """Return neighbors sorted according to the CIP rules.
 
     """
-    neighs = self.get_neighbors()
     cips = []
-    for a in neighs:
+    for a in self.neighbors:
       cips.append( [[], a, a.gen_CIP_sequence( came_from = self)])
     while not is_uniquely_sorted( cips, cip_sorting_function):
       for cip in cips:
@@ -322,7 +320,7 @@ class atom(chem_vertex):
     """
     yield self
     yield None
-    neighs = self.get_neighbors()
+    neighs = self.neighbors
     if came_from:
       assert came_from in neighs
       neighs.remove( came_from)
