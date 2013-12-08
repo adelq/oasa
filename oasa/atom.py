@@ -358,7 +358,7 @@ class atom(chem_vertex):
     Takes all aromatic bonds as single, thus giving the maximum free valency
     that would be possible if all these localized to single.
     """
-    return self.valency - chem_vertex._get_occupied_valency(self)
+    return self.valency - chem_vertex.occupied_valency.__get__(self)
 
 
 
