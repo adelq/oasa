@@ -738,7 +738,7 @@ class smiles_converter( converter_base):
     sm = smiles()
     sm.read_smiles( text, explicit_hydrogens_to_real_atoms=self.configuration['R_EXPLICIT_HYDROGENS_TO_REAL_ATOMS'])
     mol = sm.structure
-    if mol == None:
+    if mol is None:
       return []
     mol.remove_zero_order_bonds()
     mols = mol.get_disconnected_subgraphs()
