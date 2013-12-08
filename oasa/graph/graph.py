@@ -176,7 +176,7 @@ class graph(object):
 
 
   def remove_vertex( self, v):
-    for neigh in v.get_neighbors():
+    for neigh in v.neighbors:
       self.disconnect( v, neigh)
     self.delete_vertex( v)
 
@@ -313,7 +313,7 @@ class graph(object):
     if not_processed:
       recent = set() # [not_processed.pop()])
     while not_processed:
-      recent = set(j for i in [a.get_neighbors() for a in recent]
+      recent = set(j for i in [a.neighbors for a in recent]
                          for j in i) & not_processed
       if not recent:
         if comp:
@@ -807,7 +807,7 @@ class graph(object):
     while to_mark:
       marked_before = marked
       marked = to_mark
-      to_mark_next = set(j for i in [i.get_neighbors() for i in to_mark]
+      to_mark_next = set(j for i in [i.neighbors for i in to_mark]
                                for j in i)
       to_mark = to_mark_next - marked - marked_before
       d += 1
@@ -935,7 +935,7 @@ class graph(object):
       a = None
       # for acyclic path we need to find one end
       for at in path:
-        if len( [v for v in at.get_neighbors() if v in path]) == 1:
+        if len([v for v in at.neighbors if v in path]) == 1:
           a = at
           rng.remove( at)
           break
@@ -944,7 +944,7 @@ class graph(object):
     out = [a]
     while rng:
       try:
-        a = [i for i in a.get_neighbors() if i in rng][0]
+        a = [i for i in a.neighbors if i in rng][0]
       except IndexError:
         return None
       out.append( a)
@@ -1174,7 +1174,7 @@ class graph(object):
         i.properties_['d'] = d
 
       for i in to_mark:
-        for j in i.get_neighbors():
+        for j in i.neighbors:
           if 'd' not in j.properties_:
             to_mark_next.add( j)
 
@@ -1241,11 +1241,11 @@ def is_ring_end_vertex( v):
 #  one neighbor with equal 'd'. These are the conditions for a cycle end.
 #  Returns the set([v]), in second case 'v' and the other with same 'd'"""
   ed, ver = None, None
-  for x in v.get_neighbors():
+  for x in v.neighbors:
     if v.properties_['d'] == x.properties_['d']:
       if len( v.get_neighbors_with_distance( v.properties_['d']-1)) and len( x.get_neighbors_with_distance( v.properties_['d']-1)):
         ed = set([ x, v])
-    for y in v.get_neighbors():
+    for y in v.neighbors:
       if x != y:
         if (x.properties_['d'] == y.properties_['d']) and (x.properties_['d'] == v.properties_['d']-1):
           ver = set([v])
@@ -1258,11 +1258,11 @@ def is_ring_start_vertex( v):
 #  equal 'd' (then both have neighbors with one higher 'd'). These are the conditions for a cycle start.
 #  Returns boolean"""
   ed, ver = None, None
-  for x in v.get_neighbors():
+  for x in v.neighbors:
     if v.properties_['d'] == x.properties_['d']:
       if len( v.get_neighbors_with_distance( v.properties_['d']+1)) and len( x.get_neighbors_with_distance( v.properties_['d']+1)):
         ed = set([ x, v])
-    for y in v.get_neighbors():
+    for y in v.neighbors:
       if x != y:
         if (x.properties_['d'] == y.properties_['d']) and (x.properties_['d'] == v.properties_['d']+1):
           ver = set([v])
@@ -1272,7 +1272,7 @@ def is_ring_start_vertex( v):
 
 def get_first_closer_by_one( v):
   d = v.properties_['d']
-  for x in v.get_neighbors():
+  for x in v.neighbors:
     if x.properties_['d'] == d-1:
       return x
   return None
@@ -1315,7 +1315,7 @@ def get_paths_down_to( end, start):
   paths = []
   if end == start:
     return None
-  for x in end.get_neighbors():
+  for x in end.neighbors:
     if x.properties_['d'] == end.properties_['d']-1:
       ps = get_path_down_to( x, start)
       if ps != None:
@@ -1327,7 +1327,7 @@ def get_paths_down_to( end, start):
 def get_path_down_to( end, start):
   if end == start:
     return []
-  for x in end.get_neighbors():
+  for x in end.neighbors:
     if x.properties_['d'] == end.properties_['d']-1:
       ps = get_path_down_to( x, start)
       if ps != None:
