@@ -239,7 +239,7 @@ class coords_generator(object):
       angle_to_add = 120
       bond = v.get_edge_leading_to( t)
       # triple bonds
-      if 3 in [_e.order for _e in v.get_neighbor_edges()]:
+      if 3 in [_e.order for _e in v.neighbor_edges]:
         angle_to_add = 180
       # cumulated double bonds
       if bond.order == 2:
