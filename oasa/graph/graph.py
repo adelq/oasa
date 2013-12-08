@@ -122,7 +122,7 @@ class graph(object):
     returns None if operation fails or the edge instance if successful"""
     i1 = self._get_vertex_index( v1)
     i2 = self._get_vertex_index( v2)
-    if i1 == None or i2 == None:
+    if i1 is None or i2 is None:
       warnings.warn( "Adding edge to a vertex not present in graph failed (of course)", UserWarning, 3)
       return None
     # to get the vertices if v1 and v2 were indexes
@@ -154,7 +154,7 @@ class graph(object):
 
   def disconnect( self, v1, v2):
     """disconnects vertices v1 and v2, on success returns the edge"""
-    if v1 != None and v2 != None:
+    if v1 is not None and v2 is not None:
       e = self.get_edge_between( v1, v2)
       if e:
         self.edges.remove( e)
@@ -1318,7 +1318,7 @@ def get_paths_down_to( end, start):
   for x in end.neighbors:
     if x.properties_['d'] == end.properties_['d']-1:
       ps = get_path_down_to( x, start)
-      if ps != None:
+      if ps is not None:
         ps.append( end)
         paths.append( ps)
   return paths
@@ -1330,7 +1330,7 @@ def get_path_down_to( end, start):
   for x in end.neighbors:
     if x.properties_['d'] == end.properties_['d']-1:
       ps = get_path_down_to( x, start)
-      if ps != None:
+      if ps is not None:
         ps.append( end)
         return ps
 
