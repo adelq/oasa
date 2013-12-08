@@ -879,8 +879,8 @@ class molecule(graph.graph):
                     else:
                       to_remove = st1
                       break
-                else:
-                  self.add_stereochemistry( st)
+                  else:
+                    self.add_stereochemistry(st)
                 if to_remove:
                   self.remove_stereochemistry( to_remove)
 
