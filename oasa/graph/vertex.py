@@ -41,8 +41,8 @@ class vertex(object):
     self._clean_cache()
 
 
-  def __str__( self):
-    return ("vertex, value=%s, degree=%d, " % (str( self.value), self.get_degree()) )+str(self.properties_)
+  def __str__(self):
+    return ("vertex, value=%s, degree=%d, " % (str(self.value), self.degree)) + str(self.properties_)
 
 
   def _clean_cache( self):
