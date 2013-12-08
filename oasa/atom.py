@@ -32,7 +32,7 @@ from .oasa_exceptions import oasa_invalid_atom_symbol
 
 
 
-class atom( chem_vertex):
+class atom(chem_vertex):
   ## ("value","charge","x","y","z","multiplicity","valency","charge","free_sites")
   attrs_to_copy = chem_vertex.attrs_to_copy + ("symbol", "isotope","explicit_hydrogens")
 
@@ -215,27 +215,33 @@ class atom( chem_vertex):
     return "atom '%s'" % str( self.symbol)
 
 
-  def get_formula_dict( self):
-    """returns formula as dictionary that can
-    be passed to functions in periodic_table"""
+  def get_formula_dict(self):
+    """Return formula as dictionary.
+
+    That can be passed to functions in periodic_table.
+    """
     ret = PT.formula_dict( self.symbol)
     if self.free_valency + self.explicit_hydrogens > 0:
       ret['H'] = self.free_valency + self.explicit_hydrogens
     return ret
 
 
-  def raise_valency_to_senseful_value( self):
-    """set atoms valency to the lowest possible, so that free_valency
-    if non-negative (when possible) or highest possible,
-    does not lower valency when set to higher then necessary value"""
+  def raise_valency_to_senseful_value(self):
+    """Set atom valency to the lowest possible.
+
+    So that free_valency if non-negative (when possible) or highest possible,
+    does not lower valency when set to higher than necessary value.
+    """
     while self.free_valency < 0:
       if not self.raise_valency():
         return
 
 
-  def raise_valency( self):
-    """used in case where valency < occupied_valency to try to find a higher one"""
-    for v in PT.periodic_table[ self.symbol]['valency']:
+  def raise_valency(self):
+    """Used if valency < occupied_valency to try to find a higher one.
+
+    """
+    for v in PT.periodic_table[self.symbol]['valency']:
       if v > self.valency:
         self.valency = v
         #self._clean_cache()
@@ -243,15 +249,18 @@ class atom( chem_vertex):
     return False
 
 
-  def get_hydrogen_count( self):
+  def get_hydrogen_count(self):
     return self.explicit_hydrogens + self.free_valency
 
 
-  def is_chiral( self):
-    """this code is CIP (Cahn-Ingold-Prelog) based and therefore not necessarily
-    the fastest for this job, however in newer versions it will be able to take care
+  def is_chiral(self):
+    """This code is CIP (Cahn-Ingold-Prelog) based.
+
+    And therefore not necessarily the fastest for this job,
+    however in newer versions it will be able to take care
     of the chirality of other centres and therefor will be universal,
-    for now it takes only care of the connectivity"""
+    for now it takes only care of the connectivity.
+    """
     if len( self._neighbors) < 4:
       # this is not true for N,P and similar !!!
       return False
@@ -275,8 +284,10 @@ class atom( chem_vertex):
     return True
 
 
-  def get_neighbors_CIP_sorted( self):
-    """return neighbors sorted according to the CIP rules"""
+  def get_neighbors_CIP_sorted(self):
+    """Return neighbors sorted according to the CIP rules.
+
+    """
     neighs = self.get_neighbors()
     cips = []
     for a in neighs:
@@ -301,11 +312,14 @@ class atom( chem_vertex):
     return [cip[1] for cip in cips]
 
 
-  def gen_CIP_sequence( self, iter_over=None, came_from=None):
-    """generates the CIP (Cahn-Ingold-Prelog) stream of atoms suitable for
-    comparison in searches for chiral centres, their configuration etc.,
-    the values in different layers (with raising distance from self) are
-    separated by Nones"""
+  def gen_CIP_sequence(self, iter_over=None, came_from=None):
+    """Generate the CIP (Cahn-Ingold-Prelog) stream of atoms.
+
+    Suitable for comparison in searches for chiral centres,
+    their configuration etc.
+    The values in different layers (with raising distance from self) are
+    separated by Nones.
+    """
     yield self
     yield None
     neighs = self.get_neighbors()
@@ -340,10 +354,13 @@ class atom( chem_vertex):
       yield None
 
 
-  def get_highest_possible_free_valency( self):
-    """this is used in case of aromatic bonds - it takes all aromatic bonds as single,
-    thus giving the maximum free valency that would be possible if all these localized to single"""
-    return self.valency - chem_vertex._get_occupied_valency( self)
+  def get_highest_possible_free_valency(self):
+    """Used in case of aromatic bonds.
+
+    Takes all aromatic bonds as single, thus giving the maximum free valency
+    that would be possible if all these localized to single.
+    """
+    return self.valency - chem_vertex._get_occupied_valency(self)
 
 
 
