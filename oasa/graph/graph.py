@@ -381,16 +381,18 @@ class graph(object):
       yield v.get_degree()
 
 
-  def get_neighbors( self, v):
-    """Info - available also trough the vertex.get_neighbors()"""
-    for i in self.get_neighbors_indexes( v):
-      yield self.vertices[ i]
+  def get_neighbors(self, v):
+    """Info - available also trough the vertex.neighbors.
+
+    """
+    for i in self.get_neighbors_indexes(v):
+      yield self.vertices[i]
 
 
-  def get_neighbors_indexes( self, v):
-    i1 = self._get_vertex_index( v)
-    for i, x in enumerate( self.vertices[ i1]):
-      if x and i!=i1:
+  def get_neighbors_indexes(self, v):
+    i1 = self._get_vertex_index(v)
+    for i, x in enumerate(self.vertices[i1]):
+      if x and i != i1:
         yield i
 
 
