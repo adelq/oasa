@@ -191,8 +191,8 @@ class molecule(graph.graph):
       assert step < 100 # there is something strange if we reach this number
       for b in [bo for bo in self.edges if min( [a.free_valency for a in bo.vertices])]:
         a1, a2 = b.get_vertices()
-        as1 = [a for a in a1.get_neighbors() if a.free_valency > 0]
-        as2 = [a for a in a2.get_neighbors() if a.free_valency > 0]
+        as1 = [a for a in a1.neighbors if a.free_valency > 0]
+        as2 = [a for a in a2.neighbors if a.free_valency > 0]
         if len( as1) == 1 or len( as2) == 1:
           b.order += min( [a.free_valency for a in b.vertices])
           processed.append( b)
@@ -1031,7 +1031,7 @@ if __name__ == '__main__':
 ##   #    print(v.symbol, v.is_chiral())
 ##       if v.symbol:
 ##         ## for a in v.get_neighbors_CIP_sorted():
-##         ##   print(a, [na.symbol for na in a.get_neighbors()])
+##         ##   print(a, [na.symbol for na in a.neighbors])
 ##         if v.is_chiral():
 ##           print(v.symbol, [na.symbol for na in v.get_neighbors_CIP_sorted()])
 
