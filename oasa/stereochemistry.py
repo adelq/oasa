@@ -72,7 +72,7 @@ class cis_trans_stereochemistry(stereochemistry):
   # Override value
   @property
   def value(self):
-    stereochemistry.value.__get__(self)
+    return stereochemistry.value.__get__(self)
 
 
   @value.setter
@@ -85,7 +85,7 @@ class cis_trans_stereochemistry(stereochemistry):
   # Override references
   @property
   def references(self):
-    stereochemistry.references.__get__(self)
+    return stereochemistry.references.__get__(self)
 
 
   @references.setter
@@ -114,7 +114,7 @@ class tetrahedral_stereochemistry(stereochemistry):
   # Override value
   @property
   def value(self):
-    stereochemistry.value.__get__(self)
+    return stereochemistry.value.__get__(self)
 
 
   @value.setter
@@ -127,7 +127,7 @@ class tetrahedral_stereochemistry(stereochemistry):
   # Override references
   @property
   def references(self):
-    stereochemistry.references.__get__(self)
+    return stereochemistry.references.__get__(self)
 
 
   @references.setter
