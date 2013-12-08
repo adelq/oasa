@@ -214,9 +214,9 @@ class TestReactionComponent(unittest.TestCase):
     rc = reaction.reaction_component( mol, 2)
     self.assertEqual( rc.stoichiometry, 2)
     self.assertRaises( Exception, reaction.reaction_component, mol, "x")
-    self.assertRaises( Exception, rc._set_stoichiometry, "x")
+    self.assertRaises( Exception, reaction.reaction_component.stoichiometry.__set__, rc, "x")
     self.assertRaises( Exception, reaction.reaction_component, 2, 2)
-    self.assertRaises( Exception, rc._set_molecule, "x")
+    self.assertRaises( Exception, reaction.reaction_component.molecule.__set__, rc, "x")
 
 
 ## Explicit hydrogens, occupied_valency and free_valency testing
