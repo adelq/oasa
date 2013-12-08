@@ -183,8 +183,8 @@ class graph(object):
 
   def get_edge_between( self, v1, v2):
     """takes two vertices"""
-    for e in v1.get_neighbor_edges():
-      if e in v2.get_neighbor_edges():
+    for e in v1.neighbor_edges:
+      if e in v2.neighbor_edges:
         return e
     return None
 
