@@ -823,7 +823,7 @@ class molecule(graph.graph):
   def detect_stereochemistry_from_coords( self, omit_rings=True):
     from .  import stereochemistry, geometry
     def add_neighbor_double_bonds( bond, path):
-      for _e in bond.get_neighbor_edges():
+      for _e in bond.neighbor_edges:
         if _e.order == 2 and _e not in path:
           path.append( _e)
           add_neighbor_double_bonds( _e, path)
