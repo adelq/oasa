@@ -40,7 +40,8 @@ class diedge(object):
     return self.vertices
 
 
-  def get_neighbor_edges(self):
+  @property
+  def neighbor_edges(self):
     v1, v2 = self.vertices
     out1 = [e for e in v1.neighbor_edges if e != self]
     out2 = [e for e in v2.neighbor_edges if e != self]
