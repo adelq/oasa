@@ -233,8 +233,8 @@ class svg_out(object):
 def mol_to_svg( mol, filename):
   c = svg_out()
   tree = c.mol_to_svg( mol)
-  f = open(filename, "w")
-  f.write( tree.toxml())
+  f = open(filename, 'wb')
+  f.write(tree.toxml('utf-8'))
   f.close()
 
 
