@@ -584,19 +584,18 @@ class molecule(graph.graph):
   def _read_file( self, name="/home/beda/oasa/oasa/mol.graph"):
     self.vertices = []
     self.edges = set()
-    f = open(name, 'r')
-    vs = f.readline()
-    for i in vs.split(' '):
-      if i != '\n':
-        v = self.create_vertex()
-        v.symbol = i
-        self.add_vertex( v)
-    for l in f.readlines():
-      o, a, b = l.split(' ')
-      e = self.create_edge()
-      e.order = int( o)
-      self.add_edge( self.vertices[int(a)], self.vertices[int(b)], e=e)
-    f.close()
+    with open(name, 'r') as f:
+      vs = f.readline()
+      for i in vs.split(' '):
+        if i != '\n':
+          v = self.create_vertex()
+          v.symbol = i
+          self.add_vertex( v)
+      for l in f.readlines():
+        o, a, b = l.split(' ')
+        e = self.create_edge()
+        e.order = int(o)
+        self.add_edge(self.vertices[int(a)], self.vertices[int(b)], e=e)
 
 
   def find_longest_mostly_carbon_chain( self):
