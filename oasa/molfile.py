@@ -345,9 +345,8 @@ if __name__ == "__main__":
   # parsing of the file
 
   file_name = sys.argv[1]
-  f = open(file_name, 'r')
-  mol = file_to_mol( f)
-  f.close()
+  with open(file_name, 'r') as f:
+    mol = file_to_mol(f)
 
   for a in  mol.atoms:
     print(a.x, a.y)
