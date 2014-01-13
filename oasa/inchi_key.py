@@ -1333,16 +1333,16 @@ if __name__ == "__main__":
   print(ret == out)
 
   if False:
-    f = open("test_inchi_key.txt", "r")
-    odd = True
-    for line in f:
-      if odd:
-        inchi = line.strip()
-      else:
-        key = line.strip()
-        if not key == "InChIKey="+key_from_inchi( inchi):
-          print(inchi)
-          print(key)
-        
-      odd = not odd
-    f.close()
+    with open("test_inchi_key.txt", 'r') as f:
+      odd = True
+      for line in f:
+        if odd:
+          inchi = line.strip()
+        else:
+          key = line.strip()
+          if not key == "InChIKey="+key_from_inchi( inchi):
+            print(inchi)
+            print(key)
+
+        odd = not odd
+
