@@ -273,8 +273,7 @@ class coords_generator(object):
       # branched chain
       angles = [geometry.clockwise_angle_from_east( at.x-v.x, at.y-v.y) for at in done]
       angles.append( 2*pi + min( angles))
-      angles.sort()
-      angles.reverse()
+      angles = sorted(angles, reverse=True)
       diffs = misc.list_difference( angles)
       i = diffs.index( max( diffs))
       angle = (angles[i] -angles[i+1]) / (len( to_go)+1)
