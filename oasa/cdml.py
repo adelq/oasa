@@ -150,8 +150,7 @@ if __name__ == '__main__':
   import time
 
   t = time.time()
-  lens = map( len, mol.get_all_cycles())
-  lens.sort()
+  lens = sorted(map(len, mol.get_all_cycles()))
   print(lens)
   print(time.time() - t)
   print("total %d rings" % len( lens))
