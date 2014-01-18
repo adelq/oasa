@@ -312,8 +312,7 @@ class smiles( plugin):
     for v in mol.vertices:
       refs = None
       if 'stereo' in v.properties_:
-        idx = [mol.vertices.index( n) for n in v.neighbors]
-        idx.sort()
+        idx = sorted(mol.vertices.index(n) for n in v.neighbors)
         if len( idx) < 3:
           pass # no stereochemistry with less then 3 neighbors
         elif len( idx) == 3:
