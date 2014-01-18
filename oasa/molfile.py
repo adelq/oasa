@@ -196,8 +196,7 @@ class molfile( plugin):
       i += 1
     if radicals:
       assert len( radicals) <= 8
-      nums = radicals.keys()
-      nums.sort()
+      nums = sorted(radicals.keys())
       rads = " ".join( ["%3d %3d" % (n,radicals[n]) for n in nums])
       rad_line = "M  RAD%3d %s" % (len(nums), rads)
     else:
@@ -354,8 +353,7 @@ if __name__ == "__main__":
   import time
 
   t = time.time()
-  lens = map( len, mol.get_smallest_independent_cycles())
-  lens.sort()
+  lens = sorted(map(len, mol.get_smallest_independent_cycles()))
   print(lens)
   print(time.time() - t)
   print("total %d rings" % len( lens))
