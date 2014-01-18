@@ -583,8 +583,7 @@ class graph(object):
     # remove extra cycles in some cases like adamantane
     if len( cycles) - ncycles > 0:
       # sort cycles according to length
-      cs = [(len( c), c) for c in cycles]
-      cs.sort()
+      cs = sorted((len(c), c) for c in cycles)
       cs = [c[1] for c in cs]
       # now try to remove the biggest ones
       while len( cs) - ncycles > 0:
