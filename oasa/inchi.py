@@ -750,9 +750,8 @@ class inchi( plugin):
               if ne not in comp:
                 ne.properties_['valency_raise'] += 1
       # raise the valency of the most asked for atom
-      vs = [(v.properties_['valency_raise'], v) for v in self.structure.vertices]
-      vs.sort()
-      vs.reverse()
+      vs = sorted([(v.properties_['valency_raise'], v) for v in self.structure.vertices],
+                  reverse=True)
       for (x, v) in vs:
 #        print(x, v, v.valency, v.free_valency)
         if x and v.raise_valency():
