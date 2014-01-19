@@ -761,7 +761,7 @@ class graph(object):
       new_new = set()
       dist += 1
       for e in new:
-        for ne in e.get_neighbor_edges():
+        for ne in e.neighbor_edges:
           if not ne in marked:
             ne.properties_['dist'] = dist
             new_new.add( ne)
@@ -777,7 +777,7 @@ class graph(object):
       path = [e2]
       _e = e2
       for i in range( e2.properties_['dist']-1, -1, -1):
-        _e = [ee for ee in _e.get_neighbor_edges() if ee.properties_['dist'] == i][0]
+        _e = [ee for ee in _e.neighbor_edges if ee.properties_['dist'] == i][0]
         path.append( _e)
       return path
 
