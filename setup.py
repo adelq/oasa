@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name             = 'oasa',
-      version          = '0.14.0b1',
+      version          = '0.14.0b2',
       description      = "OASA is a free cheminformatics library written in Python",
       author           = "Beda Kosata",
       author_email     = "beda@zirael.org",

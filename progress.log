@@ -1,3 +1,11 @@
+RELEASE - OASA 0.14.0b2
+----------------------------------------
+
+ * fixes - typo in setup.py
+         - regression in ring perception
+         - set explicitly encoding in SVG output
+
+
 RELEASE - OASA 0.14.0b1
 ----------------------------------------
 
