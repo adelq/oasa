@@ -20,9 +20,10 @@
 from __future__ import print_function
 
 import re
-import misc
 import hashlib
 import operator
+
+from . import misc
 
 
 
