@@ -31,6 +31,20 @@ class reaction(object):
     self.reagents = reagents or []
 
 
+  def __str__(self):
+    s = "\nreactants:\n"
+    for i in self.reactants:
+      s += "    {0}\n".format(i)
+    s += "reagents:\n"
+    for i in self.reagents:
+      s += "    {0}\n".format(i)
+    s += "products:\n"
+    for i in self.products:
+      s += "    {0}\n".format(i)
+
+    return s
+
+
 
 class reaction_component(object):
   """Represents one component of a reaction.
