@@ -34,7 +34,7 @@ class vertex(object):
   """
   attrs_to_copy = ("value",)
 
-  def __init__( self):
+  def __init__(self):
     self.properties_ = {} # used to store intermediate properties such as distances etc.
     self.value = None  # used to store any object associated with the vertex
     self._neighbors = {} # set of all neighbors
@@ -45,24 +45,24 @@ class vertex(object):
     return ("vertex, value=%s, degree=%d, " % (str(self.value), self.degree)) + str(self.properties_)
 
 
-  def _clean_cache( self):
+  def _clean_cache(self):
     self._cache = {}
 
 
-  def copy( self):
+  def copy(self):
     other = self.__class__()
     for attr in self.attrs_to_copy:
-      setattr( other, attr, copy.copy( getattr( self, attr)))
+      setattr(other, attr, copy.copy(getattr(self, attr)))
     return other
 
 
-  def add_neighbor( self, v, e):
+  def add_neighbor(self, v, e):
     """adds a neighbor connected via e"""
     self._clean_cache()
-    self._neighbors[ e] = v
+    self._neighbors[e] = v
 
 
-  def remove_neighbor( self, v):
+  def remove_neighbor(self, v):
     self._clean_cache()
     to_del = None
     for k, vv in self._neighbors.items():
@@ -70,17 +70,17 @@ class vertex(object):
         to_del = k
         break
     if to_del:
-      del self._neighbors[ to_del]
+      del self._neighbors[to_del]
     else:
-      raise Exception("cannot remove non-existing neighbor")
+      raise Exception("Cannot remove non-existing neighbor")
 
 
-  def remove_edge_and_neighbor( self, e):
+  def remove_edge_and_neighbor(self, e):
     self._clean_cache()
     if e in self._neighbors.keys():
-      del self._neighbors[ e]
+      del self._neighbors[e]
     else:
-      raise Exception("cannot remove non-existing edge", e)
+      raise Exception("Cannot remove non-existing edge", e)
 
 
   @property
@@ -93,10 +93,10 @@ class vertex(object):
 
 
   def get_neighbor_connected_via( self, e):
-    return self._neighbors[ e]
+    return self._neighbors[e]
 
 
-  def get_edge_leading_to( self, a):
+  def get_edge_leading_to(self, a):
     for b, at in self._neighbors.items():
       if a == at:
         return b
@@ -115,11 +115,11 @@ class vertex(object):
     ret = []
     for v in self.neighbors:
       if 'd' in v.properties_ and v.properties_['d'] == d:
-        ret.append( v)
+        ret.append(v)
     return ret
 
 
-  def get_neighbor_edge_pairs( self):
+  def get_neighbor_edge_pairs(self):
     for e, v in self._neighbors.items():
       if not e.disconnected:
         yield e,v
