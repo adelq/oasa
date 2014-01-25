@@ -61,7 +61,7 @@ allNames = ['atom', 'bond', 'chem_vertex', 'coords_generator', 'config',
 
 try:
   from . import cairo_out
-except:
+except ImportError:
   CAIRO_AVAILABLE = False
 else:
   allNames.append("cairo_out")
