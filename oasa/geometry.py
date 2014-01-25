@@ -95,6 +95,9 @@ def on_which_side_is_point( line, point, threshold=0):
   x, y = point
   a = atan2( y-y1, x-x1)
   b = atan2( y2-y1, x2-x1)
+  # If a is too small, pick the other point
+  if abs(a) <= threshold:
+    a = atan2(y-y2, x-x2)
   if a*b < 0 and abs(a-b) > pi:
     if a < 0:
       a += 2*pi
