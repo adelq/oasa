@@ -18,13 +18,13 @@
 #--------------------------------------------------------------------------
 
 import sys
+import copy
 import math
 import cairo
 
-import misc
-import copy
-import geometry
-import transform3d
+from . import misc
+from . import geometry
+from . import transform3d
 
 
 
@@ -821,7 +821,7 @@ def mols_to_cairo( mols, filename, format, **kw):
 
 if __name__ == "__main__":
 
-  import smiles
+  from . import smiles
 
   mol = smiles.text_to_mol( "FCCSCl", calc_coords=30)
   #mol.vertices[0].properties_['show_hydrogens'] = False
@@ -829,7 +829,7 @@ if __name__ == "__main__":
   #mol.vertices[2].properties_['show_symbol'] = True
   mol_to_png( mol, "output.png", show_hydrogens_on_hetero=True, scaling=2)
 
-##   import inchi
+##   from . import inchi
 ##   mol = inchi.text_to_mol( "1/C7H6O2/c8-7(9)6-4-2-1-3-5-6/h1-5H,(H,8,9)", include_hydrogens=False, calc_coords=30)
 ##   mol_to_png( mol, "output.png")
 
