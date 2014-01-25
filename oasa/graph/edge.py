@@ -27,31 +27,31 @@ class edge(object):
 
   attrs_to_copy = ("disconnected",)
 
-  def __init__( self, vs=[]):
+  def __init__(self, vs=[]):
     self._vertices = []
-    self.set_vertices( vs)
+    self.set_vertices(vs)
     self.properties_ = {}
     self.disconnected = False
 
 
-  def __str__( self):
-    return "edge between %s %s" % tuple( map( str, self.vertices))
+  def __str__(self):
+    return "edge between %s %s" % tuple(map(str, self.vertices))
 
 
-  def copy( self):
+  def copy(self):
     other = self.__class__()
     for attr in self.attrs_to_copy:
-      setattr( other, attr, copy.copy( getattr( self, attr)))
+      setattr(other, attr, copy.copy(getattr(self, attr)))
     return other
 
 
-  def set_vertices( self, vs=[]):
+  def set_vertices(self, vs=[]):
     # Ring perception algorithm relies on allowing both vertices to be the same
-    if vs and len( vs) == 2:
+    if vs and len(vs) == 2:
       self._vertices = list(vs)
 
 
-  def get_vertices( self):
+  def get_vertices(self):
     return self._vertices
 
 
