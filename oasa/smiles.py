@@ -740,7 +740,9 @@ class smiles_converter( converter_base):
     if mol is None:
       return []
     mol.remove_zero_order_bonds()
-    mols = mol.get_disconnected_subgraphs()
+    # Keep components sorted in input order
+    mols = sorted(mol.get_disconnected_subgraphs(),
+                  key=lambda c: mol.vertices.index(c.vertices[0]))
     for mol in mols:
       if self.configuration["R_LOCALIZE_AROMATIC_BONDS"]:
         mol.localize_aromatic_bonds()
