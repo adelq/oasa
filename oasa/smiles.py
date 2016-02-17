@@ -584,7 +584,7 @@ class smiles( plugin):
     if not mol.is_connected():
       print("unconnected ", mol)
     if start_from and start_from.degree > 1:
-      e = start_from._neighbors.keys()[0]
+      e = list(start_from._neighbors.keys())[0]
       mol.disconnect_edge( e)
       ps = [i for i in mol.get_connected_components()]
       if len( ps) == 1:
