@@ -883,8 +883,8 @@ class molecule(graph.graph):
                       break
                   else:
                     self.add_stereochemistry(st)
-                if to_remove:
-                  self.remove_stereochemistry( to_remove)
+                if to_remove is not None:
+                  self.remove_stereochemistry(to_remove)
 
 
   def mark_morgan( self):
