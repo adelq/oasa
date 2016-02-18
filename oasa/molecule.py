@@ -871,6 +871,9 @@ class molecule(graph.graph):
                 st = stereochemistry.cis_trans_stereochemistry( center=center, value=value, references=refs)
                 to_remove = None
                 to_add = None
+                if not self.stereochemistry:
+                  self.add_stereochemistry(st)
+                  continue
                 for st1 in self.stereochemistry:
                   if set( st1.references) == set( st.references):
                     if st.value == st1.value:
