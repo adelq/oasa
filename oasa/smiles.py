@@ -647,8 +647,10 @@ def is_line( mol):
     return True
   return False
 
+
 def is_pure_ring(mol):
-  return filter(lambda x: x.degree != 2, mol.vertices) == []
+  return list(filter(lambda x: x.degree != 2, mol.vertices)) == []
+
 
 def match_atom_lists( l1, l2):
   """sort of bubble sort with counter"""
