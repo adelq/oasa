@@ -175,7 +175,7 @@ class inchi( plugin):
 
       # here we check out if the molecule seems ok
       fvs = [v for v in self.structure.vertices if v.free_valency]
-      if not fvs and not filter( None, [not v.order for v in self.structure.edges]):
+      if not fvs and not list(filter(None, [not v.order for v in self.structure.edges])):
         repeat = False
       else:
         if len( fvs) == 1:
@@ -365,7 +365,7 @@ class inchi( plugin):
         assert steps < 10
 
         for v in self.structure.vertices:
-          if v.symbol != 'C' and not v.free_valency and filter( None, [n.free_valency for n in v.neighbors]):
+          if v.symbol != 'C' and not v.free_valency and list(filter(None, [n.free_valency for n in v.neighbors])):
             v.charge = charge
             charge = 0
             change = True
