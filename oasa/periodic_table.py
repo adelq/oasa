@@ -369,12 +369,12 @@ def text_to_hydrogenated_atom( text):
 
 
 
-def gen_bit_masks( length):
+def gen_bit_masks(length):
   ret = length * [0]
   yield ret
-  for i in xrange( 2 ** length):
+  for i in range(2 ** length):
     ret[0] += 1
-    for j in xrange( length):
+    for j in range(length):
       if ret[j] == 2:
         ret[j] = 0
         if j == length-1:
