@@ -207,17 +207,17 @@ def gen_variations(items, n):
   if n==0:
     yield []
   else:
-    for i in xrange( len(items)-n+1):
+    for i in range(len(items)-n+1):
       for v in gen_variations(items[i+1:],n-1):
         yield [items[i]]+v
 
 
-def gen_combinations( items, n):
+def gen_combinations(items, n):
   if n==0:
     yield []
   else:
-    for i in xrange( len( items)):
-      for v in gen_combinations( [x for x in items if x!=items[i]], n-1):
+    for i in range(len(items)):
+      for v in gen_combinations([x for x in items if x!=items[i]], n-1):
         yield [items[i]]+v
 
 
