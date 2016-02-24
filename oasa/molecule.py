@@ -430,7 +430,7 @@ class molecule(graph.graph):
               b = aring[i].get_edge_leading_to( aring[i+1])
               b.order = 1
               already_set = i
-          if already_set != None:
+          if already_set is not None:
             # we reorder the comb and aring to start from the already set bonds
             j = already_set + 1
             aring = aring[j:len(aring)] + aring[1:j]
@@ -441,7 +441,7 @@ class molecule(graph.graph):
           while i+1 < len( aring):
             if comb[i] + comb[i+1] == 2:
               b = aring[i].get_edge_leading_to( aring[i+1])
-              assert b != None # should be
+              assert b is not None # should be
               # to assure alternating bonds
               bs1 = [bo for bo in aring[i].neighbor_edges
                           if bo.order == 2 and bo.aromatic and bo != b]
