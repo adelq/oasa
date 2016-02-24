@@ -204,13 +204,13 @@ class cairo_out(object):
         if self.align_coords:
           v.x = self._round( v.x)
           v.y = self._round( v.y)
-        if x1 == None or x1 > v.x:
+        if x1 is None or x1 > v.x:
           x1 = v.x
-        if x2 == None or x2 < v.x:
+        if x2 is None or x2 < v.x:
           x2 = v.x
-        if y1 == None or y1 > v.y:
+        if y1 is None or y1 > v.y:
           y1 = v.y
-        if y2 == None or y2 < v.y:
+        if y2 is None or y2 < v.y:
           y2 = v.y
     w = int( x2 - x1)
     h = int( y2 - y1)
