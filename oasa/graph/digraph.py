@@ -55,7 +55,7 @@ class digraph(graph.graph):
     returns None if operation fails or the edge instance if successful"""
     i1 = self._get_vertex_index( v1)
     i2 = self._get_vertex_index( v2)
-    if i1 == None or i2 == None:
+    if i1 is None or i2 is None:
       warnings.warn( "Adding edge to a vertex not present in graph failed (of course)", UserWarning, 3)
       return None
     # to get the vertices if v1 and v2 were indexes
