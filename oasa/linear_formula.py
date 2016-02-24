@@ -107,7 +107,7 @@ class linear_formula( object):
       for chunk in chunks:
         if chunk:
           atms = self.chunk_to_atoms( chunk, mol)
-          if atms == None:
+          if atms is None:
             return None
           last_atom = self.get_last_free_atom( mol)
           for a in atms:
@@ -228,7 +228,7 @@ def gen_formula_fragments( formula, reverse=False):
       next, nbrack = chunks[i+1]
       if not nbrack:
         count, rest = split_number_and_text( next)
-        if count == None:
+        if count is None:
           yield chunk, 1
         else:
           chunks[i+1] = (rest, nbrack)
