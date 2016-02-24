@@ -90,7 +90,7 @@ class inchi( plugin):
         if l.startswith("f"):
           i = layers.index( l)
           break
-      if i != None:
+      if i is not None:
         del layers[i]
         layers[i] = 'f'+layers[i][1:]
       return layers
