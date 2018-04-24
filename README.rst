@@ -1,7 +1,7 @@
 OASA
-==================================================
+====
 
-OASA is a free python library for manipulating and analyzing chemical
+OASA is a free Python library for manipulating and analyzing chemical
 structures and is distributed under GNU GPLv2. The program is provided as is
 without warranty of any kind. For details see the file "gpl.txt" in main oasa
 directory.
@@ -9,28 +9,29 @@ directory.
 More info can be found on http://bkchem.zirael.org/oasa_en.html
 
 Install
---------------------------------------------------
+-------
 
 OASA needs Python 2.6 or higher to run properly.
 
 To use it, you can either copy the oasa directory inside your projects directory
-or you may use
+or you may use::
 
     python setup.py install
 
 to make a system-wide install
 
-To use OASA from a Python program use "import oasa"
+To use OASA from a Python program use ``import oasa``.
 
 
 Status
---------------------------------------------------
+------
 
 Below are summarized the limitations of the library. It does by no means imply that there
 are no other limitations, but there are known issues that do not need bug reports :)
 
 
 OVERALL:
+
 - no documentation beyond the source code is available
 - stereochemistry support is limited to cis/trans stereochemistry on double bonds
   and only in some formats
@@ -39,25 +40,30 @@ OVERALL:
 
 
 SMILES:
+
 - cis/trans stereochemistry is supported, some attempt were made to make tetrahedral stereochemistry
   work, but it is not very much tested
 
 
 InChI:
+
 - reading is done natively by OASA
 - for writing the original InChI program is needed (cInChI, cInChI.exe)
 
 
-MOLFILE
+MOLFILE:
+
 - not all data in the properties block (after the bond block) are supported
   (this means that molfiles containing a properties block might not be read properly)
 
 
 COORDS GENERATOR:
+
 - coords for molecules like calix[4]arene and similar do not give a very nice picture
 - tetrahedral stereochemistry is not taken into account
 
 
 CAIRO_OUT:
+
 - pycairo is required to make use of cairo_out functionality
 - PNG, PDF and SVG export is supported now
