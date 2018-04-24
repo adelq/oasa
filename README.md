@@ -1,26 +1,33 @@
+OASA
+==================================================
+
 OASA is a free python library for manipulating and analyzing chemical
-structures and is distributed under GNU GPL. The program is provided as is
+structures and is distributed under GNU GPLv2. The program is provided as is
 without warranty of any kind. For details see the file "gpl.txt" in main oasa
 directory.
+
 More info can be found on http://bkchem.zirael.org/oasa_en.html
 
-INSTALL
+Install
 --------------------------------------------------
+
 OASA needs Python 2.6 or higher to run properly.
+
 To use it, you can either copy the oasa directory inside your projects directory
 or you may use
 
-python setup.py install
+    python setup.py install
 
 to make a system-wide install
 
-To use OASA from a python program use "import oasa"
+To use OASA from a Python program use "import oasa"
 
 
-STATUS
+Status
 --------------------------------------------------
-Bellow are summarized the limitations of the library. It does by no means mean that there
-are no other limitations, however, for these it has no sense to write bugreports :)
+
+Below are summarized the limitations of the library. It does by no means imply that there
+are no other limitations, but there are known issues that do not need bug reports :)
 
 
 OVERALL:
@@ -54,4 +61,3 @@ COORDS GENERATOR:
 CAIRO_OUT:
 - pycairo is required to make use of cairo_out functionality
 - PNG, PDF and SVG export is supported now
-
