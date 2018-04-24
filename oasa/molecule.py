@@ -21,10 +21,10 @@ from __future__ import print_function
 
 import copy
 import math
-import misc
 
 from . import graph
 from . import common
+from . import misc
 from . import transform3d
 from . import periodic_table as PT
 from .atom import atom

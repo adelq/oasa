@@ -19,13 +19,13 @@
 
 from __future__ import division, print_function
 
-import misc
 import warnings
 
 from math import pi, sqrt, sin, cos, atan2
 
 #from . import graph
 from . import geometry
+from . import misc
 
 
 
